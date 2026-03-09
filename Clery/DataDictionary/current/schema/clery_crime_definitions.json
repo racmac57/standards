@@ -1,0 +1,162 @@
+{
+  "_header": {
+    "timestamp": "2026-03-09",
+    "project": "Clery_Act_Standards",
+    "file": "clery_crime_definitions.json",
+    "author": "R. A. Carucci",
+    "purpose": "Clery Act crime categories and definitions per FBI UCR/NIBRS and DOE Handbook for Campus Safety and Security Reporting"
+  },
+  "metadata": {
+    "version": "1.0",
+    "source": "Clery Center Understanding Clery Statistics, FBI UCR SRS/NIBRS User Manuals, DOE Handbook 2016",
+    "date_created": "2026-03-09",
+    "total_clery_crimes": 17,
+    "primary_crimes": 9,
+    "arrest_referral_categories": 3,
+    "vawa_crimes": 3,
+    "hate_crime_additions": 4
+  },
+  "primary_crimes": {
+    "MURDER_NONNEGLIGENT": {
+      "clery_name": "Murder/Non-Negligent Manslaughter",
+      "nibrs_codes": ["09A"],
+      "fbi_manual": "SRS User Manual",
+      "definition": "The willful (nonnegligent) killing of one human being by another."
+    },
+    "MANSLAUGHTER_NEGLIGENT": {
+      "clery_name": "Manslaughter by Negligence",
+      "nibrs_codes": ["09B"],
+      "fbi_manual": "SRS User Manual",
+      "definition": "The killing of another person through gross negligence."
+    },
+    "RAPE": {
+      "clery_name": "Rape",
+      "nibrs_codes": ["11A"],
+      "fbi_manual": "NIBRS User Manual",
+      "definition": "Penetration, no matter how slight, of vagina or anus with any body part or object, or oral penetration by sex organ, without consent."
+    },
+    "FONDLING": {
+      "clery_name": "Fondling",
+      "nibrs_codes": ["11D"],
+      "fbi_manual": "NIBRS User Manual",
+      "definition": "Touching private body parts of another for sexual gratification without consent."
+    },
+    "INCEST": {
+      "clery_name": "Incest",
+      "nibrs_codes": ["36A"],
+      "fbi_manual": "NIBRS User Manual",
+      "definition": "Nonforcible sexual intercourse between persons who are related to each other within degrees wherein marriage is prohibited by law."
+    },
+    "STATUTORY_RAPE": {
+      "clery_name": "Statutory Rape",
+      "nibrs_codes": ["36B"],
+      "fbi_manual": "NIBRS User Manual",
+      "definition": "Nonforcible sexual intercourse with a person who is under the statutory age of consent."
+    },
+    "ROBBERY": {
+      "clery_name": "Robbery",
+      "nibrs_codes": ["120"],
+      "fbi_manual": "SRS User Manual",
+      "definition": "Taking or attempting to take anything of value from a person by force or threat of force."
+    },
+    "AGGRAVATED_ASSAULT": {
+      "clery_name": "Aggravated Assault",
+      "nibrs_codes": ["13A"],
+      "fbi_manual": "SRS User Manual",
+      "definition": "Unlawful attack using dangerous weapon or resulting in severe bodily injury."
+    },
+    "BURGLARY": {
+      "clery_name": "Burglary",
+      "nibrs_codes": ["220"],
+      "fbi_manual": "SRS User Manual",
+      "definition": "Unlawful entry of a structure to commit a felony or theft."
+    },
+    "MOTOR_VEHICLE_THEFT": {
+      "clery_name": "Motor Vehicle Theft",
+      "nibrs_codes": ["240"],
+      "fbi_manual": "SRS User Manual",
+      "definition": "Theft or attempted theft of a motor vehicle."
+    },
+    "ARSON": {
+      "clery_name": "Arson",
+      "nibrs_codes": ["200"],
+      "fbi_manual": "SRS User Manual",
+      "definition": "Unlawful and intentional damage of property by fire or incendiary device."
+    }
+  },
+  "hate_crime_additions": {
+    "SIMPLE_ASSAULT": {
+      "clery_name": "Simple Assault",
+      "nibrs_codes": ["13B"],
+      "hate_crime_only": true,
+      "definition": "Physical attack without weapon or severe injury. Reportable as Clery only when bias-motivated."
+    },
+    "LARCENY_THEFT": {
+      "clery_name": "Larceny-Theft",
+      "nibrs_codes": ["23A", "23B", "23C", "23D", "23E", "23F", "23G", "23H"],
+      "hate_crime_only": true,
+      "definition": "Unlawful taking of property. Reportable as Clery only when bias-motivated."
+    },
+    "INTIMIDATION": {
+      "clery_name": "Intimidation",
+      "nibrs_codes": ["13C"],
+      "hate_crime_only": true,
+      "definition": "Placing another in reasonable fear of harm through threats. Reportable as Clery only when bias-motivated."
+    },
+    "DESTRUCTION_VANDALISM": {
+      "clery_name": "Destruction/Damage/Vandalism of Property",
+      "nibrs_codes": ["290"],
+      "hate_crime_only": true,
+      "definition": "Willful or malicious destruction of property. Reportable as Clery only when bias-motivated."
+    }
+  },
+  "arrest_referrals": {
+    "LIQUOR_LAW": {
+      "clery_name": "Liquor Law Violations",
+      "report_type": "arrests_and_referrals",
+      "definition": "Violations of state/local laws prohibiting manufacture, sale, purchase, transportation, possession, or use of alcoholic beverages."
+    },
+    "DRUG_LAW": {
+      "clery_name": "Drug Law Violations",
+      "report_type": "arrests_and_referrals",
+      "nibrs_codes": ["35A", "35B"],
+      "definition": "Violations of state/local laws relating to narcotic drugs, marijuana, synthetic narcotics, or dangerous non-narcotic drugs."
+    },
+    "WEAPONS_LAW": {
+      "clery_name": "Weapons Law Violations",
+      "report_type": "arrests_and_referrals",
+      "nibrs_codes": ["520", "521"],
+      "definition": "Violations of laws prohibiting manufacture, sale, purchase, transportation, possession, or use of firearms or other weapons."
+    }
+  },
+  "vawa_crimes": {
+    "DATING_VIOLENCE": {
+      "clery_name": "Dating Violence",
+      "definition": "Violence committed by a person who is or has been in a social relationship of a romantic or intimate nature with the victim. Existence determined by length, type, frequency of relationship.",
+      "nibrs_may_include": ["13A", "13B", "13C", "11A", "11D"],
+      "relationship_required": true
+    },
+    "DOMESTIC_VIOLENCE": {
+      "clery_name": "Domestic Violence",
+      "definition": "Felony or misdemeanor crime of violence committed by current/former spouse, cohabitant, person sharing a child, or intimate partner.",
+      "nibrs_may_include": ["13A", "13B", "13C", "11A", "11D"],
+      "relationship_required": true
+    },
+    "STALKING": {
+      "clery_name": "Stalking",
+      "definition": "Engaging in a course of conduct directed at a specific person that would cause a reasonable person to fear for safety or suffer substantial emotional distress.",
+      "nibrs_may_include": ["13C", "36C"],
+      "course_of_conduct_required": true
+    }
+  },
+  "bias_categories": {
+    "race": "Race",
+    "religion": "Religion",
+    "sexual_orientation": "Sexual Orientation",
+    "gender": "Gender",
+    "gender_identity": "Gender Identity",
+    "disability": "Disability",
+    "ethnicity": "Ethnicity",
+    "national_origin": "National Origin"
+  }
+}

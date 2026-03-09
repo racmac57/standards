@@ -1,0 +1,79 @@
+{
+  "_header": {
+    "timestamp": "2026-03-09",
+    "project": "Clery_Act_Standards",
+    "file": "clery_geography_definitions.json",
+    "author": "R. A. Carucci",
+    "purpose": "Clery Act geographic categories for crime reporting - DOE Handbook for Campus Safety and Security Reporting"
+  },
+  "metadata": {
+    "version": "1.0",
+    "source": "U.S. Dept. of Education, Office of Postsecondary Education, Handbook 2016",
+    "date_created": "2026-03-09"
+  },
+  "geography_categories": {
+    "ON_CAMPUS": {
+      "code": "ON_CAMPUS",
+      "name": "On-Campus",
+      "plain_language": "Institution's core, main campus",
+      "definition": [
+        "Any building or property owned or controlled by an institution within the same reasonably contiguous geographic area and used by the institution in direct support of, or in a manner related to, the institution's educational purposes, including residence halls; and",
+        "Any building or property that is within or reasonably contiguous to the above, that is owned by the institution but controlled by another person, is frequently used by students, and supports institutional purposes (e.g., food or retail vendor)."
+      ],
+      "includes": [
+        "Residence halls",
+        "Academic buildings",
+        "Student centers",
+        "Athletic facilities",
+        "Campus-owned retail/dining (even if operated by third party)"
+      ],
+      "excludes": [
+        "Properties not reasonably contiguous",
+        "Off-campus student housing (unless owned/controlled by institution)"
+      ]
+    },
+    "NONCAMPUS": {
+      "code": "NONCAMPUS",
+      "name": "Noncampus",
+      "plain_language": "Properties not contiguous to core campus but used for educational purposes",
+      "definition": [
+        "Any building or property owned or controlled by a student organization that is officially recognized by the institution; or",
+        "Any building or property owned or controlled by an institution that is used in direct support of, or in relation to, the institution's educational purposes, is frequently used by students, and is NOT within the same reasonably contiguous geographic area of the institution."
+      ],
+      "includes": [
+        "Remote instructional sites",
+        "Clinical/field placement locations",
+        "Study abroad housing (institution-controlled)",
+        "Recognized student organization property (e.g., fraternity house)"
+      ],
+      "excludes": [
+        "Off-campus party at non-institution location",
+        "Student-rented apartments (unless owned by institution)",
+        "Local bars or clubs",
+        "Student hometowns"
+      ],
+      "clarification": "Noncampus does NOT mean 'off campus' - it refers to specific institution-owned or student-org-controlled properties."
+    },
+    "PUBLIC_PROPERTY": {
+      "code": "PUBLIC_PROPERTY",
+      "name": "Public Property",
+      "plain_language": "Public property immediately adjacent to, within, or surrounding on-campus geography",
+      "definition": "Public property immediately adjacent to, within, or surrounding one's on-campus geography.",
+      "includes": [
+        "Public sidewalk bordering campus",
+        "Public street adjacent to campus",
+        "Public sidewalk on opposite side of street",
+        "Public property within core campus (e.g., public roads through campus)"
+      ],
+      "excludes": [
+        "Public property not immediately adjacent",
+        "Public transit stops beyond immediate campus border"
+      ]
+    }
+  },
+  "reporting_notes": {
+    "geography_required": "Every Clery crime must be assigned to one of the three geographic categories.",
+    "institution_responsibility": "Institution must define and document its Clery geography annually.",
+    "multi_campus": "Institutions with multiple campuses report separately for each campus or provide aggregate as required by DOE."
+  }
+}

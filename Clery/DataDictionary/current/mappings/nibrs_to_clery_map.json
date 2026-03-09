@@ -1,0 +1,173 @@
+{
+  "_header": {
+    "timestamp": "2026-03-09",
+    "project": "Clery_Act_Standards",
+    "file": "nibrs_to_clery_map.json",
+    "author": "R. A. Carucci",
+    "purpose": "Map NIBRS offense codes to Clery Act crime categories for Hackensack PD RMS data used in institution Clery requests"
+  },
+  "metadata": {
+    "version": "1.0",
+    "date_created": "2026-03-09",
+    "source_system": "Hackensack PD RMS / NIBRS",
+    "nibrs_reference": "ucr_offense_classification.json",
+    "clery_reference": "clery_crime_definitions.json",
+    "mapping_notes": "Primary crimes map directly. Hate crimes require bias motivation. VAWA crimes require relationship/conduct context."
+  },
+  "nibrs_to_clery": {
+    "09A": {
+      "clery_category": "MURDER_NONNEGLIGENT",
+      "clery_name": "Murder/Non-Negligent Manslaughter",
+      "confidence": 1.0,
+      "notes": "Direct match"
+    },
+    "09B": {
+      "clery_category": "MANSLAUGHTER_NEGLIGENT",
+      "clery_name": "Manslaughter by Negligence",
+      "confidence": 1.0,
+      "notes": "Direct match"
+    },
+    "11A": {
+      "clery_category": "RAPE",
+      "clery_name": "Rape",
+      "confidence": 1.0,
+      "notes": "Direct match"
+    },
+    "11D": {
+      "clery_category": "FONDLING",
+      "clery_name": "Fondling",
+      "confidence": 1.0,
+      "notes": "Direct match"
+    },
+    "36A": {
+      "clery_category": "INCEST",
+      "clery_name": "Incest",
+      "confidence": 1.0,
+      "notes": "Direct match"
+    },
+    "36B": {
+      "clery_category": "STATUTORY_RAPE",
+      "clery_name": "Statutory Rape",
+      "confidence": 1.0,
+      "notes": "Direct match"
+    },
+    "120": {
+      "clery_category": "ROBBERY",
+      "clery_name": "Robbery",
+      "confidence": 1.0,
+      "notes": "Direct match"
+    },
+    "13A": {
+      "clery_category": "AGGRAVATED_ASSAULT",
+      "clery_name": "Aggravated Assault",
+      "confidence": 1.0,
+      "notes": "Direct match. May also be DV/Dating if relationship context."
+    },
+    "220": {
+      "clery_category": "BURGLARY",
+      "clery_name": "Burglary",
+      "confidence": 1.0,
+      "notes": "Direct match"
+    },
+    "240": {
+      "clery_category": "MOTOR_VEHICLE_THEFT",
+      "clery_name": "Motor Vehicle Theft",
+      "confidence": 1.0,
+      "notes": "Direct match"
+    },
+    "200": {
+      "clery_category": "ARSON",
+      "clery_name": "Arson",
+      "confidence": 1.0,
+      "notes": "Direct match"
+    },
+    "13B": {
+      "clery_category": "SIMPLE_ASSAULT",
+      "clery_name": "Simple Assault",
+      "confidence": 0.5,
+      "hate_crime_only": true,
+      "notes": "Clery reportable ONLY when bias-motivated (hate crime). May also be DV/Dating if relationship context."
+    },
+    "13C": {
+      "clery_category": "INTIMIDATION",
+      "clery_name": "Intimidation",
+      "confidence": 0.5,
+      "hate_crime_only": true,
+      "notes": "Clery reportable as primary only when bias-motivated. May map to Stalking if course of conduct."
+    },
+    "23A": { "clery_category": "LARCENY_THEFT", "clery_name": "Larceny-Theft", "confidence": 0.5, "hate_crime_only": true },
+    "23B": { "clery_category": "LARCENY_THEFT", "clery_name": "Larceny-Theft", "confidence": 0.5, "hate_crime_only": true },
+    "23C": { "clery_category": "LARCENY_THEFT", "clery_name": "Larceny-Theft", "confidence": 0.5, "hate_crime_only": true },
+    "23D": { "clery_category": "LARCENY_THEFT", "clery_name": "Larceny-Theft", "confidence": 0.5, "hate_crime_only": true },
+    "23E": { "clery_category": "LARCENY_THEFT", "clery_name": "Larceny-Theft", "confidence": 0.5, "hate_crime_only": true },
+    "23F": { "clery_category": "LARCENY_THEFT", "clery_name": "Larceny-Theft", "confidence": 0.5, "hate_crime_only": true },
+    "23G": { "clery_category": "LARCENY_THEFT", "clery_name": "Larceny-Theft", "confidence": 0.5, "hate_crime_only": true },
+    "23H": { "clery_category": "LARCENY_THEFT", "clery_name": "Larceny-Theft", "confidence": 0.5, "hate_crime_only": true },
+    "290": {
+      "clery_category": "DESTRUCTION_VANDALISM",
+      "clery_name": "Destruction/Damage/Vandalism of Property",
+      "confidence": 0.5,
+      "hate_crime_only": true,
+      "notes": "Clery reportable as primary only when bias-motivated"
+    },
+    "35A": {
+      "clery_category": "DRUG_LAW",
+      "clery_name": "Drug Law Violations",
+      "confidence": 1.0,
+      "arrest_referral_only": true,
+      "notes": "Report as arrest/referral, not as primary crime"
+    },
+    "35B": {
+      "clery_category": "DRUG_LAW",
+      "clery_name": "Drug Law Violations",
+      "confidence": 1.0,
+      "arrest_referral_only": true,
+      "notes": "Report as arrest/referral"
+    },
+    "520": {
+      "clery_category": "WEAPONS_LAW",
+      "clery_name": "Weapons Law Violations",
+      "confidence": 1.0,
+      "arrest_referral_only": true,
+      "notes": "Report as arrest/referral"
+    },
+    "521": {
+      "clery_category": "WEAPONS_LAW",
+      "clery_name": "Weapons Law Violations",
+      "confidence": 1.0,
+      "arrest_referral_only": true,
+      "notes": "Report as arrest/referral"
+    }
+  },
+  "excluded_from_clery": [
+    "09C",
+    "100",
+    "210",
+    "250",
+    "26A",
+    "26B",
+    "26C",
+    "26D",
+    "26E",
+    "26F",
+    "26G",
+    "26H",
+    "270",
+    "280",
+    "360",
+    "370",
+    "39A",
+    "39B",
+    "39C",
+    "39D",
+    "40A",
+    "40B",
+    "40C",
+    "510"
+  ],
+  "vawa_classification_notes": {
+    "domestic_violence": "Requires relationship: spouse, cohabitant, shared child, intimate partner. Check narrative/incident type for DV indicators.",
+    "dating_violence": "Requires romantic/intimate relationship. Check narrative for relationship context.",
+    "stalking": "Requires course of conduct. May map from 13C (Intimidation) or 36C (Stalking) when pattern documented."
+  }
+}

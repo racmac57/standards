@@ -1,0 +1,467 @@
+{
+  "timestamp": "2026-03-09T11:19:23.180151",
+  "source_root": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024",
+  "output_root": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\09_Reference\\Standards\\Clery\\DataDictionary\\current\\institutions",
+  "institutions": {
+    "Bergen Academies": {
+      "folder": "Bergen Academies",
+      "geodatabases": [],
+      "aprx_projects": [],
+      "feature_classes": [],
+      "exported": []
+    },
+    "Bergen Community College": {
+      "folder": "Bergen Community College",
+      "geodatabases": [
+        {
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Bergen Community College\\2025_Bergen_Community_College\\2025_Bergen_Community_College.gdb",
+          "relative": "Bergen Community College\\2025_Bergen_Community_College\\2025_Bergen_Community_College.gdb"
+        }
+      ],
+      "aprx_projects": [
+        {
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Bergen Community College\\2025_Bergen_Community_College\\2025_Bergen_Community_College.aprx",
+          "layers": [
+            {
+              "map": "Map",
+              "layer_name": "Crimes",
+              "data_source": "https://services1.arcgis.com/JYl0Hy0wQdiiV0qh/arcgis/rest/services/Crimes_2153d1ef33a0414291a8eb54b938507b/FeatureServer/0"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Polygons",
+              "data_source": "https://services1.arcgis.com/JYl0Hy0wQdiiV0qh/arcgis/rest/services/PolicePosts/FeatureServer/1"
+            },
+            {
+              "map": "Map",
+              "layer_name": "City",
+              "data_source": "https://services1.arcgis.com/JYl0Hy0wQdiiV0qh/arcgis/rest/services/City/FeatureServer/0"
+            },
+            {
+              "map": "Map",
+              "layer_name": "World Topographic Map",
+              "data_source": "https:\\cdn.arcgis.com\\sharing\\rest\\content\\items\\27e89eb03c1e4341a1d75e597f0291e6\\resources\\styles\\root.json"
+            },
+            {
+              "map": "Map",
+              "layer_name": "World Hillshade",
+              "data_source": "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer"
+            }
+          ],
+          "error": null
+        }
+      ],
+      "feature_classes": [],
+      "exported": []
+    },
+    "Bergen Community College Clery Act": {
+      "folder": "Bergen Community College Clery Act",
+      "geodatabases": [],
+      "aprx_projects": [
+        {
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Bergen Community College Clery Act\\2024 - Bergen Community College Clery Act (for 2023).aprx",
+          "layers": [
+            {
+              "map": "Map",
+              "layer_name": "Text Notes - 1000",
+              "data_source": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb\\Annotation1k"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Dark Gray Reference",
+              "data_source": "https:\\cdn.arcgis.com\\sharing\\rest\\content\\items\\747cb7a5329c478cbe6981076cc879c5\\resources\\styles\\root.json"
+            },
+            {
+              "map": "Map",
+              "layer_name": "2023 Reported Crime(s)",
+              "data_source": "https://services1.arcgis.com/JYl0Hy0wQdiiV0qh/arcgis/rest/services/Crimes_2153d1ef33a0414291a8eb54b938507b/FeatureServer/0"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Human Geography Dark Detail",
+              "data_source": "https:\\www.arcgis.com\\sharing\\rest\\content\\items\\1ddbb25aa29c4811aaadd94de469856a\\resources\\styles\\root.json"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Dark Gray Base",
+              "data_source": "https:\\cdn.arcgis.com\\sharing\\rest\\content\\items\\5e9b3685f4c24d8781073dd928ebda50\\resources\\styles\\root.json"
+            }
+          ],
+          "error": null
+        }
+      ],
+      "feature_classes": [],
+      "exported": []
+    },
+    "Eastwick College": {
+      "folder": "Eastwick College",
+      "geodatabases": [
+        {
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Eastwick College\\2024_Eastwick_College\\2024_Eastwick_College.gdb",
+          "relative": "Eastwick College\\2024_Eastwick_College\\2024_Eastwick_College.gdb"
+        }
+      ],
+      "aprx_projects": [
+        {
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Eastwick College\\2024_Eastwick_College\\2024_Eastwick_College.aprx",
+          "layers": [
+            {
+              "map": "Map",
+              "layer_name": "c250_Moore_Street_Clery_2024_Geocoded",
+              "data_source": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Eastwick College\\2024_Eastwick_College\\2024_Eastwick_College.gdb\\c250_Moore_Street_Clery_2024_Geocoded"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Clery_Crimes",
+              "data_source": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Eastwick College\\2024_Eastwick_College\\2024_Eastwick_College.gdb\\Clery_Crimes"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Crimes",
+              "data_source": "https://services1.arcgis.com/JYl0Hy0wQdiiV0qh/arcgis/rest/services/Crimes_2153d1ef33a0414291a8eb54b938507b/FeatureServer/0"
+            },
+            {
+              "map": "Map",
+              "layer_name": "CleryAOI",
+              "data_source": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Eastwick College\\2024_Eastwick_College\\2024_Eastwick_College.gdb\\CleryAOI"
+            },
+            {
+              "map": "Map",
+              "layer_name": "City Boundsries",
+              "data_source": "https://services2.arcgis.com/XVOqAjTOJ5P6ngMu/arcgis/rest/services/NJ_Municipalities_3857/FeatureServer/0"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Human Geography Dark Label",
+              "data_source": "https:\\www.arcgis.com\\sharing\\rest\\content\\items\\4a3922d6d15f405d8c2b7a448a7fbad2\\resources\\styles\\root.json"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Human Geography Dark Detail",
+              "data_source": "https:\\www.arcgis.com\\sharing\\rest\\content\\items\\1ddbb25aa29c4811aaadd94de469856a\\resources\\styles\\root.json"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Human Geography Dark Base",
+              "data_source": "https:\\www.arcgis.com\\sharing\\rest\\content\\items\\d7397603e9274052808839b70812be50\\resources\\styles\\root.json"
+            },
+            {
+              "map": "Map",
+              "layer_name": "World Topographic Map",
+              "data_source": "https:\\cdn.arcgis.com\\sharing\\rest\\content\\items\\27e89eb03c1e4341a1d75e597f0291e6\\resources\\styles\\root.json"
+            },
+            {
+              "map": "Map",
+              "layer_name": "World Hillshade",
+              "data_source": "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer"
+            }
+          ],
+          "error": null
+        }
+      ],
+      "feature_classes": [
+        {
+          "name": "CleryAOI",
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Eastwick College\\2024_Eastwick_College\\2024_Eastwick_College.gdb\\CleryAOI",
+          "shape_type": "Polygon",
+          "spatial_ref": "WGS_1984_Web_Mercator_Auxiliary_Sphere",
+          "feature_count": 1,
+          "gdb": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Eastwick College\\2024_Eastwick_College\\2024_Eastwick_College.gdb"
+        },
+        {
+          "name": "Clery_Crimes",
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Eastwick College\\2024_Eastwick_College\\2024_Eastwick_College.gdb\\Clery_Crimes",
+          "shape_type": "Point",
+          "spatial_ref": "WGS_1984_Web_Mercator_Auxiliary_Sphere",
+          "feature_count": 1,
+          "gdb": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Eastwick College\\2024_Eastwick_College\\2024_Eastwick_College.gdb"
+        },
+        {
+          "name": "c250_Moore_Street_Clery_2024_Geocoded",
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Eastwick College\\2024_Eastwick_College\\2024_Eastwick_College.gdb\\c250_Moore_Street_Clery_2024_Geocoded",
+          "shape_type": "Point",
+          "spatial_ref": "NAD_1983_StatePlane_New_Jersey_FIPS_2900_Feet",
+          "feature_count": 8,
+          "gdb": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Eastwick College\\2024_Eastwick_College\\2024_Eastwick_College.gdb"
+        }
+      ],
+      "exported": [
+        {
+          "file": "Eastwick_College_CleryAOI.geojson",
+          "error": "ERROR 000622: Failed to execute (Features To JSON). Parameters are not valid.\nERROR 000800: The value is not a member of FORMATTED | NOT_FORMATTED.\n"
+        },
+        {
+          "file": "Eastwick_College_Clery_Crimes.geojson",
+          "error": "ERROR 000622: Failed to execute (Features To JSON). Parameters are not valid.\nERROR 000800: The value is not a member of FORMATTED | NOT_FORMATTED.\n"
+        },
+        {
+          "file": "Eastwick_College_c250_Moore_Street_Clery_2024_Geocoded.geojson",
+          "error": "ERROR 000622: Failed to execute (Features To JSON). Parameters are not valid.\nERROR 000800: The value is not a member of FORMATTED | NOT_FORMATTED.\n"
+        }
+      ]
+    },
+    "FDU Clery Act": {
+      "folder": "FDU Clery Act",
+      "geodatabases": [
+        {
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb",
+          "relative": "FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb"
+        }
+      ],
+      "aprx_projects": [
+        {
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.aprx",
+          "layers": [
+            {
+              "map": "Map",
+              "layer_name": "Hybrid Reference Layer",
+              "data_source": "https:\\cdn.arcgis.com\\sharing\\rest\\content\\items\\30d6b8271e1849cd9c3042060001f425\\resources\\styles\\root.json"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Crimes",
+              "data_source": "https://services1.arcgis.com/JYl0Hy0wQdiiV0qh/arcgis/rest/services/Crimes_2153d1ef33a0414291a8eb54b938507b/FeatureServer/0"
+            },
+            {
+              "map": "Map",
+              "layer_name": "FDU_Property",
+              "data_source": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb\\FDU_Property"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Crimes_OnCampus",
+              "data_source": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb\\FDU_Property_ExportFeatures"
+            },
+            {
+              "map": "Map",
+              "layer_name": "World Imagery",
+              "data_source": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer"
+            }
+          ],
+          "error": null
+        }
+      ],
+      "feature_classes": [
+        {
+          "name": "Surronding_Area",
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb\\Surronding_Area",
+          "shape_type": "Polygon",
+          "spatial_ref": "WGS_1984_Web_Mercator_Auxiliary_Sphere",
+          "feature_count": 0,
+          "gdb": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb"
+        },
+        {
+          "name": "Polygon",
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb\\Polygon",
+          "shape_type": "Polygon",
+          "spatial_ref": "WGS_1984_Web_Mercator_Auxiliary_Sphere",
+          "feature_count": 0,
+          "gdb": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb"
+        },
+        {
+          "name": "Point",
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb\\Point",
+          "shape_type": "Point",
+          "spatial_ref": "WGS_1984_Web_Mercator_Auxiliary_Sphere",
+          "feature_count": 0,
+          "gdb": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb"
+        },
+        {
+          "name": "Annotation1k",
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb\\Annotation1k",
+          "shape_type": "Polygon",
+          "spatial_ref": "WGS_1984_Web_Mercator_Auxiliary_Sphere",
+          "feature_count": 0,
+          "gdb": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb"
+        },
+        {
+          "name": "FDU_Property",
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb\\FDU_Property",
+          "shape_type": "Polygon",
+          "spatial_ref": "WGS_1984_Web_Mercator_Auxiliary_Sphere",
+          "feature_count": 1,
+          "gdb": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb"
+        },
+        {
+          "name": "Crimes_OnCampus",
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb\\Crimes_OnCampus",
+          "shape_type": "Point",
+          "spatial_ref": "WGS_1984_Web_Mercator_Auxiliary_Sphere",
+          "feature_count": 0,
+          "gdb": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb"
+        },
+        {
+          "name": "FDU_Property_ExportFeatures",
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb\\FDU_Property_ExportFeatures",
+          "shape_type": "Polygon",
+          "spatial_ref": "WGS_1984_Web_Mercator_Auxiliary_Sphere",
+          "feature_count": 1,
+          "gdb": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb"
+        },
+        {
+          "name": "FDU_Property_SummarizeWithin",
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb\\FDU_Property_SummarizeWithin",
+          "shape_type": "Polygon",
+          "spatial_ref": "WGS_1984_Web_Mercator_Auxiliary_Sphere",
+          "feature_count": 1,
+          "gdb": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\FDU Clery Act\\2023_FDU_CLERY_ACT\\2023_FDU_CLERY_ACT.gdb"
+        }
+      ],
+      "exported": [
+        {
+          "file": "FDU_Clery_Act_Surronding_Area.geojson",
+          "error": "ERROR 000622: Failed to execute (Features To JSON). Parameters are not valid.\nERROR 000800: The value is not a member of FORMATTED | NOT_FORMATTED.\n"
+        },
+        {
+          "file": "FDU_Clery_Act_Polygon.geojson",
+          "error": "ERROR 000622: Failed to execute (Features To JSON). Parameters are not valid.\nERROR 000800: The value is not a member of FORMATTED | NOT_FORMATTED.\n"
+        },
+        {
+          "file": "FDU_Clery_Act_Point.geojson",
+          "error": "ERROR 000622: Failed to execute (Features To JSON). Parameters are not valid.\nERROR 000800: The value is not a member of FORMATTED | NOT_FORMATTED.\n"
+        },
+        {
+          "file": "FDU_Clery_Act_Annotation1k.geojson",
+          "error": "ERROR 000622: Failed to execute (Features To JSON). Parameters are not valid.\nERROR 000800: The value is not a member of FORMATTED | NOT_FORMATTED.\n"
+        },
+        {
+          "file": "FDU_Clery_Act_FDU_Property.geojson",
+          "error": "ERROR 000622: Failed to execute (Features To JSON). Parameters are not valid.\nERROR 000800: The value is not a member of FORMATTED | NOT_FORMATTED.\n"
+        },
+        {
+          "file": "FDU_Clery_Act_Crimes_OnCampus.geojson",
+          "error": "ERROR 000622: Failed to execute (Features To JSON). Parameters are not valid.\nERROR 000800: The value is not a member of FORMATTED | NOT_FORMATTED.\n"
+        },
+        {
+          "file": "FDU_Clery_Act_FDU_Property_ExportFeatures.geojson",
+          "error": "ERROR 000622: Failed to execute (Features To JSON). Parameters are not valid.\nERROR 000800: The value is not a member of FORMATTED | NOT_FORMATTED.\n"
+        },
+        {
+          "file": "FDU_Clery_Act_FDU_Property_SummarizeWithin.geojson",
+          "error": "ERROR 000622: Failed to execute (Features To JSON). Parameters are not valid.\nERROR 000800: The value is not a member of FORMATTED | NOT_FORMATTED.\n"
+        }
+      ]
+    },
+    "Parisian": {
+      "folder": "Parisian",
+      "geodatabases": [
+        {
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Parisian\\2025_06_25_Parisian_Clery\\2025_06_25_Parisian_Clery.gdb",
+          "relative": "Parisian\\2025_06_25_Parisian_Clery\\2025_06_25_Parisian_Clery.gdb"
+        }
+      ],
+      "aprx_projects": [
+        {
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Parisian\\2025_06_25_Parisian_Clery\\2025_06_25_Parisian_Clery.aprx",
+          "layers": [
+            {
+              "map": "Map",
+              "layer_name": "Crimes",
+              "data_source": "https://services1.arcgis.com/JYl0Hy0wQdiiV0qh/arcgis/rest/services/Crimes_2153d1ef33a0414291a8eb54b938507b/FeatureServer/0"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Parisian_Campus_Zone",
+              "data_source": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Parisian\\2025_06_25_Parisian_Clery\\2025_06_25_Parisian_Clery.gdb\\Parisian_Beauty"
+            },
+            {
+              "map": "Map",
+              "layer_name": "World Topographic Map",
+              "data_source": "https:\\cdn.arcgis.com\\sharing\\rest\\content\\items\\27e89eb03c1e4341a1d75e597f0291e6\\resources\\styles\\root.json"
+            },
+            {
+              "map": "Map",
+              "layer_name": "World Hillshade",
+              "data_source": "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer"
+            }
+          ],
+          "error": null
+        }
+      ],
+      "feature_classes": [
+        {
+          "name": "Parisian_Beauty",
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Parisian\\2025_06_25_Parisian_Clery\\2025_06_25_Parisian_Clery.gdb\\Parisian_Beauty",
+          "shape_type": "Polygon",
+          "spatial_ref": "WGS_1984_Web_Mercator_Auxiliary_Sphere",
+          "feature_count": 1,
+          "gdb": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Parisian\\2025_06_25_Parisian_Clery\\2025_06_25_Parisian_Clery.gdb"
+        }
+      ],
+      "exported": [
+        {
+          "file": "Parisian_Parisian_Beauty.geojson",
+          "error": "ERROR 000622: Failed to execute (Features To JSON). Parameters are not valid.\nERROR 000800: The value is not a member of FORMATTED | NOT_FORMATTED.\n"
+        }
+      ]
+    },
+    "Rutgers": {
+      "folder": "Rutgers",
+      "geodatabases": [
+        {
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Rutgers\\2025_04_Clery_Rutgers\\2025_04_Clery_Rutgers.gdb",
+          "relative": "Rutgers\\2025_04_Clery_Rutgers\\2025_04_Clery_Rutgers.gdb"
+        }
+      ],
+      "aprx_projects": [
+        {
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Rutgers\\2025_04_Clery_Rutgers\\2025_04_Clery_Rutgers.aprx",
+          "layers": [
+            {
+              "map": "Map",
+              "layer_name": "RUTGERS_CLERY_RMS_Geocoded",
+              "data_source": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Rutgers\\2025_04_Clery_Rutgers\\2025_04_Clery_Rutgers.gdb\\RUTGERS_CLERY_RMS_Geocoded"
+            },
+            {
+              "map": "Map",
+              "layer_name": "City Boundsries",
+              "data_source": "https://services2.arcgis.com/XVOqAjTOJ5P6ngMu/arcgis/rest/services/NJ_Municipalities_3857/FeatureServer/0"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Human Geography Dark Label",
+              "data_source": "https:\\www.arcgis.com\\sharing\\rest\\content\\items\\4a3922d6d15f405d8c2b7a448a7fbad2\\resources\\styles\\root.json"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Human Geography Dark Detail",
+              "data_source": "https:\\www.arcgis.com\\sharing\\rest\\content\\items\\1ddbb25aa29c4811aaadd94de469856a\\resources\\styles\\root.json"
+            },
+            {
+              "map": "Map",
+              "layer_name": "Human Geography Dark Base",
+              "data_source": "https:\\www.arcgis.com\\sharing\\rest\\content\\items\\d7397603e9274052808839b70812be50\\resources\\styles\\root.json"
+            },
+            {
+              "map": "Map",
+              "layer_name": "World Topographic Map",
+              "data_source": "https:\\cdn.arcgis.com\\sharing\\rest\\content\\items\\27e89eb03c1e4341a1d75e597f0291e6\\resources\\styles\\root.json"
+            },
+            {
+              "map": "Map",
+              "layer_name": "World Hillshade",
+              "data_source": "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer"
+            }
+          ],
+          "error": null
+        }
+      ],
+      "feature_classes": [
+        {
+          "name": "RUTGERS_CLERY_RMS_Geocoded",
+          "path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Rutgers\\2025_04_Clery_Rutgers\\2025_04_Clery_Rutgers.gdb\\RUTGERS_CLERY_RMS_Geocoded",
+          "shape_type": "Point",
+          "spatial_ref": "NAD_1983_StatePlane_New_Jersey_FIPS_2900_Feet",
+          "feature_count": 9,
+          "gdb": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\10_Projects\\Clery\\2024\\Rutgers\\2025_04_Clery_Rutgers\\2025_04_Clery_Rutgers.gdb"
+        }
+      ],
+      "exported": [
+        {
+          "file": "Rutgers_RUTGERS_CLERY_RMS_Geocoded.geojson",
+          "error": "ERROR 000622: Failed to execute (Features To JSON). Parameters are not valid.\nERROR 000800: The value is not a member of FORMATTED | NOT_FORMATTED.\n"
+        }
+      ]
+    }
+  }
+}

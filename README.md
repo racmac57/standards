@@ -13,6 +13,9 @@ Standards/
 ├── CAD/                        # CAD system standards
 │   └── DataDictionary/
 │       └── current/schema/     # CAD field definitions
+├── Clery/                      # Clery Act crime statistics (institution requests)
+│   └── DataDictionary/
+│       └── current/            # clery_crime_definitions, geography, nibrs_to_clery_map
 ├── CAD_RMS/                    # Cross-system mapping (CANONICAL)
 │   └── DataDictionary/
 │       └── current/schema/     # cad_to_rms_field_map.json, rms_to_cad_field_map.json
@@ -38,6 +41,8 @@ Standards/
 | `multi_column_matching_strategy.md` | `CAD_RMS/DataDictionary/current/schema/` |
 | `rms_export_field_definitions.md` | `RMS/DataDictionary/current/schema/` |
 | `cad_export_field_definitions.md` | `CAD/DataDictionary/current/schema/` |
+| `clery_crime_definitions.json` | `Clery/DataDictionary/current/schema/` |
+| `nibrs_to_clery_map.json` | `Clery/DataDictionary/current/mappings/` |
 
 ## Archive Policy
 
