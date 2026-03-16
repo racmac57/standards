@@ -1,0 +1,396 @@
+- **Logic**: `Hour_Calc = FORMAT(TimeofCall, "HH:mm")`
+- **Validation rules**:
+  - Must be non-null. - Must represent a valid time-of-day. ### `DayofWeek`
+
+- **Definition**: Day name for `TimeofCall` (derived). - **Recommended standard**: `Monday`…`Sunday`. - **Logic**: `DayofWeek = FORMAT(TimeofCall, "dddd")`
+
+### `TimeDispatched` *(export header: `Time Dispatched`)*
+
+- **Definition**: Timestamp when units were dispatched/assigned. - **Type**: datetime. - **Validation rules**:
+  - Must be non-null. - Should be ≥ `TimeofCall` (flag if earlier). ### `TimeOut` *(export header: `Time Out`)*
+
+- **Definition**: Timestamp when unit goes “out” (often **arrived on scene**; confirm CAD meaning). - **Type**: datetime. - **Validation rules**:
+  - Must be non-null. - Should be ≥ `TimeDispatched` (flag if earlier). ### `TimeIn` *(export header: `Time In`)*
+
+- **Definition**: Timestamp when unit clears the call / is back in service. - **Type**: datetime. - **Validation rules**:
+  - Must be non-null. - Should be ≥ `TimeOut` (flag if earlier). ### `TimeResponse` *(export header: `Time Response`)*
+
+- **Definition**: Response duration. - **Recommended logic (typical CAD)**: `TimeResponse = TimeOut - TimeDispatched`
+- **Type**: duration (stored as text in current profiling). - **Validation rules**:
+  - Must be non-null. - Must be ≥ 0. - If stored as text, standardize to one format (recommended: total seconds, or `HH:mm:ss`). ### `TimeSpent` *(export header: `Time Spent`)*
+
+- **Definition**: Time spent on scene / on the call. - **Recommended logic (typical CAD)**: `TimeSpent = TimeIn - TimeOut`
+- **Type**: duration (stored as text in current profiling). - **Validation rules**:
+  - Must be non-null. - Must be ≥ 0. - Standardize duration format (recommended: `HH:mm:ss`). ### `Officer`
+
+- **Definition**: Officer identifier for the call (primary/assigned officer). - **Type**: text (string). - **Validation rules**:
+  - Must be non-null. - Should match a standardized officer naming/badge convention (recommend aligning to `CAD/SCRPA/Assignment_Master_V2.csv` standardization outputs). ### `Disposition`
+
+- **Definition**: Disposition / outcome code or label for the CAD call. - **Type**: text (string). - **Observed**: 1 unique value in the profiled sample (exact value not captured in the report). - **Validation rules**:
+  - Must be non-null. - Must be limited to a controlled domain (to be defined once the value list is extracted from the export). ### `latitude`
+
+- **Definition**: Latitude of the incident location (WGS84). - **Type**: number. - **Validation rules**:
+  - If present: must be between `-90` and `90`. ### `longitude`
+
+- **Definition**: Longitude of the incident location (WGS84). - **Type**: number. - **Validation rules**:
+  - If present: must be between `-180` and `180`. ## Open confirmations (to finalize v1)
+
+1. Confirm `Time Out` meaning in your CAD (arrived on scene vs enroute vs other). 2. Confirm the canonical representation for `cMonth` (numeric vs month name). 3. Provide/confirm the official allowed domains for:
+   - `Disposition`
+   - `Grid`
+   - `ZoneCalc` (PDZone)
+4. Confirm whether supplementals can exceed `Z` (e.g., `AA`) or are limited to single-letter suffix. ```
+
+```markdown
+# CAD DataDictionary (status)
+
+## Current schema artifacts
+
+Located in `current/schema/`:
+
+- `cad_to_rms_field_map.json`
+- `rms_to_cad_field_map.json`
+- `cad_export_field_definitions.md`
+
+
+
+```
+
+### CAD export column summary (with logic + allowed values)
+
+I documented a complete “data dictionary style” summary for the columns you listed in:
+
+- `CAD/DataDictionary/current/schema/cad_export_field_definitions.md`
+
+It includes:
+
+- **`ReportNumberNew`**: `YY-NNNNNN` sequential (resets Jan 01) + **supplemental suffix** `A`, `B`, `C`… (regex: `^\d{2}-\d{6}([A-Z])?$`)
+- **`HowReported`**: controlled domain with your full allowed list (and an explicit rule that **`9-1-1` must remain text**, not a date)
+- **Timestamp fields** (`TimeofCall`, `TimeDispatched`, `TimeOut`, `TimeIn`) and derived fields (`cYear`, `cMonth`, `Hour_Calc`, `DayofWeek`)
+- **Duration logic**:
+  - `TimeResponse = TimeOut - TimeDispatched` *(typical CAD; marked as confirm for your system)*
+  - `TimeSpent = TimeIn - TimeOut`
+- **Validation rules** for `FullAddress2`, `Incident`, `Grid`, `ZoneCalc` (mapped from export `PDZone`), and `latitude/longitude`
+
+Also updated:
+
+- `CAD/DataDictionary/SUMMARY.md` to reference the new definitions doc. If you answer these 4 confirmations, I can lock this to a final v1 standard: **meaning of `Time Out`**, canonical format for **`cMonth`**, official domains for **`Disposition/Grid/ZoneCalc`**, and whether supplemental report suffixes can go past `Z` (e.g., `AA`). ---
+
+**User**
+
+Make changes to the README, SUMMARY and changelog files to reflect recent updates. ---
+
+**Cursor**
+
+Got it. I’ll read the current root `README.md`, `SUMMARY.md`, `CHANGELOG.md` plus the CAD DataDictionary `README.md`/`CHANGELOG.md`, then update them to include the new **CAD export field definitions document** we added (`cad_export_field_definitions.md`) and note the latest structure/content changes. ```markdown
+# Standards
+
+This folder is the **standards repository** for exports and reference materials used by the City of Hackensack (e.g., CAD, RMS, state/federal reporting). ## Data dictionaries (CAD, RMS, and cross-system)
+
+Data dictionary artifacts are organized under:
+
+- `CAD/DataDictionary/`
+- `RMS/DataDictionary/`
+- `CAD_RMS/DataDictionary/` (cross-system mapping + merge rules)
+
+Each DataDictionary uses the same layout:
+
+- `current/schema/`: schemas + field maps (JSON)
+- `current/domains/`: allowed value sets / enumerations (JSON)
+- `current/defaults/`: defaults / standardization rules (JSON)
+- `archive/`: dated snapshots (read-only historical copies)
+- `templates/`: reusable templates for new dictionary items
+- `scripts/`: helper scripts
+
+## Recommended JSON placement
+
+- **Cross-system**
+  - `CAD_RMS/DataDictionary/current/schema/cad_to_rms_field_map.json`
+  - `CAD_RMS/DataDictionary/current/schema/rms_to_cad_field_map.json`
+
+## CAD export field definitions
+
+Draft CAD export field definitions and validation rules live at:
+
+- `CAD/DataDictionary/current/schema/cad_export_field_definitions.md`
+
+## Bootstrap script
+
+Use `CAD_RMS/DataDictionary/scripts/init_cad_rms_standards.ps1` to create/repair the folder scaffolding and optionally place incoming JSON files into the correct locations. ## Documentation
+
+In addition to the root docs, each DataDictionary root includes its own:
+
+- `README.md`
+- `SUMMARY.md`
+- `CHANGELOG.md`
+
+## Local Git
+
+This folder is initialized as a **local Git repository** (see `.git/`) and includes a `.gitignore` to keep common OS/temp/editor noise out of commits. ```
+
+```markdown
+# Summary (current state)
+
+## What exists now
+
+- **CAD**
+  - `CAD/DataDictionary/current/schema/` contains:
+    - `cad_to_rms_field_map.json`
+    - `rms_to_cad_field_map.json`
+    - `cad_export_field_definitions.md`
+- **RMS**
+  - `RMS/DataDictionary/` scaffolding exists (schema/domains/defaults + archive/templates/scripts)
+- **Cross-system**
+  - `CAD_RMS/DataDictionary/current/schema/` contains:
+    - `cad_to_rms_field_map.json`
+    - `rms_to_cad_field_map.json`
+
+## Notes
+
+- The two cross-system field maps are intentionally kept in **both** locations:
+  - Original location under `CAD/DataDictionary/current/schema/` (existing)
+  - Canonical cross-system location under `CAD_RMS/DataDictionary/current/schema/` (new)
+
+- A bootstrap script is available at:
+  - `CAD_RMS/DataDictionary/scripts/init_cad_rms_standards.ps1`
+
+- Root + per-DataDictionary documentation exists:
+  - Root: `README.md`, `SUMMARY.md`, `CHANGELOG.md`
+  - Per DataDictionary: `*/DataDictionary/{README.md,SUMMARY.md,CHANGELOG.md}`
+
+- This folder is a local Git repo:
+  - `.git/` and `.gitignore` are present
+
+
+
+```
+
+```markdown
+# Changelog
+
+All notable changes to this Standards folder (structure and key artifacts) will be documented here. ## 2025-12-15
+
+- Created CAD/RMS/CAD_RMS `DataDictionary/` scaffolding:
+  - `current/schema`, `current/domains`, `current/defaults`
+  - `archive`, `templates`, `scripts`
+- Added root documentation files:
+  - `README.md`, `SUMMARY.md`, `CHANGELOG.md`
+- Added per-DataDictionary documentation files:
+  - `CAD/DataDictionary/{README.md,SUMMARY.md,CHANGELOG.md}`
+  - `RMS/DataDictionary/{README.md,SUMMARY.md,CHANGELOG.md}`
+  - `CAD_RMS/DataDictionary/{README.md,SUMMARY.md,CHANGELOG.md}`
+- Added bootstrap scaffolding + placement script:
+  - `CAD_RMS/DataDictionary/scripts/init_cad_rms_standards.ps1`
+- Copied cross-system field maps into the canonical cross-system location:
+  - `CAD_RMS/DataDictionary/current/schema/cad_to_rms_field_map.json`
+  - `CAD_RMS/DataDictionary/current/schema/rms_to_cad_field_map.json`
+- Initialized local Git repository:
+  - `.git/` created (branch `main`)
+  - `.gitignore` added
+
+## 2025-12-17
+
+- Added CAD export field definitions / validation rules (draft):
+  - `CAD/DataDictionary/current/schema/cad_export_field_definitions.md`
+- Updated summaries to reference the new CAD definitions document. ```
+
+```markdown
+# CAD DataDictionary
+
+This folder stores the **CAD export** data dictionary artifacts: schemas, value domains, defaults, and supporting scripts. ## CAD export field definitions
+
+The draft “data dictionary style” definitions (formats, derivations, allowed values, validations) for the CAD export live at:
+
+- `current/schema/cad_export_field_definitions.md`
+
+## Layout
+
+- `current/schema/`: schemas + field maps (JSON)
+- `current/domains/`: allowed value sets / enumerations (JSON)
+- `current/defaults/`: default rules (JSON)
+- `archive/`: dated snapshots
+- `templates/`: reusable templates
+- `scripts/`: helper scripts
+
+
+
+```
+
+```markdown
+# Changelog (CAD DataDictionary)
+
+## 2025-12-15
+
+- Standardized folder scaffolding (`current/schema|domains|defaults`, `archive`, `templates`, `scripts`). - Confirmed presence of cross-system field maps under `current/schema/`. ## 2025-12-17
+
+- Added draft CAD export field definitions / validation rules:
+  - `current/schema/cad_export_field_definitions.md`
+
+
+
+```
+
+Good news: the content updates are in; the only remaining issues are minor markdown lint warnings about **extra blank lines at the ends** of a few docs. I’ll trim those trailing blank lines so the README/SUMMARY/CHANGELOGs are clean. ```markdown
+# Standards
+
+This folder is the **standards repository** for exports and reference materials used by the City of Hackensack (e.g., CAD, RMS, state/federal reporting). ## Data dictionaries (CAD, RMS, and cross-system)
+
+Data dictionary artifacts are organized under:
+
+- `CAD/DataDictionary/`
+- `RMS/DataDictionary/`
+- `CAD_RMS/DataDictionary/` (cross-system mapping + merge rules)
+
+Each DataDictionary uses the same layout:
+
+- `current/schema/`: schemas + field maps (JSON)
+- `current/domains/`: allowed value sets / enumerations (JSON)
+- `current/defaults/`: defaults / standardization rules (JSON)
+- `archive/`: dated snapshots (read-only historical copies)
+- `templates/`: reusable templates for new dictionary items
+- `scripts/`: helper scripts
+
+## Recommended JSON placement
+
+- **Cross-system**
+  - `CAD_RMS/DataDictionary/current/schema/cad_to_rms_field_map.json`
+  - `CAD_RMS/DataDictionary/current/schema/rms_to_cad_field_map.json`
+
+## CAD export field definitions
+
+Draft CAD export field definitions and validation rules live at:
+
+- `CAD/DataDictionary/current/schema/cad_export_field_definitions.md`
+
+## Bootstrap script
+
+Use `CAD_RMS/DataDictionary/scripts/init_cad_rms_standards.ps1` to create/repair the folder scaffolding and optionally place incoming JSON files into the correct locations. ## Documentation
+
+In addition to the root docs, each DataDictionary root includes its own:
+
+- `README.md`
+- `SUMMARY.md`
+- `CHANGELOG.md`
+
+## Local Git
+
+This folder is initialized as a **local Git repository** (see `.git/`) and includes a `.gitignore` to keep common OS/temp/editor noise out of commits. ```
+
+```markdown
+# Summary (current state)
+
+## What exists now
+
+- **CAD**
+  - `CAD/DataDictionary/current/schema/` contains:
+    - `cad_to_rms_field_map.json`
+    - `rms_to_cad_field_map.json`
+    - `cad_export_field_definitions.md`
+- **RMS**
+  - `RMS/DataDictionary/` scaffolding exists (schema/domains/defaults + archive/templates/scripts)
+- **Cross-system**
+  - `CAD_RMS/DataDictionary/current/schema/` contains:
+    - `cad_to_rms_field_map.json`
+    - `rms_to_cad_field_map.json`
+
+## Notes
+
+- The two cross-system field maps are intentionally kept in **both** locations:
+  - Original location under `CAD/DataDictionary/current/schema/` (existing)
+  - Canonical cross-system location under `CAD_RMS/DataDictionary/current/schema/` (new)
+
+- A bootstrap script is available at:
+  - `CAD_RMS/DataDictionary/scripts/init_cad_rms_standards.ps1`
+
+- Root + per-DataDictionary documentation exists:
+  - Root: `README.md`, `SUMMARY.md`, `CHANGELOG.md`
+  - Per DataDictionary: `*/DataDictionary/{README.md,SUMMARY.md,CHANGELOG.md}`
+
+- This folder is a local Git repo:
+  - `.git/` and `.gitignore` are present
+
+```
+
+```markdown
+# Changelog
+
+All notable changes to this Standards folder (structure and key artifacts) will be documented here. ## 2025-12-15
+
+- Created CAD/RMS/CAD_RMS `DataDictionary/` scaffolding:
+  - `current/schema`, `current/domains`, `current/defaults`
+  - `archive`, `templates`, `scripts`
+- Added root documentation files:
+  - `README.md`, `SUMMARY.md`, `CHANGELOG.md`
+- Added per-DataDictionary documentation files:
+  - `CAD/DataDictionary/{README.md,SUMMARY.md,CHANGELOG.md}`
+  - `RMS/DataDictionary/{README.md,SUMMARY.md,CHANGELOG.md}`
+  - `CAD_RMS/DataDictionary/{README.md,SUMMARY.md,CHANGELOG.md}`
+- Added bootstrap scaffolding + placement script:
+  - `CAD_RMS/DataDictionary/scripts/init_cad_rms_standards.ps1`
+- Copied cross-system field maps into the canonical cross-system location:
+  - `CAD_RMS/DataDictionary/current/schema/cad_to_rms_field_map.json`
+  - `CAD_RMS/DataDictionary/current/schema/rms_to_cad_field_map.json`
+- Initialized local Git repository:
+  - `.git/` created (branch `main`)
+  - `.gitignore` added
+
+## 2025-12-17
+
+- Added CAD export field definitions / validation rules (draft):
+  - `CAD/DataDictionary/current/schema/cad_export_field_definitions.md`
+- Updated summaries to reference the new CAD definitions document. ```
+
+```markdown
+# CAD DataDictionary
+
+This folder stores the **CAD export** data dictionary artifacts: schemas, value domains, defaults, and supporting scripts. ## CAD export field definitions
+
+The draft “data dictionary style” definitions (formats, derivations, allowed values, validations) for the CAD export live at:
+
+- `current/schema/cad_export_field_definitions.md`
+
+## Layout
+
+- `current/schema/`: schemas + field maps (JSON)
+- `current/domains/`: allowed value sets / enumerations (JSON)
+- `current/defaults/`: default rules (JSON)
+- `archive/`: dated snapshots
+- `templates/`: reusable templates
+- `scripts/`: helper scripts
+
+```
+
+```markdown
+# Changelog (CAD DataDictionary)
+
+## 2025-12-15
+
+- Standardized folder scaffolding (`current/schema|domains|defaults`, `archive`, `templates`, `scripts`). - Confirmed presence of cross-system field maps under `current/schema/`. ## 2025-12-17
+
+- Added draft CAD export field definitions / validation rules:
+  - `current/schema/cad_export_field_definitions.md`
+
+```
+
+### Docs updated to reflect the latest CAD work
+
+- **Root `README.md`**: now includes the new CAD export definitions doc path  
+  - `CAD/DataDictionary/current/schema/cad_export_field_definitions.md`
+- **Root `SUMMARY.md`**: lists `cad_export_field_definitions.md` under CAD schema contents. - **Root `CHANGELOG.md`**: added a `2025-12-17` entry for the CAD export definitions doc + summary updates. - **`CAD/DataDictionary/README.md`**: now calls out `current/schema/cad_export_field_definitions.md` as the draft field definitions source. - **`CAD/DataDictionary/CHANGELOG.md`**: added a `2025-12-17` entry for the new definitions doc. Also cleaned up trailing blank lines so markdown lint is clean. ---
+
+**User**
+
+I'm preparing to export this chat. Please generate a descriptive filename that summarizes the main topic or task of this conversation. Requirements:
+• 4-8 words
+• Title Case (capitalize major words)
+• Replace spaces with underscores
+• Include .md extension
+• No dates or special characters
+
+Output only the filename, nothing else. After export, I'll process it using: scripts\quick_process_chatlog.bat
+
+---
+
+**Cursor**
+
+Standards_DataDictionary_Scaffolding_And_Documentation.md

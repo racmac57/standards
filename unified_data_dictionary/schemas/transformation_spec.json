@@ -42,7 +42,7 @@
           "outputs": ["validation_report"],
           "parameters": {
             "expected_cad_cols": ["ReportNumberNew", "Incident", "FullAddress2", "TimeOfCall"],
-            "expected_rms_cols": ["CaseNumber", "Location", "IncidentType1"]
+            "expected_rms_cols": ["CaseNumber", "FullAddress", "Zone", "IncidentType1"]
           },
           "error_handling": "Log warning for missing columns; continue with available fields"
         }
@@ -228,7 +228,7 @@
           "outputs": ["merged_df"],
           "parameters": {
             "cad_field": "FullAddress2",
-            "rms_field": "Location",
+            "rms_field": "FullAddress",
             "condition": "pd.isna(FullAddress2) or Address_Needs_Review == True",
             "flag_col": "Address_Backfilled"
           },

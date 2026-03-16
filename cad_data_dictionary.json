@@ -1,0 +1,314 @@
+{
+  "name": "CAD Export Data Dictionary",
+  "version": "1.0",
+  "generated_on": "2026-02-10",
+  "source_files": [
+    "cad_export_field_definitions.md",
+    "cad_field_map_latest.json"
+  ],
+  "fields": [
+    {
+      "system": "CAD",
+      "source_field_name": "ReportNumberNew",
+      "internal_field_name": "ReportNumberNew",
+      "esri_field_name": "ReportNumberNew",
+      "data_type": "string",
+      "description": "CAD report identifier (primary key / join key to RMS Case Number).",
+      "regex": "^\\d{2}-\\d{6}([A-Z])?$",
+      "allowed_values_raw": null,
+      "derivation_logic": [
+        "`YY` = last two digits of the **year the report was created**",
+        "`NNNNNN` = sequential number starting at `000001` on January 01 each year",
+        "**Supplementals**: same base number, with a suffix letter starting at `A` (then `B`, `C`, \u2026)",
+        "**Validation rules**:",
+        "Must be non-null.",
+        "Must match the regex.",
+        "Must not be parsed as numeric (keep as text to preserve leading zeros)."
+      ],
+      "validation_rules": [
+        "Must be non-null.",
+        "Must match the regex.",
+        "Must not be parsed as numeric (keep as text to preserve leading zeros)."
+      ]
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "Incident",
+      "internal_field_name": "Incident",
+      "esri_field_name": "Incident",
+      "data_type": "string",
+      "description": "Incident type descriptor (typically a code + description).",
+      "regex": "^.+\\s-\\s.+$",
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": [
+        "Must be non-null.",
+        "Must contain `\" - \"` (flag rows missing delimiter)."
+      ]
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "How Reported",
+      "internal_field_name": "HowReported",
+      "esri_field_name": "How Reported",
+      "data_type": "string",
+      "description": "Method by which the call/incident was reported/initiated.",
+      "regex": null,
+      "allowed_values_raw": [
+        "`9-1-1`",
+        "`Walk-In`",
+        "`Phone`",
+        "`Self-Initiated`",
+        "`Radio`",
+        "`Teletype`",
+        "`Fax`",
+        "`Other - See Notes`",
+        "`eMail`",
+        "`Mail`",
+        "`Virtual Patrol`",
+        "`Canceled Call`",
+        "**Important**:",
+        "`9-1-1` **must be kept as text** and must not be displayed/parsed as a date (e.g., Excel auto-formatting).",
+        "**Observed in sample** (from `cad_data_quality_report.md`): `Phone`, `9-1-1`, `Walk-In`, `Other - See Notes`, `Radio`."
+      ],
+      "derivation_logic": null,
+      "validation_rules": null
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "FullAddress2",
+      "internal_field_name": "FullAddress2",
+      "esri_field_name": "FullAddress2",
+      "data_type": "string",
+      "description": "Full incident location address string.",
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": [
+        "Must be non-null.",
+        "Must contain at least one comma."
+      ]
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "PDZone",
+      "internal_field_name": "PDZone",
+      "esri_field_name": "PDZone",
+      "data_type": null,
+      "description": null,
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": null
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "Grid",
+      "internal_field_name": "Grid",
+      "esri_field_name": "Grid",
+      "data_type": "string",
+      "description": "CAD grid / map grid identifier.",
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": [
+        "May be null (missing observed in sample).",
+        "If present, should match a controlled list of known grid codes (to be defined from GIS/grid reference)."
+      ]
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "Time of Call",
+      "internal_field_name": "TimeOfCall",
+      "esri_field_name": "TimeOfCall",
+      "data_type": null,
+      "description": null,
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": null
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "cYear",
+      "internal_field_name": "cYear",
+      "esri_field_name": "cYear",
+      "data_type": "integer",
+      "description": "Calendar year of `TimeofCall` (derived).",
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": [
+        "`cYear = YEAR(TimeofCall)`",
+        "**Type**: integer.",
+        "**Validation rules**:",
+        "Must be non-null.",
+        "Must equal the year portion of `TimeofCall`."
+      ],
+      "validation_rules": [
+        "Must be non-null.",
+        "Must equal the year portion of `TimeofCall`."
+      ]
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "cMonth",
+      "internal_field_name": "cMonth",
+      "esri_field_name": "cMonth",
+      "data_type": "string",
+      "description": "Calendar month of `TimeofCall` (derived).",
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": [
+        "If numeric: `cMonth = FORMAT(TimeofCall, \"MM\")`",
+        "If name: `cMonth = FORMAT(TimeofCall, \"MMMM\")`"
+      ],
+      "validation_rules": [
+        "Must be non-null.",
+        "Must represent a valid time-of-day."
+      ]
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "HourMinuetsCalc",
+      "internal_field_name": "Hour",
+      "esri_field_name": "Hour",
+      "data_type": null,
+      "description": null,
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": null
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "DayofWeek",
+      "internal_field_name": "DayofWeek",
+      "esri_field_name": "DayofWeek",
+      "data_type": "datetime",
+      "description": "Day name for `TimeofCall` (derived).",
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": [
+        "`DayofWeek = FORMAT(TimeofCall, \"dddd\")`"
+      ],
+      "validation_rules": [
+        "Must be non-null.",
+        "Should be \u2265 `TimeofCall` (flag if earlier)."
+      ]
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "Time Dispatched",
+      "internal_field_name": "TimeDispatched",
+      "esri_field_name": null,
+      "data_type": null,
+      "description": null,
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": null
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "Time Out",
+      "internal_field_name": "TimeOut",
+      "esri_field_name": null,
+      "data_type": null,
+      "description": null,
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": null
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "Time In",
+      "internal_field_name": "TimeIn",
+      "esri_field_name": null,
+      "data_type": null,
+      "description": null,
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": null
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "Time Spent",
+      "internal_field_name": "TimeSpent",
+      "esri_field_name": null,
+      "data_type": null,
+      "description": null,
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": null
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "Time Response",
+      "internal_field_name": "TimeResponse",
+      "esri_field_name": null,
+      "data_type": null,
+      "description": null,
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": null
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "Officer",
+      "internal_field_name": "Officer",
+      "esri_field_name": "Officer",
+      "data_type": "string",
+      "description": "Officer identifier for the call (primary/assigned officer).",
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": [
+        "Must be non-null.",
+        "Should match a standardized officer naming/badge convention (recommend aligning to `CAD/SCRPA/Assignment_Master_V2.csv` standardization outputs)."
+      ]
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "Disposition",
+      "internal_field_name": "Disposition",
+      "esri_field_name": "Disposition",
+      "data_type": "string",
+      "description": "Disposition / outcome code or label for the CAD call.",
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": [
+        "Must be non-null.",
+        "Must be limited to a controlled domain (to be defined once the value list is extracted from the export)."
+      ]
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "Response Type",
+      "internal_field_name": "Response_Type",
+      "esri_field_name": "Response_Type",
+      "data_type": null,
+      "description": null,
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": null
+    },
+    {
+      "system": "CAD",
+      "source_field_name": "CADNotes",
+      "internal_field_name": "CADNotes",
+      "esri_field_name": null,
+      "data_type": null,
+      "description": null,
+      "regex": null,
+      "allowed_values_raw": null,
+      "derivation_logic": null,
+      "validation_rules": null
+    }
+  ]
+}

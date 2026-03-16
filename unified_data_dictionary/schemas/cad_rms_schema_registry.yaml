@@ -13,9 +13,9 @@ fields:
   # ==============================
   case_number:
     aliases:
-      - "Case Number"     # RMS
+      - "Case Number" # RMS
       - "ReportNumberNew" # CAD
-      - "CaseID"          # Future compatibility
+      - "CaseID" # Future compatibility
     type: "string"
     required: true
     validation:
@@ -30,67 +30,67 @@ fields:
   # ==============================
   incident_date:
     aliases:
-      - "Incident Date"   # RMS
-      - "cDate"           # CAD
-      - "OccurredDate"    # Legacy system
+      - "Incident Date" # RMS
+      - "cDate" # CAD
+      - "OccurredDate" # Legacy system
     type: "date"
     required: true
     format: "%Y-%m-%d"
     description: "Date incident occurred"
     example: "2025-07-15"
     group: "temporal"
-  
+
   call_time:
     aliases:
-      - "Time of Call"    # CAD
-      - "CallReceived"    # Legacy
+      - "Time of Call" # CAD
+      - "CallReceived" # Legacy
     type: "datetime"
     required: false
     format: "%H:%M:%S"
     description: "Time call was received"
     example: "14:35:22"
     group: "temporal"
-  
+
   dispatch_time:
     aliases:
       - "Time Dispatched" # CAD
-      - "UnitDispatched"  # Legacy
+      - "UnitDispatched" # Legacy
     type: "datetime"
     required: false
     format: "%H:%M:%S"
     description: "Time unit was dispatched"
     example: "14:37:45"
     group: "temporal"
-  
+
   arrival_time:
     aliases:
-      - "Time Out"        # CAD
-      - "UnitArrived"     # Legacy
+      - "Time Out" # CAD
+      - "UnitArrived" # Legacy
     type: "datetime"
     required: false
     format: "%H:%M:%S"
     description: "Time unit arrived on scene"
     example: "14:42:12"
     group: "temporal"
-  
+
   clear_time:
     aliases:
-      - "Time In"         # CAD
-      - "UnitCleared"     # Legacy 
+      - "Time In" # CAD
+      - "UnitCleared" # Legacy
     type: "datetime"
     required: false
     format: "%H:%M:%S"
     description: "Time unit cleared scene"
     example: "15:22:37"
     group: "temporal"
-  
+
   # ==============================
   # Spatial Fields
   # ==============================
   address:
     aliases:
-      - "FullAddress2"    # CAD
-      - "Location"        # RMS
+      - "FullAddress2" # CAD
+      - "FullAddress" # RMS (export header; not "Location")
       - "IncidentAddress" # Legacy
     type: "string"
     required: true
@@ -103,10 +103,10 @@ fields:
     description: "Incident location"
     example: "123 MAIN ST, HACKENSACK, NJ"
     group: "spatial"
-  
+
   address_type:
     aliases:
-      - "LocationType"    # RMS
+      - "LocationType" # RMS
     type: "string"
     required: false
     computed: true
@@ -120,29 +120,29 @@ fields:
 
   zone:
     aliases:
-      - "PDZone"          # CAD
-      - "Zone"            # RMS
-      - "Beat"            # Legacy
+      - "PDZone" # CAD
+      - "Zone" # RMS
+      - "Beat" # Legacy
     type: "string"
     required: false
     description: "Police district zone"
     example: "Z1"
     group: "spatial"
-  
+
   grid:
     aliases:
-      - "Grid"            # CAD/RMS
-      - "GridID"          # Legacy
+      - "Grid" # CAD/RMS
+      - "GridID" # Legacy
     type: "string"
     required: false
     description: "Map grid identifier"
     example: "4B"
     group: "spatial"
-  
+
   latitude:
     aliases:
-      - "Lat"             # GIS
-      - "Y"               # Legacy GIS
+      - "Lat" # GIS
+      - "Y" # Legacy GIS
     type: "float"
     required: false
     computed: true
@@ -152,12 +152,12 @@ fields:
     description: "Geocoded latitude"
     example: "40.8857"
     group: "spatial"
-  
+
   longitude:
     aliases:
-      - "Lon"             # GIS
-      - "Long"            # GIS
-      - "X"               # Legacy GIS
+      - "Lon" # GIS
+      - "Long" # GIS
+      - "X" # Legacy GIS
     type: "float"
     required: false
     computed: true
@@ -167,25 +167,25 @@ fields:
     description: "Geocoded longitude"
     example: "-74.0435"
     group: "spatial"
-  
+
   # ==============================
   # Classification Fields
   # ==============================
   incident_type:
     aliases:
-      - "Incident"        # CAD
-      - "Incident Type"   # RMS
-      - "CallType"        # Legacy
+      - "Incident" # CAD
+      - "Incident Type" # RMS
+      - "CallType" # Legacy
     type: "string"
     required: true
     description: "Incident classification"
     example: "SUSPICIOUS PERSON"
     group: "classification"
-  
+
   priority:
     aliases:
-      - "Priority"        # CAD
-      - "CallPriority"    # Legacy
+      - "Priority" # CAD
+      - "CallPriority" # Legacy
     type: "integer"
     required: false
     validation:
@@ -194,31 +194,38 @@ fields:
     description: "Call priority (1-5)"
     example: "2"
     group: "classification"
-  
+
   how_reported:
     aliases:
-      - "HowReported"     # CAD
-      - "CallSource"      # Legacy
+      - "HowReported" # CAD
+      - "CallSource" # Legacy
+      - "How Reported" # CAD export header
     type: "string"
     required: false
     enum:
-      - "911"
-      - "WALK_IN"
-      - "PHONE"
-      - "SELF_INITIATED"
-      - "OTHER"
-    description: "How incident was reported"
-    example: "911"
+      - "9-1-1" # Canonical value (matches canonical_schema.json)
+      - "Phone"
+      - "Walk-in"
+      - "Self-Initiated"
+      - "Radio"
+      - "Other"
+    description: "How incident was reported (method of contact)"
+    example: "9-1-1"
     group: "classification"
-  
+    notes: |
+      Valid values ONLY: 9-1-1, Phone, Walk-in, Self-Initiated, Radio, Other
+      Legacy values (Teletype, Fax, eMail, Mail, Virtual Patrol, Canceled Call) 
+      should be mapped to appropriate canonical value during ETL.
+      IMPORTANT: 9-1-1 must be stored as TEXT to prevent Excel date conversion.
+
   # ==============================
   # Personnel Fields
   # ==============================
   officer:
     aliases:
-      - "Officer"         # CAD
-      - "Officer Name"    # RMS
-      - "PrimaryOfficer"  # Legacy
+      - "Officer" # CAD
+      - "Officer Name" # RMS
+      - "PrimaryOfficer" # Legacy
     type: "string"
     required: false
     transformations:
@@ -226,11 +233,11 @@ fields:
     description: "Primary officer"
     example: "PO J SMITH #1234"
     group: "personnel"
-  
+
   badge_number:
     aliases:
-      - "Badge"           # RMS
-      - "OfficerID"       # Legacy
+      - "Badge" # RMS
+      - "OfficerID" # Legacy
     type: "string"
     required: false
     computed: true
@@ -239,11 +246,11 @@ fields:
     description: "Officer badge number"
     example: "1234"
     group: "personnel"
-  
+
   platoon:
     aliases:
-      - "Platoon"         # RMS
-      - "Squad"           # Legacy
+      - "Platoon" # RMS
+      - "Squad" # Legacy
     type: "string"
     required: false
     enum:
@@ -255,14 +262,14 @@ fields:
     description: "Officer platoon assignment"
     example: "B"
     group: "personnel"
-  
+
   # ==============================
   # Status Fields
   # ==============================
   disposition:
     aliases:
-      - "Disposition"     # CAD
-      - "Status"          # RMS
+      - "Disposition" # CAD
+      - "Status" # RMS
       - "CallDisposition" # Legacy
     type: "string"
     required: false
@@ -279,7 +286,7 @@ fields:
     description: "Call disposition"
     example: "REPORT_TAKEN"
     group: "status"
-  
+
   # ==============================
   # Integration & Quality Fields
   # ==============================
@@ -293,19 +300,19 @@ fields:
       - "RMS_ONLY"
     description: "Integration result type"
     group: "integration"
-  
+
   match_confidence:
     type: "string"
     required: true
     computed: true
     enum:
-      - "HIGH"    # Direct case number match
-      - "MEDIUM"  # Secondary field match
-      - "LOW"     # Fuzzy match
-      - "NONE"    # No match
+      - "HIGH" # Direct case number match
+      - "MEDIUM" # Secondary field match
+      - "LOW" # Fuzzy match
+      - "NONE" # No match
     description: "Confidence in CAD/RMS matching"
     group: "integration"
-  
+
   data_quality_score:
     type: "integer"
     required: true
@@ -316,7 +323,7 @@ fields:
     description: "Overall data quality score"
     example: "85"
     group: "quality"
-  
+
   data_source:
     type: "string"
     required: true
@@ -326,21 +333,21 @@ fields:
       - "UNIFIED"
     description: "Data source system"
     group: "metadata"
-  
+
   source_file:
     type: "string"
     required: true
     description: "Source file name"
     example: "2025_07_CAD.xlsx"
     group: "metadata"
-  
+
   processing_timestamp:
     type: "datetime"
     required: true
     computed: true
     description: "When record was processed"
     group: "metadata"
-  
+
   pipeline_version:
     type: "string"
     required: true
@@ -365,17 +372,17 @@ transformations:
       - "CIR → CIRCLE"
       - "LN → LANE"
       - "DR → DRIVE"
-  
+
   add_city_state:
     description: "Ensure city and state in address"
     default_city: "HACKENSACK"
     default_state: "NJ"
-  
+
   extract_block:
     description: "Extract block number from address"
     regex: "^(\\d+)"
     target_field: "block_number"
-  
+
   standardize_officer_name:
     description: "Standardize officer name format"
     format: "[RANK] [LAST_NAME] #[BADGE]"

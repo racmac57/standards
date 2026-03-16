@@ -1,0 +1,861 @@
+Paste the single-file template below into Cursor. Replace `DATA` with real rows. Keep class names and layout. Cursor will wire charts, map, and exports.
+
+Key layout rules
+
+1. Header stays fixed height. Title left. Date range and export buttons right.
+2. Row 1 shows KPI cards. Row 2 shows charts and map. Row 3 shows the searchable table.
+3. Use CSS variables only for theme changes.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FCE / PA Activity Report</title>
+
+  <style>
+    :root{
+      --hpd-navy:#0d233c;
+      --ink:#0b1220;
+      --muted:#5b6678;
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --line:#e3e8f1;
+      --accent:#1b5aa6;
+      --warn:#b45309;
+      --good:#0f766e;
+      --radius:14px;
+      --shadow: 0 8px 24px rgba(13,35,60,.10);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: "DIN Condensed","DIN Next","DIN","Montserrat",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--ink);
+      background:var(--bg);
+    }
+
+    .page{
+      max-width:1280px;
+      margin:0 auto;
+      padding:18px 18px 32px;
+    }
+
+    .topbar{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:14px 16px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+
+    .titleblock{min-width:280px}
+    .title{
+      margin:0;
+      font-size:26px;
+      letter-spacing:.2px;
+      color:var(--hpd-navy);
+      line-height:1.1;
+    }
+    .subtitle{
+      margin:6px 0 0;
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .meta{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fbfcff;
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    .actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+    .btn{
+      border:1px solid var(--line);
+      background:var(--card);
+      color:var(--ink);
+      border-radius:10px;
+      padding:9px 10px;
+      font-size:12px;
+      cursor:pointer;
+    }
+    .btn.primary{
+      background:var(--hpd-navy);
+      border-color:var(--hpd-navy);
+      color:#fff;
+    }
+
+    .filters{
+      margin-top:14px;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:12px 12px;
+      display:grid;
+      grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+      gap:10px;
+    }
+
+    .field label{
+      display:block;
+      font-size:11px;
+      color:var(--muted);
+      margin:0 0 6px;
+    }
+    .field input,.field select{
+      width:100%;
+      padding:9px 10px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:#fbfcff;
+      font-size:12px;
+      outline:none;
+    }
+
+    .grid{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
+
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:12px;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:12px 12px;
+    }
+
+    .kpi-label{
+      font-size:12px;
+      color:var(--muted);
+      margin:0 0 8px;
+    }
+    .kpi-value{
+      font-size:26px;
+      margin:0;
+      color:var(--hpd-navy);
+      letter-spacing:.2px;
+      line-height:1;
+    }
+    .kpi-foot{
+      margin:8px 0 0;
+      font-size:11px;
+      color:var(--muted);
+      font-family:var(--mono);
+    }
+
+    .row2{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap:14px;
+      align-items:stretch;
+    }
+
+    .panel-title{
+      margin:0 0 10px;
+      font-size:14px;
+      color:var(--hpd-navy);
+      letter-spacing:.2px;
+    }
+
+    .charts{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+
+    .chartwrap{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px;
+      background:#fbfcff;
+      min-height:210px;
+    }
+
+    canvas{width:100%; height:180px}
+
+    .mapwrap{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px;
+      background:#fbfcff;
+      min-height:460px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .mapbox{
+      border:1px dashed #cbd5e1;
+      border-radius:12px;
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:12px;
+      background:#ffffff;
+    }
+
+    .row3{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+
+    .tablebar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .search{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      width:min(560px, 100%);
+    }
+    .search input{
+      flex:1;
+      padding:9px 10px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:#fbfcff;
+      font-size:12px;
+      outline:none;
+    }
+    .count{
+      font-size:12px;
+      color:var(--muted);
+      font-family:var(--mono);
+    }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+    }
+    thead th{
+      position:sticky;
+      top:0;
+      background:#f3f6fc;
+      color:var(--hpd-navy);
+      font-size:12px;
+      text-align:left;
+      padding:10px 10px;
+      border-bottom:1px solid var(--line);
+      cursor:pointer;
+      user-select:none;
+    }
+    tbody td{
+      font-size:12px;
+      padding:10px 10px;
+      border-bottom:1px solid var(--line);
+      vertical-align:top;
+      color:var(--ink);
+    }
+    tbody tr:hover td{background:#fbfcff}
+    tbody tr:last-child td{border-bottom:none}
+
+    .tag{
+      display:inline-flex;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-size:11px;
+      color:var(--muted);
+      background:#fbfcff;
+      white-space:nowrap;
+    }
+    .tag.good{border-color:#99f6e4; color:var(--good)}
+    .tag.warn{border-color:#fed7aa; color:var(--warn)}
+
+    .note{
+      margin-top:10px;
+      font-size:11px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+
+    @media (max-width: 1100px){
+      .kpis{grid-template-columns: repeat(2, 1fr)}
+      .row2{grid-template-columns: 1fr}
+      .charts{grid-template-columns: 1fr}
+      .filters{grid-template-columns: 1fr 1fr}
+    }
+
+    @media print{
+      body{background:#fff}
+      .actions,.filters,.search,.note{display:none}
+      .page{max-width:none; padding:0}
+      .card,.topbar{box-shadow:none}
+      thead th{position:static}
+      .row2{grid-template-columns: 1fr}
+      .mapbox{min-height:240px}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <div class="topbar">
+      <div class="titleblock">
+        <h1 class="title">FCE / PA Activity Report</h1>
+        <div class="subtitle" id="subTitleLine">Hackensack Police Department. Safe Streets Operations Control Center.</div>
+      </div>
+
+      <div class="meta">
+        <div class="pill" id="datePill">Date range: 01/01/2026 to 01/31/2026</div>
+        <div class="pill" id="scopePill">Scope: All</div>
+
+        <div class="actions">
+          <button class="btn" id="btnExportCsv">Export CSV</button>
+          <button class="btn" id="btnPrint">Print</button>
+          <button class="btn primary" id="btnReset">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="field">
+        <label>Date from</label>
+        <input type="date" id="fDateFrom" />
+      </div>
+      <div class="field">
+        <label>Date to</label>
+        <input type="date" id="fDateTo" />
+      </div>
+      <div class="field">
+        <label>Officer</label>
+        <select id="fOfficer"></select>
+      </div>
+      <div class="field">
+        <label>Type</label>
+        <select id="fType"></select>
+      </div>
+      <div class="field">
+        <label>Post / Grid</label>
+        <select id="fPostGrid"></select>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <div class="kpis">
+        <div class="card">
+          <div class="kpi-label">Total events</div>
+          <div class="kpi-value" id="kpiTotal">0</div>
+          <div class="kpi-foot" id="kpiTotalFoot">rows: 0</div>
+        </div>
+
+        <div class="card">
+          <div class="kpi-label">Unique persons</div>
+          <div class="kpi-value" id="kpiPersons">0</div>
+          <div class="kpi-foot" id="kpiPersonsFoot">field: person_id</div>
+        </div>
+
+        <div class="card">
+          <div class="kpi-label">Unique locations</div>
+          <div class="kpi-value" id="kpiLocations">0</div>
+          <div class="kpi-foot" id="kpiLocationsFoot">field: location</div>
+        </div>
+
+        <div class="card">
+          <div class="kpi-label">High risk flags</div>
+          <div class="kpi-value" id="kpiFlags">0</div>
+          <div class="kpi-foot" id="kpiFlagsFoot">field: risk_flag</div>
+        </div>
+
+        <div class="card">
+          <div class="kpi-label">Avg duration</div>
+          <div class="kpi-value" id="kpiAvgDur">0</div>
+          <div class="kpi-foot" id="kpiAvgDurFoot">minutes</div>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="card">
+          <div class="panel-title">Activity patterns</div>
+
+          <div class="charts">
+            <div class="chartwrap">
+              <div class="panel-title" style="margin:0 0 8px;font-size:12px;color:var(--muted)">Events by day</div>
+              <canvas id="chByDay" width="600" height="200"></canvas>
+            </div>
+
+            <div class="chartwrap">
+              <div class="panel-title" style="margin:0 0 8px;font-size:12px;color:var(--muted)">Events by hour</div>
+              <canvas id="chByHour" width="600" height="200"></canvas>
+            </div>
+
+            <div class="chartwrap" style="grid-column:1 / -1">
+              <div class="panel-title" style="margin:0 0 8px;font-size:12px;color:var(--muted)">Events by post or grid</div>
+              <canvas id="chByPost" width="1200" height="220"></canvas>
+            </div>
+          </div>
+
+          <div class="note">
+            Cursor hook. Replace canvas rendering with Chart.js or ECharts if preferred.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="panel-title">Map</div>
+          <div class="mapwrap">
+            <div class="pill" id="mapPill">Map layer: points by location</div>
+            <div class="mapbox" id="mapBox">
+              Map placeholder. Cursor hook for Leaflet, Mapbox GL, or ArcGIS JS API.
+            </div>
+            <div class="note">
+              Map fields expected: lat, lon. Fallback: geocode later.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card row3">
+        <div class="panel-title">Event table</div>
+
+        <div class="tablebar">
+          <div class="search">
+            <input id="q" placeholder="Search case, officer, location, narrative" />
+          </div>
+          <div class="count" id="rowCount">0 rows</div>
+        </div>
+
+        <div style="overflow:auto; max-height:520px">
+          <table id="tbl">
+            <thead>
+              <tr>
+                <th data-key="date">Date</th>
+                <th data-key="time">Time</th>
+                <th data-key="type">Type</th>
+                <th data-key="officer">Officer</th>
+                <th data-key="post_grid">Post/Grid</th>
+                <th data-key="location">Location</th>
+                <th data-key="risk_flag">Flag</th>
+                <th data-key="narrative">Narrative</th>
+              </tr>
+            </thead>
+            <tbody id="tblBody"></tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          Cursor hook. Add row click for a right-side detail drawer with full narrative, persons, and attachments.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // =========================
+    // DATA CONTRACT
+    // Replace DATA with real rows
+    // =========================
+    const REPORT_META = {
+      agency: "Hackensack Police Department",
+      unit: "Safe Streets Operations Control Center",
+      report_name: "FCE / PA Activity Report",
+      date_from: "2026-01-01",
+      date_to: "2026-01-31"
+    }
+
+    const DATA = [
+      {
+        case_id: "FCE-0001",
+        date: "2026-01-04",
+        time: "19:42",
+        type: "FCE",
+        officer: "Smith J",
+        post_grid: "Post 3 / Grid 31",
+        location: "Main St & Anderson St",
+        person_id: "P-10293",
+        risk_flag: "No",
+        duration_min: 12,
+        lat: 40.885,
+        lon: -74.042,
+        narrative: "Subject checked. No enforcement action."
+      },
+      {
+        case_id: "PA-0002",
+        date: "2026-01-04",
+        time: "21:10",
+        type: "PA",
+        officer: "Rodriguez J",
+        post_grid: "Post 2 / Grid 21",
+        location: "River St",
+        person_id: "P-55120",
+        risk_flag: "Yes",
+        duration_min: 28,
+        lat: 40.889,
+        lon: -74.044,
+        narrative: "Proactive patrol. Suspicious activity noted."
+      }
+    ]
+
+    // =========================
+    // STATE
+    // =========================
+    let filtered = DATA.slice()
+    let sortKey = "date"
+    let sortDir = "asc"
+
+    // =========================
+    // INIT
+    // =========================
+    initMeta()
+    initFilters()
+    applyAll()
+
+    // Buttons
+    document.getElementById("btnReset").addEventListener("click", () => {
+      document.getElementById("q").value = ""
+      document.getElementById("fDateFrom").value = REPORT_META.date_from
+      document.getElementById("fDateTo").value = REPORT_META.date_to
+      document.getElementById("fOfficer").value = "All"
+      document.getElementById("fType").value = "All"
+      document.getElementById("fPostGrid").value = "All"
+      applyAll()
+    })
+
+    document.getElementById("btnPrint").addEventListener("click", () => window.print())
+
+    document.getElementById("btnExportCsv").addEventListener("click", () => exportCsv(filtered))
+
+    document.getElementById("q").addEventListener("input", () => applyAll())
+
+    // Sort headers
+    document.querySelectorAll("thead th").forEach(th => {
+      th.addEventListener("click", () => {
+        const key = th.getAttribute("data-key")
+        if (!key) return
+        if (sortKey === key) sortDir = (sortDir === "asc") ? "desc" : "asc"
+        else { sortKey = key; sortDir = "asc" }
+        applyAll()
+      })
+    })
+
+    function initMeta(){
+      document.title = REPORT_META.report_name
+      document.querySelector(".title").textContent = REPORT_META.report_name
+      document.getElementById("subTitleLine").textContent = REPORT_META.agency + ". " + REPORT_META.unit + "."
+      document.getElementById("datePill").textContent = "Date range: " + fmtDate(REPORT_META.date_from) + " to " + fmtDate(REPORT_META.date_to)
+      document.getElementById("fDateFrom").value = REPORT_META.date_from
+      document.getElementById("fDateTo").value = REPORT_META.date_to
+    }
+
+    function initFilters(){
+      fillSelect("fOfficer", unique(DATA.map(r => r.officer)))
+      fillSelect("fType", unique(DATA.map(r => r.type)))
+      fillSelect("fPostGrid", unique(DATA.map(r => r.post_grid)))
+
+      ;["fDateFrom","fDateTo","fOfficer","fType","fPostGrid"].forEach(id => {
+        document.getElementById(id).addEventListener("change", () => applyAll())
+      })
+    }
+
+    function fillSelect(id, values){
+      const el = document.getElementById(id)
+      el.innerHTML = ""
+      el.appendChild(new Option("All","All"))
+      values.forEach(v => el.appendChild(new Option(v, v)))
+    }
+
+    function applyAll(){
+      filtered = applyFilters(DATA)
+      filtered = applySearch(filtered)
+      filtered = sortRows(filtered, sortKey, sortDir)
+
+      renderKpis(filtered)
+      renderTable(filtered)
+      renderCharts(filtered)
+
+      document.getElementById("rowCount").textContent = filtered.length + " rows"
+      document.getElementById("scopePill").textContent = "Scope: " + scopeLabel()
+    }
+
+    function applyFilters(rows){
+      const d1 = document.getElementById("fDateFrom").value || "0000-01-01"
+      const d2 = document.getElementById("fDateTo").value || "9999-12-31"
+      const officer = document.getElementById("fOfficer").value
+      const type = document.getElementById("fType").value
+      const pg = document.getElementById("fPostGrid").value
+
+      return rows.filter(r => {
+        const okDate = (r.date >= d1 && r.date <= d2)
+        const okOfficer = (officer === "All") || (r.officer === officer)
+        const okType = (type === "All") || (r.type === type)
+        const okPg = (pg === "All") || (r.post_grid === pg)
+        return okDate && okOfficer && okType && okPg
+      })
+    }
+
+    function applySearch(rows){
+      const q = (document.getElementById("q").value || "").trim().toLowerCase()
+      if (!q) return rows
+
+      return rows.filter(r => {
+        const blob = [
+          r.case_id, r.date, r.time, r.type, r.officer, r.post_grid, r.location, r.risk_flag, r.narrative
+        ].join(" ").toLowerCase()
+        return blob.indexOf(q) !== -1
+      })
+    }
+
+    function renderKpis(rows){
+      const total = rows.length
+      const persons = unique(rows.map(r => r.person_id).filter(Boolean)).length
+      const locations = unique(rows.map(r => r.location).filter(Boolean)).length
+      const flags = rows.filter(r => String(r.risk_flag).toLowerCase() === "yes").length
+
+      const dur = rows.map(r => Number(r.duration_min)).filter(n => Number.isFinite(n))
+      const avgDur = dur.length ? Math.round(dur.reduce((a,b) => a+b, 0) / dur.length) : 0
+
+      document.getElementById("kpiTotal").textContent = total
+      document.getElementById("kpiTotalFoot").textContent = "rows: " + total
+
+      document.getElementById("kpiPersons").textContent = persons
+      document.getElementById("kpiLocations").textContent = locations
+      document.getElementById("kpiFlags").textContent = flags
+      document.getElementById("kpiAvgDur").textContent = avgDur
+    }
+
+    function renderTable(rows){
+      const body = document.getElementById("tblBody")
+      body.innerHTML = ""
+
+      rows.forEach(r => {
+        const tr = document.createElement("tr")
+
+        tr.appendChild(td(fmtDate(r.date)))
+        tr.appendChild(td(r.time || ""))
+        tr.appendChild(tdTag(r.type))
+        tr.appendChild(td(r.officer || ""))
+        tr.appendChild(td(r.post_grid || ""))
+        tr.appendChild(td(r.location || ""))
+        tr.appendChild(tdFlag(r.risk_flag))
+        tr.appendChild(td((r.narrative || "").slice(0, 180)))
+
+        body.appendChild(tr)
+      })
+    }
+
+    function td(text){
+      const el = document.createElement("td")
+      el.textContent = text
+      return el
+    }
+
+    function tdTag(text){
+      const el = document.createElement("td")
+      const span = document.createElement("span")
+      span.className = "tag"
+      span.textContent = text || ""
+      el.appendChild(span)
+      return el
+    }
+
+    function tdFlag(flag){
+      const el = document.createElement("td")
+      const span = document.createElement("span")
+      const yes = String(flag).toLowerCase() === "yes"
+      span.className = "tag " + (yes ? "warn" : "good")
+      span.textContent = yes ? "Yes" : "No"
+      el.appendChild(span)
+      return el
+    }
+
+    function renderCharts(rows){
+      // Day trend
+      const byDay = countBy(rows, r => r.date)
+      drawBar("chByDay", byDay.labels.map(fmtDate), byDay.values)
+
+      // Hour bars
+      const byHour = countBy(rows, r => (r.time || "00:00").slice(0,2))
+      drawBar("chByHour", byHour.labels.map(h => h + ":00"), byHour.values)
+
+      // Post/Grid top list
+      const byPost = countBy(rows, r => r.post_grid || "Unknown")
+      const top = topN(byPost.labels, byPost.values, 12)
+      drawBar("chByPost", top.labels, top.values)
+    }
+
+    function drawBar(canvasId, labels, values){
+      const c = document.getElementById(canvasId)
+      const ctx = c.getContext("2d")
+      const w = c.width
+      const h = c.height
+
+      ctx.clearRect(0,0,w,h)
+
+      const padL = 36
+      const padR = 10
+      const padT = 10
+      const padB = 26
+
+      const maxV = Math.max(1, ...values)
+      const n = Math.max(1, values.length)
+
+      // Axes
+      ctx.strokeStyle = "#cbd5e1"
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(padL, padT)
+      ctx.lineTo(padL, h - padB)
+      ctx.lineTo(w - padR, h - padB)
+      ctx.stroke()
+
+      const plotW = (w - padL - padR)
+      const plotH = (h - padT - padB)
+      const gap = 6
+      const barW = Math.max(2, (plotW - gap*(n-1)) / n)
+
+      // Bars
+      for (let i=0;i<n;i++){
+        const v = values[i] || 0
+        const x = padL + i*(barW + gap)
+        const bh = Math.round((v / maxV) * plotH)
+        const y = (h - padB) - bh
+
+        ctx.fillStyle = "#0d233c"
+        ctx.fillRect(x, y, barW, bh)
+
+        // Label tick
+        if (n <= 12){
+          ctx.fillStyle = "#5b6678"
+          ctx.font = "10px " + getComputedStyle(document.documentElement).getPropertyValue("--sans")
+          const t = (labels[i] || "").slice(0, 10)
+          ctx.fillText(t, x, h - 10)
+        }
+      }
+
+      // Max label
+      ctx.fillStyle = "#5b6678"
+      ctx.font = "10px " + getComputedStyle(document.documentElement).getPropertyValue("--mono")
+      ctx.fillText(String(maxV), 6, 14)
+    }
+
+    function countBy(rows, keyFn){
+      const m = new Map()
+      rows.forEach(r => {
+        const k = keyFn(r) || "Unknown"
+        m.set(k, (m.get(k) || 0) + 1)
+      })
+
+      const labels = Array.from(m.keys()).sort()
+      const values = labels.map(k => m.get(k))
+      return { labels, values }
+    }
+
+    function topN(labels, values, n){
+      const pairs = labels.map((l,i) => ({l, v: values[i] || 0}))
+      pairs.sort((a,b) => b.v - a.v)
+      const cut = pairs.slice(0, n)
+      return { labels: cut.map(x => x.l), values: cut.map(x => x.v) }
+    }
+
+    function sortRows(rows, key, dir){
+      const out = rows.slice()
+      out.sort((a,b) => {
+        const av = (a[key] ?? "").toString()
+        const bv = (b[key] ?? "").toString()
+        if (av < bv) return (dir === "asc") ? -1 : 1
+        if (av > bv) return (dir === "asc") ? 1 : -1
+        return 0
+      })
+      return out
+    }
+
+    function unique(arr){
+      return Array.from(new Set(arr)).sort()
+    }
+
+    function fmtDate(iso){
+      if (!iso) return ""
+      const parts = iso.split("-")
+      if (parts.length !== 3) return iso
+      return parts[1] + "/" + parts[2] + "/" + parts[0]
+    }
+
+    function scopeLabel(){
+      const o = document.getElementById("fOfficer").value
+      const t = document.getElementById("fType").value
+      const pg = document.getElementById("fPostGrid").value
+      const bits = []
+      if (o !== "All") bits.push("Officer " + o)
+      if (t !== "All") bits.push("Type " + t)
+      if (pg !== "All") bits.push(pg)
+      return bits.length ? bits.join(" | ") : "All"
+    }
+
+    function exportCsv(rows){
+      const cols = ["case_id","date","time","type","officer","post_grid","location","person_id","risk_flag","duration_min","lat","lon","narrative"]
+      const lines = []
+      lines.push(cols.join(","))
+
+      rows.forEach(r => {
+        const line = cols.map(k => csvCell(r[k])).join(",")
+        lines.push(line)
+      })
+
+      const blob = new Blob([lines.join("\n")], { type:"text/csv;charset=utf-8" })
+      const url = URL.createObjectURL(blob)
+
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "FCE_PA_Report.csv"
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    }
+
+    function csvCell(v){
+      const s = (v === null || v === undefined) ? "" : String(v)
+      const q = s.replace(/"/g,'""')
+      return '"' + q + '"'
+    }
+  </script>
+</body>
+</html>
+```

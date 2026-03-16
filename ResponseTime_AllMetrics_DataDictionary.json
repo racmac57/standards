@@ -1,0 +1,200 @@
+{
+  "schema_name": "ResponseTime_AllMetrics",
+  "version": "1.0",
+  "date": "2026-03-09",
+  "etl_script": "response_time_batch_all_metrics.py",
+  "etl_version": "1.17.21",
+  "description": "Per-month aggregated response time statistics for all three duration metrics, consumed by Power BI via Folder.Files().",
+  "output": {
+    "directory": "PowerBI_Date/response_time_all_metrics/",
+    "filename_pattern": "YYYY_MM_response_times.csv",
+    "aggregation_grain": ["Response_Type", "MM-YY", "Metric_Type"]
+  },
+  "columns": [
+    {
+      "name": "Response_Type",
+      "data_type": "string",
+      "nullable": false,
+      "description": "Priority classification: Emergency, Urgent, or Routine.",
+      "allowed_values": ["Emergency", "Urgent", "Routine"],
+      "example": "Emergency"
+    },
+    {
+      "name": "MM-YY",
+      "data_type": "string",
+      "nullable": false,
+      "description": "Month-Year label for the aggregation period (zero-padded month, two-digit year).",
+      "format": "MM-YY",
+      "example": "02-26"
+    },
+    {
+      "name": "Metric_Type",
+      "data_type": "string",
+      "nullable": false,
+      "description": "Which time interval was measured.",
+      "allowed_values": [
+        "Time Out - Time Dispatched",
+        "Time Out - Time of Call",
+        "Time Dispatched - Time of Call"
+      ],
+      "example": "Time Out - Time Dispatched"
+    },
+    {
+      "name": "First_Response_Time_MMSS",
+      "data_type": "string",
+      "nullable": false,
+      "description": "Average response time formatted as M:SS (minutes and seconds).",
+      "format": "M:SS",
+      "example": "4:32"
+    },
+    {
+      "name": "Avg_Minutes",
+      "data_type": "float",
+      "nullable": false,
+      "description": "Average response time in decimal minutes, rounded to 4 decimal places.",
+      "precision": 4,
+      "example": 4.5333
+    },
+    {
+      "name": "Record_Count",
+      "data_type": "integer",
+      "nullable": false,
+      "description": "Number of valid records contributing to this aggregation group.",
+      "example": 147
+    },
+    {
+      "name": "Median_Minutes",
+      "data_type": "float",
+      "nullable": false,
+      "description": "Median response time in decimal minutes for the group.",
+      "example": 4.2
+    }
+  ],
+  "metrics": [
+    {
+      "metric_type": "Time Out - Time Dispatched",
+      "label": "Travel Time",
+      "calculation": "Time Out minus Time Dispatched",
+      "business_meaning": "Time from dispatch to officer departure/arrival on scene"
+    },
+    {
+      "metric_type": "Time Out - Time of Call",
+      "label": "Total Response",
+      "calculation": "Time Out minus Time of Call",
+      "business_meaning": "Total elapsed time from citizen call to officer on scene"
+    },
+    {
+      "metric_type": "Time Dispatched - Time of Call",
+      "label": "Dispatch Queue",
+      "calculation": "Time Dispatched minus Time of Call",
+      "business_meaning": "Time the call waited in queue before being dispatched"
+    }
+  ],
+  "sources": {
+    "timereport_yearly": {
+      "directory": "05_EXPORTS/_CAD/timereport/yearly/",
+      "pattern": "YYYY_full_timereport.xlsx",
+      "discovery": "Dynamic via pathlib.glob, min_year = current year - 1"
+    },
+    "timereport_monthly": {
+      "directory": "05_EXPORTS/_CAD/timereport/monthly/",
+      "pattern": "YYYY_MM_timereport.xlsx",
+      "discovery": "Dynamic via pathlib.glob, min_year = current year - 1"
+    },
+    "calltype_reference": {
+      "path": "09_Reference/Classifications/CallTypes/CallType_Categories.csv",
+      "rows": 449,
+      "columns": ["Incident", "Incident_Norm", "Category_Type", "Response_Type"]
+    }
+  },
+  "source_columns_used": [
+    {"name": "ReportNumberNew", "type": "string", "purpose": "Primary key for first-arriving-unit deduplication"},
+    {"name": "Incident", "type": "string", "purpose": "Call type descriptor for normalization and classification"},
+    {"name": "How Reported", "type": "string", "purpose": "Method of call initiation for Layer 1 filter"},
+    {"name": "Time of Call", "type": "datetime", "purpose": "Timestamp when citizen call was received"},
+    {"name": "Time Dispatched", "type": "datetime", "purpose": "Timestamp when unit was dispatched"},
+    {"name": "Time Out", "type": "datetime", "purpose": "Timestamp when unit went en route or arrived on scene"},
+    {"name": "Response Type", "type": "string", "purpose": "CAD-assigned priority (may be missing or invalid)"}
+  ],
+  "filters": {
+    "layer_1_how_reported": {
+      "description": "Excludes non-citizen-initiated calls",
+      "retained": ["9-1-1", "Phone", "Walk-In"],
+      "excluded": ["Self-Initiated", "Radio", "Teletype", "Fax", "eMail", "Mail", "Other - See Notes", "Virtual Patrol", "Canceled Call"]
+    },
+    "layer_2_incident_exclusion": {
+      "description": "Excludes ~234 administrative, self-initiated, and non-dispatched incident types",
+      "examples": ["Task Assignment", "Meal Break", "Motor Vehicle Violation", "Training", "Court Officer"]
+    },
+    "layer_3_category_type": {
+      "description": "Safety net exclusion by Category_Type from CallType_Categories.csv",
+      "excluded_categories": ["Community Engagement", "Administrative and Support"]
+    }
+  },
+  "deduplication": {
+    "method": "First-arriving unit",
+    "sort_by": ["ReportNumberNew", "Time Out"],
+    "deduplicate_on": "ReportNumberNew",
+    "keep": "first"
+  },
+  "response_type_resolution": {
+    "description": "Priority cascade for backfilling missing Response_Type values",
+    "priority": [
+      {"order": 1, "source": "CAD original", "description": "Use Response Type column if already Emergency, Urgent, or Routine"},
+      {"order": 2, "source": "Exact match", "description": "Look up raw Incident string in CallType_Categories.csv"},
+      {"order": 3, "source": "Normalized match", "description": "Apply _normalize() and look up in CallType_Categories.csv"},
+      {"order": 4, "source": "Unresolvable", "description": "Record is excluded from output"}
+    ]
+  },
+  "bounds_filter": {
+    "min_response_mins": 0.0,
+    "min_response_exclusive": true,
+    "max_response_mins_by_type": {
+      "Emergency": 15.0,
+      "Urgent": 30.0,
+      "Routine": 60.0
+    },
+    "max_response_mins_default": 60.0,
+    "negative_duration_handling": "Excluded, logged at WARNING level",
+    "over_cap_handling": "Excluded, logged at WARNING level with per-type breakdown"
+  },
+  "data_quality_safeguards": [
+    {
+      "name": "NaT coercion monitoring",
+      "threshold": "5% of non-null values",
+      "action": "ValueError raised, script stops"
+    },
+    {
+      "name": "Negative duration logging",
+      "trigger": "Any record with col_a < col_b",
+      "action": "WARNING logged with count"
+    },
+    {
+      "name": "Over-cap logging",
+      "trigger": "Any record exceeding per-type max",
+      "action": "WARNING logged with per-type breakdown"
+    },
+    {
+      "name": "Unmapped Response Type",
+      "trigger": "Incident not resolved by any lookup",
+      "action": "Record excluded, count logged"
+    },
+    {
+      "name": "Zero source files",
+      "trigger": "discover_sources() returns empty list",
+      "action": "Script exits with error message"
+    }
+  ],
+  "downstream_consumers": {
+    "power_bi": {
+      "query_name": "___ResponseTime_AllMetrics",
+      "load_method": "Folder.Files()",
+      "window": "Rolling 13-month from pReportMonth parameter",
+      "column_mapping": {
+        "Avg_Minutes": "Average_Response_Time",
+        "First_Response_Time_MMSS": "Response_Time_MMSS",
+        "Record_Count": "Count"
+      }
+    }
+  }
+}

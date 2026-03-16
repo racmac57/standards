@@ -98,6 +98,8 @@ Step-by-step checklist for completing a Clery request.
 
 Use the ArcPy script to pull Clery geography from existing ArcGIS Pro projects. Requires ArcGIS Pro (arcpy). See [scripts/README.md](scripts/README.md) for full commands and ArcGIS Pro Python path.
 
+**Creating Clery layers**: For step-by-step instructions on how `Clery_Crimes` and geocoded layers (e.g., `c250_Moore_Street_Clery_2024_Geocoded`) are built in ArcGIS Pro—and how to repeat for 2025—see [CLERY_ARCGIS_WORKFLOW.md](CLERY_ARCGIS_WORKFLOW.md).
+
 ---
 
 ## Quick Start

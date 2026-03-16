@@ -1,0 +1,52 @@
+# next_suggestions.yaml
+# Generated: 2026-01-30
+# Purpose: Capture remaining or future improvement tasks, structured for Claude Code
+
+esri_integration:
+  description: >
+    Add optional enhancements to the ESRI-compatible exports for CAD data.
+  tasks:
+    - Add UUID field to each record to support future spatial joins or deduplication.
+    - Add 'ExportGenerated' timestamp field to every ESRI CSV for auditing.
+    - Integrate optional time zone localization (currently assumed EST/EDT).
+    - Automate ESRI CSV validation script (Python) to run after each export.
+    - Build ArcGIS Pro model metadata YAML (for documentation and future onboarding).
+
+schemas_and_dictionaries:
+  description: >
+    Continue harmonizing CAD/RMS schemas across the Standards repo and live ETL pipeline.
+  tasks:
+    - Consolidate final canonical schema from `schemas/udd/`.
+    - Move all superseded/partial schema drafts to `schemas/archive/`.
+    - Auto-generate unified field glossary YAML from canonical schema + field rules.
+    - Create markdown report (`schemas_report.md`) summarizing active schema roles.
+    - Integrate schema field comment descriptions with future data dictionary.
+
+reference_cleanup:
+  description: >
+    Improve long-term maintainability of reference directory structure.
+  tasks:
+    - Merge duplicate `CHANGELOG` and `README` files with source attribution.
+    - Archive obsolete workspace files with embedded version suffix (e.g., `(1)` or `-PD_BCI_01`).
+    - Build `index.yaml` with one-line purpose and version tag per file in Standards root.
+    - Add Git pre-commit check (optional) to prevent future file name collisions.
+
+etl_pipeline_hardening:
+  description: >
+    Improve ETL reliability and modularity.
+  tasks:
+    - Add automated test for each stage: extraction, cleaning, validation, transformation.
+    - Migrate legacy PowerShell logic to Python or batch scripts where feasible.
+    - Track audit logs in `etl/audit_logs/YYYY-MM-DD_runlog.json`.
+    - Add `Makefile` or `invoke` CLI to streamline all ETL tasks.
+    - Define reusable field transformation templates (e.g. "timestamp formatter", "address parser").
+
+documentation:
+  description: >
+    Expand developer- and analyst-facing documentation.
+  tasks:
+    - Add inline YAML comments for each schema key.
+    - Maintain `SCHEMA_FILES_SUMMARY.md` with authoritative YAML file list.
+    - Create `README_pipeline.md` that explains current ETL structure for new developers.
+    - Add code owner metadata to each script using a header block (author, last updated).
+

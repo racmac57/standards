@@ -1,0 +1,279 @@
+**Suggested edits:**
+
+1. **Data Flow diagram — add VAWA/Hate Crime flagging step**
+   Current flow skips the narrative review step which is critical per CLAUDE.md constraints:
+   ```
+   RMS incidents (Hackensack PD)
+       ↓
+   NIBRS classification (rms_to_nibrs_offense_map.json)
+       ↓
+   Clery mapping (nibrs_to_clery_map.json)
+       ↓
+   Geography filter (institution *.geojson)
+       ↓
+   VAWA/Hate Crime narrative review (manual or AI-assisted)
+       ↓
+   Clery export for institution
+   ```
+
+2. **Institution Coverage table — inconsistency with CLAUDE.md**
+   SUMMARY.md has 7 rows; CLAUDE.md has 6. The extra row is "Bergen Community College Clery Act" (APRX references FDU geodatabase). Either add this to CLAUDE.md or remove from SUMMARY.md with explanation. Recommend keeping it in both with consistent notes. 3. **Add estimated time/effort per request**
+   For an executive summary, it'd be useful to note:
+   ```
+   ## Typical Request Turnaround
+   - Standard request (geography already exported): ~2-4 hours
+   - New institution (geography extraction needed): ~1 day
+   ```
+   Adjust to your actual experience. 4. **Quick Reference section — missing REQUEST_CHECKLIST.md path**
+   Add:
+   ```
+   - **Request checklist:** `DataDictionary/current/REQUEST_CHECKLIST.md`
+   ```
+
+---
+
+## README.md
+
+**Good:** Most complete file, good quick-start code examples. **Suggested edits:**
+
+1. **Quick Start Python example — add error handling**
+   The `nibrs_to_clery` function silently returns `None`. For a reference example, add a note:
+   ```python
+   # Example: 13A → Aggravated Assault
+   name, hate_only = nibrs_to_clery('13A')
+   print(name, hate_only)  # ('Aggravated Assault', False)
+
+   # Unmapped code returns None — log these for QA
+   name, hate_only = nibrs_to_clery('99Z')
+   if name is None:
+       print(f"WARNING: NIBRS code '99Z' has no Clery mapping")
+   ```
+
+2. **"Filter RMS Data for Clery" section — expand step 4**
+   Current: "Flag VAWA (DV, Dating, Stalking) from narrative"
+   This is the hardest step and deserves more guidance:
+   ```
+   4. Flag **VAWA** crimes:
+      - Dating Violence: Look for relationship context (boyfriend/girlfriend/dating partner) in narrative
+      - Domestic Violence: Check for household/family relationship per NJ DV statute (2C:25-19)
+      - Stalking: Pattern of conduct causing fear; may span multiple incidents
+      - Note: NIBRS codes alone are insufficient for VAWA classification
+   ```
+
+3. **References section — add NJ-specific statute reference**
+   Since you're Hackensack PD, NJ DV definitions matter for VAWA classification:
+   ```
+   - **NJ Domestic Violence Act**: N.J.S.A. 2C:25-17 et seq. ```
+
+4. **Missing: Versioning/update protocol**
+   Add to Maintenance section:
+   ```
+   **Update protocol**:
+   1. Update relevant JSON/GeoJSON files
+   2. Update CHANGELOG.md with version bump
+   3. Update "Last Updated" in README.md, SUMMARY.md, CLAUDE.md
+   4. Verify institution geography index matches exports
+   ```
+
+5. **Integration table — add Clery ↔ Power BI connection**
+   Given your Power BI infrastructure, if Clery data feeds into any dashboards:
+   ```
+   | **Power BI** | Clery counts may feed annual compliance dashboards |
+   ```
+
+---
+
+## Structural Recommendations
+
+1. **Add cross-links between files** — Each file should have a "See Also" footer:
+   ```
+   ## See Also
+   - [README.md](README.md) — Overview and quick start
+   - [SUMMARY.md](SUMMARY.md) — Executive summary
+   - [CLAUDE.md](CLAUDE.md) — AI agent protocol
+   - [CHANGELOG.md](CHANGELOG.md) — Version history
+   ```
+
+2. **Consider a single source of truth for institution status** — Create `institution_status.md` or use the existing `institution_clery_geography_index.json` as the canonical source, and have all docs reference it instead of maintaining parallel tables. 3. **REQUEST_CHECKLIST.md is referenced everywhere but not included** — If you want me to draft a template for it based on what's described across these four files, happy to do that. ---
+
+## Priority Actions
+
+| Priority | Action | File(s) |
+|----------|--------|---------|
+| High | Sync institution tables (Bergen CC Clery Act row) | CLAUDE.md, SUMMARY.md |
+| High | Add VAWA narrative review to data flow | SUMMARY.md |
+| High | Add zero-reporting and PII constraints | CLAUDE.md |
+| Medium | Add cross-links / See Also sections | All four |
+| Medium | Note `Surronding_Area` [sic] typo | CLAUDE.md, SUMMARY.md |
+| Medium | Add Known Issues to changelog | CHANGELOG.md |
+| Low | Standardize path separators | All four |
+| Low | Add turnaround estimates | SUMMARY.md |
+
+Want me to produce updated versions of any or all four files with these changes applied? ---
+
+**Cursor**
+
+
+Implementing the recommended changes across all four files. Summary of edits applied from the review:
+
+## Changes applied
+
+### CLAUDE.md
+- Added **Audience** section (AI coding assistants)
+- Added **Critical Constraint #5** (date range: 3 most recent calendar years)
+- Added **zero-reporting** to DO section
+- Added **RMS path placeholder** to Key Paths table
+- Added **Bergen Community College Clery Act** row to institution table
+- Noted **Surronding_Area [sic]** and **Parisian Beauty Academy**
+- Added **PII/FERPA** to DON'T section
+- Replaced extraction command block with link to `scripts/README.md`
+- Added **See Also** section
+
+### CHANGELOG.md
+- Added link to CLAUDE.md at top
+- Clarified **datetime fix** description
+- Added **Known Issues** (Bergen CC, Bergen Academies, Bergen CC Clery Act)
+- Added **v1.1.0** entry for documentation updates
+
+### SUMMARY.md
+- Added **VAWA/Hate Crime narrative review** step to data flow
+- Added **Typical Request Turnaround** section (~2–4 hours standard, ~1 day new institution)
+- Added **REQUEST_CHECKLIST** path to Quick Reference
+- Noted **Surronding_Area [sic]** and **Parisian Beauty Academy**
+- Updated extraction reference to `scripts/README.md`
+- Added **See Also** section
+
+### README.md
+- Added **error handling** for unmapped NIBRS codes in Python example
+- Expanded **VAWA step 4** (Dating Violence, Domestic Violence, Stalking)
+- Added **NJ Domestic Violence Act** reference (N.J.S.A. 2C:25-17)
+- Added **update protocol** to Maintenance
+- Added **Power BI** to integration table
+- Added **Parisian Beauty Academy** to purpose
+- Simplified extraction section with link to `scripts/README.md`
+- Added **See Also** section
+
+Version bumped to **1.1** in CLAUDE.md and SUMMARY.md. ---
+
+**User**
+
+Nice work — you incorporated virtually everything cleanly. Here's my second-pass review:
+
+## What Landed Well
+
+- All four files now have consistent institution tables (7 rows, Bergen CC Clery Act included)
+- `[sic]` notation on `Surronding_Area` — good practice
+- VAWA step added to data flow diagram in SUMMARY.md
+- See Also cross-links in all four files
+- Zero-reporting and PII constraints in CLAUDE.md DO/DON'T
+- Constraint #5 (date range) added
+- CHANGELOG.md v1.1.0 entry cleanly documents what changed and why
+- Known Issues section in CHANGELOG covers all three Bergen gaps
+- NJ statute reference, Power BI integration row, update protocol in README.md
+
+## Remaining Items (Minor)
+
+1. **Version mismatch** — CLAUDE.md and SUMMARY.md both say `Version: 1.1` but CHANGELOG.md logs it as `[1.1.0]`. Recommend either using `1.1.0` everywhere or `1.1` everywhere. Semver convention would be `1.1.0`. 2. **README.md has no version field** — The other three files have explicit version numbers. README.md just has `Last Updated` and `Status`. Consider adding `**Version:** 1.1.0` for parity, or intentionally note that README tracks by date only. 3. **CLAUDE.md extraction script section** — You trimmed the inline commands (good, DRY) and point to `scripts/README.md`, but the link is `[scripts/README.md](scripts/README.md)`. Since CLAUDE.md sits at the Clery root alongside the `scripts/` folder, this relative path is correct. Just confirming that's accurate for your actual directory layout. 4. **CHANGELOG.md — both entries share the same date** — `[1.0.0] - 2026-03-09` and `[1.1.0] - 2026-03-09`. That's fine and accurate, but if someone skims quickly they might wonder. No action needed, just noting it. 5. **SUMMARY.md turnaround estimates** — The `~2–4 hours` and `~1 day` values are placeholders I suggested. Adjust these to your actual experience if they're off. These will get quoted back to you by command staff. 6. **One small gap remaining: REQUEST_CHECKLIST.md** — All four files reference it but it wasn't included for review. If you want me to draft a template based on what's described across these docs (data scope, crime categories, export fields, geography filtering, classification steps, QA checks), just say the word. ## Verdict
+
+These are clean, consistent, and production-ready. The four files now work as a cohesive documentation set with no contradictions. Ship it. ---
+
+**Cursor**
+
+
+Applying the minor fixes:
+
+
+
+Updates applied:
+
+1. **Version set to 1.1.0** in CLAUDE.md, SUMMARY.md, and README.md. 2. **Version field added** to README.md for consistency. 3. **Turnaround note added** in SUMMARY.md: *"Adjust these estimates to your actual experience; they may be cited by command staff. "*
+
+No changes made for:
+- CHANGELOG same-date (kept as-is)
+- `scripts/README.md` link (path is correct)
+- REQUEST_CHECKLIST.md (no template requested)
+
+Documentation is ready to ship. ---
+
+**User**
+
+All four files are now fully consistent. Version `1.1.0` across the board, institution tables match, cross-links in place, no contradictions. Only two micro-observations remain — neither is blocking:
+
+1. **SUMMARY.md turnaround caveat** — You added the italic note *"Adjust these estimates to your actual experience; they may be cited by command staff. "* That's a good internal reminder during drafting, but consider removing it before this goes into production. Command staff or an institution rep reading SUMMARY.md shouldn't see that hedge — either commit to the numbers or drop the section until you have real baselines. 2. **CLAUDE.md repo structure shows `CHANGELOG.md` under `DataDictionary/`** — Line in the tree shows `DataDictionary/ → archive/ → CHANGELOG.md`, but the actual CHANGELOG.md lives at the Clery root (same level as CLAUDE.md). The tree also shows CHANGELOG.md at the root, so there are two listed. Either remove the one under `DataDictionary/` or clarify if there's genuinely a separate changelog there for schema-only changes. Everything else is clean. These are ready to commit. ---
+
+**Cursor**
+
+
+Applying both fixes:
+
+
+
+Both updates are in place:
+
+1. **SUMMARY.md** — Removed the italic caveat; turnaround estimates are now stated without hedging. 2. **CLAUDE.md** — Clarified the two CHANGELOGs:
+   - `DataDictionary/CHANGELOG.md` — schema/mapping changes only  
+   - `CHANGELOG.md` (root) — module version history  
+
+Ready to commit. ---
+
+**User**
+
+create/update local and remote git
+
+---
+
+**Cursor**
+
+
+Here’s what’s done:
+
+## Local Git
+
+**Commit created:** `623d177`
+
+```
+Add Clery Act reference data (v1.1.0)
+
+- Crime definitions, geography definitions, NIBRS-to-Clery mapping
+- Request checklist, institution geography index
+- ArcPy extraction script for ArcGIS Pro projects
+- README, SUMMARY, CLAUDE.md, CHANGELOG
+- Standards README updated with Clery section
+```
+
+**13 files changed, 1,851 insertions**
+
+---
+
+## Remote Git
+
+**Push failed:** no remote is configured. `origin` is not set, so `git push` has nowhere to send changes. To add a remote and push:
+
+```powershell
+cd "C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards"
+
+# Add your remote (replace with your actual repo URL)
+git remote add origin https://github.com/YOUR_ORG/Standards.git
+# or: git remote add origin git@github.com:YOUR_ORG/Standards.git
+
+# Push
+git push -u origin main
+```
+
+If you already have a remote URL (e.g., GitHub, Azure DevOps), share it and we can wire it up. ---
+
+**User**
+
+I'm preparing to export this chat. Please generate a descriptive filename that summarizes the main topic or task of this conversation. Requirements:
+• 4-8 words
+• Title Case (capitalize major words)
+• Replace spaces with underscores
+• Include .md extension
+• No dates or special characters
+
+Output only the filename, with the suffix .md and nothing else. ---
+
+**Cursor**
+
+
+Clery_Act_Reference_Data_Standards_Setup.md

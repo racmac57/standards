@@ -1,0 +1,35 @@
+{
+  "tags": [
+    "code",
+    "data",
+    "docs",
+    "json",
+    "markdown",
+    "police",
+    "sql"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "files",
+        "pointer",
+        "json",
+        "canonical",
+        "unified_data_dictionary",
+        "mappings"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "# Directory merge project completion\n_Exported on 2/3/2026 at 19:17:17 EST from Cursor (2.4.27)_\n\n---\n\n**User**\n\nplease review C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\09_Reference\\Standards\\unified_data_dictionary and C:\\Users\\c...",
+      "first_line": "# Directory merge project completion"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2026-02-03T19:17:37.151248",
+  "department": "admin"
+}

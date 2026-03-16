@@ -58,19 +58,15 @@ Some CAD export headers contain spaces; the “standard” name is what we use i
 - **Type**: text (string).
 - **Allowed values (domain)**:
   - `9-1-1`
-  - `Walk-In`
   - `Phone`
+  - `Walk-in`
   - `Self-Initiated`
   - `Radio`
-  - `Teletype`
-  - `Fax`
-  - `Other - See Notes`
-  - `eMail`
-  - `Mail`
-  - `Virtual Patrol`
-  - `Canceled Call`
+  - `Other`
 - **Important**:
   - `9-1-1` **must be kept as text** and must not be displayed/parsed as a date (e.g., Excel auto-formatting).
+  - All values should be normalized to match the canonical schema values listed above.
+  - Legacy values such as `Teletype`, `Fax`, `eMail`, `Mail`, `Virtual Patrol`, and `Canceled Call` should be mapped to the appropriate canonical value (typically `Other` or `Phone`).
 - **Observed in sample** (from `cad_data_quality_report.md`): `Phone`, `9-1-1`, `Walk-In`, `Other - See Notes`, `Radio`.
 
 ### `FullAddress2`

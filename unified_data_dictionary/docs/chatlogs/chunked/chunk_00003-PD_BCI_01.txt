@@ -1,0 +1,1052 @@
+applies_to: [cad]
+  
+  zone_validity:
+    rule_id: OPT_002
+    description: "PD Zone should be valid zone identifier"
+    field: pd_zone
+    severity: optional
+    valid_values: ["5", "6", "7", "8", "9"]
+    fix_suggestion: "Validate against zone master list, map to closest valid zone"
+    applies_to: [cad, rms]
+  
+  response_type_consistency:
+    rule_id: OPT_003
+    description: "Response Type should align with incident severity"
+    fields: [response_type, incident_type]
+    severity: optional
+    logic: "Emergency incidents should have Emergency/Priority response"
+    emergency_incidents:
+      - ROBBERY
+      - ASSAULT
+      - BURGLARY
+      - SHOOTING
+      - STABBING
+      - DOMESTIC VIOLENCE
+    emergency_responses:
+      - EMERGENCY
+      - PRIORITY
+    non_emergency_incidents:
+      - NOISE COMPLAINT
+      - PARKING VIOLATION
+      - CIVIL DISPUTE
+      - PROPERTY DAMAGE
+    non_emergency_responses:
+      - NON-EMERGENCY
+      - ROUTINE
+    fix_suggestion: "Create response type validation matrix, flag mismatches for review"
+    applies_to: [cad]
+  
+  narrative_completeness:
+    rule_id: OPT_004
+    description: "Narrative should have minimum length for reports"
+    field: narrative
+    severity: optional
+    min_length: 20  # characters
+    fix_suggestion: "Encourage officers to provide detailed narratives"
+    applies_to: [rms]
+  
+  vehicle_info_completeness:
+    rule_id: OPT_005
+    description: "Vehicle incidents should have complete vehicle information"
+    logic: "IF incident involves vehicle THEN registration, make, model should be present"
+    fields: [registration_1, make_1, model_1]
+    vehicle_incident_patterns:
+      - MOTOR VEHICLE THEFT
+      - BURGLARY AUTO
+      - HIT AND RUN
+      - DWI
+      - TRAFFIC ACCIDENT
+    severity: optional
+    fix_suggestion: "Validate vehicle information for vehicle-related incidents"
+    applies_to: [rms]
+
+# Validation execution settings
+validation_settings:
+  # Stop validation after first rule failure (faster but less comprehensive)
+  fail_fast: false
+  
+  # Maximum number of failed record examples to include in report
+  max_failed_examples: 10
+  
+  # Parallelize validation rules
+  parallel_validation: true
+  
+  # Cache validation results to avoid re-running on same data
+  cache_results: true
+  cache_expiry_hours: 24
+
+# Custom validation functions (Python callable paths)
+custom_validators:
+  address_geocode_validator:
+    module: src.clean.geocoder
+    function: validate_geocoded_address
+    description: "Validate address using geocoding API with reverse validation"
+  
+  case_number_checksum:
+    module: src.utils.validators
+    function: validate_case_number_checksum
+    description: "Validate case number checksum algorithm (if applicable)"
+  
+  duplicate_detector:
+    module: src.utils.validators
+    function: detect_potential_duplicates
+    description: "Detect potential duplicate records using fuzzy matching"
+
+# Field-level constraints (complementary to validation rules)
+field_constraints:
+  case_number:
+    required: true
+    unique: true
+    max_length: 20
+    pattern: '^\d{2,4}-\d{6}[A-Z]?$'
+  
+  incident_date:
+    required: true
+    type: date
+    min_date: "2020-01-01"
+    max_date: "2030-12-31"
+  
+  incident_time:
+    required: false
+    type: time
+    format: "HH:MM:SS"
+  
+  full_address:
+    required: true
+    min_length: 10
+    max_length: 500
+  
+  latitude:
+    required: false
+    type: float
+    min: 40.85  # Approximate Hackensack south
+    max: 40.92  # Approximate Hackensack north
+  
+  longitude:
+    required: false
+    type: float
+    min: -74.08  # Approximate Hackensack east
+    max: -74.02  # Approximate Hackensack west
+
+# Quality score calculation weights
+quality_score_weights:
+  critical: 0.50  # 50% of overall score
+  important: 0.30  # 30% of overall score
+  optional: 0.20  # 20% of overall score
+
+```
+
+```yaml
+# SCRPA Crime Type Patterns
+# Extracted from: SCRPA_ArcPy/05_orchestrator/FINAL_Weekly_Crime_Report.py
+# Purpose: Define crime types, statute code patterns, and APRX layer mappings
+# Version: 1.0.0
+
+# Crime type definitions for SCRPA weekly reports
+crime_types:
+  robbery:
+    display_name: "Robbery"
+    ucr_category: "Part I - Violent"
+    statute_code: "2C:15-1"
+    
+    # Pattern matching for CAD/RMS incident types
+    patterns:
+      exact_match:
+        - "Robbery - 2C:15-1"
+        - "ROBBERY"
+      
+      partial_match:
+        - "ARMED ROBBERY"
+        - "ROBBERY IN PROGRESS"
+        - "ROBBERY - STRONG ARM"
+        - "ROBBERY - ARMED"
+    
+    # ArcGIS Pro APRX layer names
+    aprx_layers:
+      7day: "Robbery 7-Day"
+      28day: "Robbery 28-Day"
+      ytd: "Robbery YTD"
+    
+    # Query field mappings (for building SQL WHERE clauses)
+    query_fields:
+      incident_type: "calltype"
+      date: "calldate"
+      disposition: "disposition"
+    
+    # Reporting priority (1=highest)
+    priority: 1
+    
+    # Include in executive summary
+    executive_summary: true
+  
+  mv_theft:
+    display_name: "Motor Vehicle Theft"
+    ucr_category: "Part I - Property"
+    statute_code: "2C:20-3"
+    
+    patterns:
+      exact_match:
+        - "Motor Vehicle Theft - 2C:20-3"
+        - "MV THEFT"
+        - "AUTO THEFT"
+      
+      partial_match:
+        - "STOLEN VEHICLE"
+        - "VEHICLE THEFT"
+        - "CAR THEFT"
+    
+    aprx_layers:
+      7day: "MV Theft 7-Day"
+      28day: "MV Theft 28-Day"
+      ytd: "MV Theft YTD"
+    
+    query_fields:
+      incident_type: "calltype"
+      date: "calldate"
+      disposition: "disposition"
+    
+    priority: 2
+    executive_summary: true
+  
+  burglary_auto:
+    display_name: "Burglary - Auto"
+    ucr_category: "Part I - Property"
+    statute_code: "2C:18-2"
+    
+    patterns:
+      exact_match:
+        - "Burglary Auto"
+        - "BURGLARY - AUTO"
+        - "BURGLARY FROM AUTO"
+      
+      partial_match:
+        - "THEFT FROM AUTO"
+        - "BURGLARY TO AUTO"
+        - "AUTO BURGLARY"
+    
+    aprx_layers:
+      7day: "Burglary - Auto 7-Day"
+      28day: "Burglary - Auto 28-Day"
+      ytd: "Burglary - Auto YTD"
+    
+    query_fields:
+      incident_type: "calltype"
+      date: "calldate"
+      disposition: "disposition"
+    
+    priority: 3
+    executive_summary: true
+  
+  burglary_comm_res:
+    display_name: "Burglary - Commercial & Residential"
+    ucr_category: "Part I - Property"
+    statute_code: "2C:18-2"
+    
+    patterns:
+      exact_match:
+        - "Burglary Commercial"
+        - "Burglary Residential"
+        - "BURGLARY - COMMERCIAL"
+        - "BURGLARY - RESIDENTIAL"
+      
+      partial_match:
+        - "COMMERCIAL BURGLARY"
+        - "RESIDENTIAL BURGLARY"
+        - "BURGLARY - BUSINESS"
+        - "BURGLARY - DWELLING"
+    
+    aprx_layers:
+      7day: "Burglary - Comm & Res 7-Day"
+      28day: "Burglary - Comm & Res 28-Day"
+      ytd: "Burglary - Comm & Res YTD"
+    
+    query_fields:
+      incident_type: "calltype"
+      date: "calldate"
+      disposition: "disposition"
+    
+    priority: 4
+    executive_summary: true
+  
+  sexual_offenses:
+    display_name: "Sexual Offenses"
+    ucr_category: "Part I - Violent"
+    statute_code: "2C:14-2"
+    
+    patterns:
+      exact_match:
+        - "Criminal Sexual Contact"
+        - "SEXUAL ASSAULT"
+        - "RAPE"
+      
+      partial_match:
+        - "Sexual"
+        - "SEXUAL OFFENSE"
+        - "CRIMINAL SEXUAL CONTACT"
+        - "ATTEMPTED SEXUAL ASSAULT"
+    
+    aprx_layers:
+      7day: "Sexual Offenses 7-Day"
+      28day: "Sexual Offenses 28-Day"
+      ytd: "Sexual Offenses YTD"
+    
+    query_fields:
+      incident_type: "calltype"
+      date: "calldate"
+      disposition: "disposition"
+    
+    priority: 1  # Highest priority (ties with Robbery)
+    executive_summary: true
+    sensitive_data: true  # Flag for special handling
+
+  # Additional crime types (can be extended)
+  aggravated_assault:
+    display_name: "Aggravated Assault"
+    ucr_category: "Part I - Violent"
+    statute_code: "2C:12-1b"
+    enabled: false  # Set to true to include in reports
+    
+    patterns:
+      exact_match:
+        - "Aggravated Assault"
+        - "ASSAULT - AGGRAVATED"
+      
+      partial_match:
+        - "AGG ASSAULT"
+        - "ASSAULT W/ WEAPON"
+    
+    aprx_layers:
+      7day: "Aggravated Assault 7-Day"
+      28day: "Aggravated Assault 28-Day"
+      ytd: "Aggravated Assault YTD"
+    
+    priority: 2
+    executive_summary: false
+  
+  larceny_theft:
+    display_name: "Larceny / Theft"
+    ucr_category: "Part I - Property"
+    statute_code: "2C:20-3"
+    enabled: false
+    
+    patterns:
+      exact_match:
+        - "Theft"
+        - "Larceny"
+        - "SHOPLIFTING"
+      
+      partial_match:
+        - "THEFT FROM"
+        - "THEFT OF"
+        - "GRAND LARCENY"
+        - "PETIT LARCENY"
+    
+    aprx_layers:
+      7day: "Larceny Theft 7-Day"
+      28day: "Larceny Theft 28-Day"
+      ytd: "Larceny Theft YTD"
+    
+    priority: 5
+    executive_summary: false
+
+# Disposition filters (only count incidents with these dispositions)
+disposition_filters:
+  include:
+    - "See Report"
+    - "REPORT TAKEN"
+    - "ARREST"
+  
+  exclude:
+    - "UNFOUNDED"
+    - "CANCELLED"
+    - "DUPLICATE"
+    - "FALSE ALARM"
+
+# Reporting periods configuration
+reporting_periods:
+  7day:
+    label: "7-Day Period"
+    days_back: 7
+    description: "Week-over-week comparison"
+    folder_name: "7_Day"
+  
+  28day:
+    label: "28-Day Period"
+    days_back: 28
+    description: "Month-over-month comparison (4 weeks)"
+    folder_name: "28_Day"
+  
+  ytd:
+    label: "Year-to-Date"
+    days_back: ytd  # Special value: calculated from January 1st
+    description: "Cumulative statistics from January 1st"
+    folder_name: "YTD"
+
+# Statistical analysis settings
+statistics:
+  # Calculate trend indicators
+  calculate_trends: true
+  
+  # Compare to same period last year
+  year_over_year_comparison: true
+  
+  # Identify hotspots (clusters of incidents)
+  hotspot_analysis:
+    enabled: true
+    clustering_distance_meters: 150
+    min_cluster_size: 3
+  
+  # Time-of-day analysis
+  temporal_analysis:
+    enabled: true
+    bins: [morning, afternoon, evening, night]
+
+# Output format configuration
+output:
+  # Statistics export files
+  statistics_files:
+    - format: txt
+      filename_pattern: "{crime_type}_{period}_{start_date}_{end_date}_Details.txt"
+    
+    - format: csv
+      filename_pattern: "{crime_type}_{period}_{start_date}_{end_date}_Stats.csv"
+    
+    - format: json
+      filename_pattern: "{crime_type}_{period}_{start_date}_{end_date}_Data.json"
+  
+  # Map export settings
+  map_exports:
+    - format: pdf
+      dpi: 300
+      filename_pattern: "{crime_type}_{period}_Map_{date}.pdf"
+    
+    - format: png
+      dpi: 150
+      filename_pattern: "{crime_type}_{period}_Map_{date}.png"
+  
+  # Executive summary
+  executive_summary:
+    enabled: true
+    formats: [markdown, html]
+    filename_pattern: "SCRPA_{period}_Executive_Summary_{date}. {ext}"
+    include_charts: true
+    include_maps: true
+
+# Validation settings for crime pattern matching
+validation:
+  # Warn if no records found for a crime type
+  warn_on_zero_count: true
+  
+  # Require at least one pattern match per crime type
+  require_pattern_match: true
+  
+  # Log unmatched incident types for future pattern updates
+  log_unmatched_incidents: true
+  unmatched_log_path: "./logs/unmatched_incidents_{date}.csv"
+
+```
+
+Great progress! Now let me create the core Python modules. I'll start with the utilities and then build the main pipeline components:
+
+```python
+"""
+Utility modules for SCRPA Unified Pipeline. Provides common functionality:
+- Configuration loading
+- Logging setup
+- Date/time helpers
+- File operations
+"""
+
+from .config_loader import load_config, get_config_value
+from .logging_config import setup_logging, get_logger
+from .date_helpers import (
+    get_7day_period,
+    get_28day_period,
+    get_ytd_period,
+    format_date_for_filename,
+    parse_scrpa_cycle_id
+)
+
+__all__ = [
+    'load_config',
+    'get_config_value',
+    'setup_logging',
+    'get_logger',
+    'get_7day_period',
+    'get_28day_period',
+    'get_ytd_period',
+    'format_date_for_filename',
+    'parse_scrpa_cycle_id',
+]
+
+```
+
+```python
+"""
+Configuration loading utilities. Provides functions to load and parse YAML configuration files
+with variable interpolation and validation.
+""" import re
+from pathlib import Path
+from typing import Any, Dict, Optional
+import yaml
+
+
+class ConfigLoader:
+    """Load and manage YAML configuration files with interpolation.""" def __init__(self, config_path: Optional[Path] = None):
+        """Initialize configuration loader. Args:
+            config_path: Path to main pipeline.yaml config file. If None, searches for configs/pipeline.yaml
+        """
+        if config_path is None:
+            # Try to find config relative to this file
+            repo_root = Path(__file__).resolve().parents[2]
+            config_path = repo_root / "configs" / "pipeline.yaml"
+        
+        self.config_path = Path(config_path)
+        self.config: Dict[str, Any] = {}
+        self._load()
+    
+    def _load(self) -> None:
+        """Load configuration from YAML file.""" if not self.config_path.exists():
+            raise FileNotFoundError(
+                f"Configuration file not found: {self.config_path}"
+            )
+        
+        with open(self.config_path, 'r', encoding='utf-8') as f:
+            self.config = yaml.safe_load(f)
+        
+        # Perform variable interpolation
+        self._interpolate_variables()
+    
+    def _interpolate_variables(self) -> None:
+        """Interpolate {variable} references in config values. Example: "{reference_data}/CallTypes" expands using reference_data path
+        """
+        def _interpolate_value(value: Any, context: Dict[str, Any]) -> Any:
+            """Recursively interpolate a single value.""" if isinstance(value, str):
+                # Find all {variable} patterns
+                pattern = r'\{([^}]+)\}'
+                matches = re.findall(pattern, value)
+                
+                for var_name in matches:
+                    # Look up variable in context
+                    var_value = self.get(var_name, default=None)
+                    if var_value is not None:
+                        value = value.replace(f"{{{var_name}}}", str(var_value))
+                
+                return value
+            
+            elif isinstance(value, dict):
+                return {k: _interpolate_value(v, context) for k, v in value.items()}
+            
+            elif isinstance(value, list):
+                return [_interpolate_value(item, context) for item in value]
+            
+            else:
+                return value
+        
+        # Interpolate all values
+        self.config = _interpolate_value(self.config, self.config)
+    
+    def get(self, key_path: str, default: Any = None) -> Any:
+        """Get configuration value using dot-notation path. Args:
+            key_path: Dot-separated path (e.g., "paths.rms_input")
+            default: Default value if key not found
+        
+        Returns:
+            Configuration value or default
+        
+        Example:
+            >>> config.get("data_quality.thresholds.critical")
+            0.95
+        """
+        keys = key_path.split('.') value = self.config
+        
+        for key in keys:
+            if isinstance(value, dict) and key in value:
+                value = value[key]
+            else:
+                return default
+        
+        return value
+    
+    def get_path(self, key_path: str, default: Optional[Path] = None) -> Optional[Path]:
+        """Get configuration value as Path object. Args:
+            key_path: Dot-separated path
+            default: Default Path if key not found
+        
+        Returns:
+            Path object or default
+        """
+        value = self.get(key_path, default=default)
+        if value is None:
+            return None
+        return Path(value)
+    
+    def reload(self) -> None:
+        """Reload configuration from file.""" self._load()
+    
+    def __repr__(self) -> str:
+        return f"ConfigLoader(config_path='{self.config_path}')"
+
+
+# Global singleton instance
+_config_loader: Optional[ConfigLoader] = None
+
+
+def load_config(config_path: Optional[Path] = None) -> ConfigLoader:
+    """Load configuration (singleton pattern). Args:
+        config_path: Path to pipeline.yaml file
+    
+    Returns:
+        ConfigLoader instance
+    """
+    global _config_loader
+    
+    if _config_loader is None or config_path is not None:
+        _config_loader = ConfigLoader(config_path)
+    
+    return _config_loader
+
+
+def get_config_value(key_path: str, default: Any = None) -> Any:
+    """Convenience function to get config value. Args:
+        key_path: Dot-separated path
+        default: Default value if key not found
+    
+    Returns:
+        Configuration value or default
+    """
+    config = load_config()
+    return config.get(key_path, default=default)
+
+
+# Example usage
+if __name__ == "__main__":
+    # Test configuration loading
+    config = load_config()
+    
+    print("Project name:", config.get("project.name"))
+    print("RMS input path:", config.get_path("paths.rms_input"))
+    print("Critical threshold:", config.get("data_quality.thresholds.critical"))
+    print("Crime types:", config.get("scrpa_weekly.crime_types", default=[]))
+
+```
+
+```python
+"""
+Logging configuration for SCRPA Unified Pipeline. Provides centralized logging setup with:
+- Color-coded console output with emoji indicators
+- File logging with rotation
+- Multiple log levels
+- JSON-structured logs (optional)
+"""
+
+import logging
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+from logging.handlers import RotatingFileHandler
+
+
+# Color codes for console output
+class LogColors:
+    """ANSI color codes for terminal output.""" RESET = "\033[0m"
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    MAGENTA = "\033[95m"
+    CYAN = "\033[96m"
+    WHITE = "\033[97m"
+    BOLD = "\033[1m"
+
+
+# Emoji indicators for different log levels
+EMOJI_INDICATORS = {
+    'DEBUG': '🔍',
+    'INFO': '✅',
+    'WARNING': '⚠️',
+    'ERROR': '❌',
+    'CRITICAL': '🔥',
+    'SUCCESS': '🎉',
+    'PROCESSING': '🔄',
+    'STATS': '📊',
+}
+
+
+class ColoredFormatter(logging.Formatter):
+    """Custom formatter with colors and emoji.""" COLORS = {
+        'DEBUG': LogColors.CYAN,
+        'INFO': LogColors.GREEN,
+        'WARNING': LogColors.YELLOW,
+        'ERROR': LogColors.RED,
+        'CRITICAL': LogColors.RED + LogColors.BOLD,
+    }
+    
+    def __init__(self, use_colors: bool = True, use_emoji: bool = True):
+        """Initialize formatter. Args:
+            use_colors: Enable colored output
+            use_emoji: Enable emoji indicators
+        """
+        super().__init__(
+            fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        self.use_colors = use_colors
+        self.use_emoji = use_emoji
+    
+    def format(self, record: logging.LogRecord) -> str:
+        """Format log record with colors and emoji. Args:
+            record: Log record to format
+        
+        Returns:
+            Formatted log string
+        """
+        # Add emoji indicator
+        if self.use_emoji:
+            emoji = EMOJI_INDICATORS.get(record.levelname, '')
+            record.levelname = f"{emoji} {record.levelname}"
+        
+        # Format base message
+        formatted = super().format(record)
+        
+        # Add colors
+        if self.use_colors:
+            color = self.COLORS.get(record.levelname.replace(EMOJI_INDICATORS.get(record.levelname.split()[1], ''), '').strip(), '')
+            formatted = f"{color}{formatted}{LogColors.RESET}"
+        
+        return formatted
+
+
+def setup_logging(
+    log_dir: Optional[Path] = None,
+    log_level: str = 'INFO',
+    use_colors: bool = True,
+    use_emoji: bool = True,
+    log_to_file: bool = True,
+    max_bytes: int = 10485760,  # 10 MB
+    backup_count: int = 5
+) -> logging.Logger:
+    """Set up logging configuration for the pipeline. Args:
+        log_dir: Directory for log files
+        log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        use_colors: Enable colored console output
+        use_emoji: Enable emoji indicators
+        log_to_file: Enable file logging
+        max_bytes: Maximum log file size before rotation
+        backup_count: Number of backup log files to keep
+    
+    Returns:
+        Configured logger instance
+    """
+    # Create logger
+    logger = logging.getLogger('scrpa_pipeline')
+    logger.setLevel(getattr(logging, log_level.upper()))
+    
+    # Clear existing handlers
+    logger.handlers.clear()
+    
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.DEBUG)
+    console_formatter = ColoredFormatter(use_colors=use_colors, use_emoji=use_emoji)
+    console_handler.setFormatter(console_formatter)
+    logger.addHandler(console_handler)
+    
+    # File handler
+    if log_to_file:
+        if log_dir is None:
+            log_dir = Path('./logs')
+        
+        log_dir = Path(log_dir)
+        log_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Main log file with rotation
+        main_log_path = log_dir / f"scrpa_pipeline_{datetime.now().strftime('%Y%m%d')}.log"
+        file_handler = RotatingFileHandler(
+            main_log_path,
+            maxBytes=max_bytes,
+            backupCount=backup_count,
+            encoding='utf-8'
+        )
+        file_handler.setLevel(logging.DEBUG)
+        
+        # File formatter (no colors, no emoji for better readability in files)
+        file_formatter = logging.Formatter(
+            fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        file_handler.setFormatter(file_formatter)
+        logger.addHandler(file_handler)
+        
+        # Error log file (only errors and above)
+        error_log_path = log_dir / f"errors_{datetime.now().strftime('%Y%m%d')}.log"
+        error_handler = RotatingFileHandler(
+            error_log_path,
+            maxBytes=max_bytes,
+            backupCount=backup_count,
+            encoding='utf-8'
+        )
+        error_handler.setLevel(logging.ERROR)
+        error_handler.setFormatter(file_formatter)
+        logger.addHandler(error_handler)
+    
+    return logger
+
+
+def get_logger(name: str = 'scrpa_pipeline') -> logging.Logger:
+    """Get a logger instance. Args:
+        name: Logger name (module name recommended)
+    
+    Returns:
+        Logger instance
+    """
+    return logging.getLogger(name)
+
+
+# Example usage
+if __name__ == "__main__":
+    # Set up logging
+    logger = setup_logging(log_level='DEBUG', use_colors=True, use_emoji=True)
+    
+    # Test different log levels
+    logger.debug("This is a debug message")
+    logger.info("This is an info message")
+    logger.warning("This is a warning message")
+    logger.error("This is an error message")
+    logger.critical("This is a critical message")
+    
+    # Test with custom emoji
+    logger.info("🔄 Processing data...")
+    logger.info("📊 Statistics computed")
+    logger.info("🎉 Pipeline completed successfully!") ```
+
+```python
+"""
+Date and time helper functions for SCRPA reporting periods. Extracted from: SCRPA_ArcPy/05_orchestrator/FINAL_Weekly_Crime_Report.py
+Provides functions for calculating 7-day, 28-day, and YTD periods.
+""" from datetime import date, datetime, timedelta
+from typing import Tuple, Optional
+import re
+
+
+def get_7day_period(end_date: Optional[date] = None) -> Tuple[date, date]:
+    """Calculate 7-day reporting period. Args:
+        end_date: End date of period (defaults to today)
+    
+    Returns:
+        Tuple of (start_date, end_date)
+    
+    Example:
+        >>> start, end = get_7day_period(date(2025, 10, 27))
+        >>> # Returns (2025-10-20, 2025-10-27) - 7 days prior
+    """
+    if end_date is None:
+        end_date = date.today()
+    
+    start_date = end_date - timedelta(days=7)
+    return start_date, end_date
+
+
+def get_28day_period(end_date: Optional[date] = None) -> Tuple[date, date]:
+    """Calculate 28-day reporting period (4 weeks). Args:
+        end_date: End date of period (defaults to today)
+    
+    Returns:
+        Tuple of (start_date, end_date)
+    
+    Example:
+        >>> start, end = get_28day_period(date(2025, 10, 27))
+        >>> # Returns (2025-09-29, 2025-10-27) - 28 days prior
+    """
+    if end_date is None:
+        end_date = date.today()
+    
+    start_date = end_date - timedelta(days=28)
+    return start_date, end_date
+
+
+def get_ytd_period(end_date: Optional[date] = None) -> Tuple[date, date]:
+    """Calculate year-to-date reporting period. Args:
+        end_date: End date of period (defaults to today)
+    
+    Returns:
+        Tuple of (start_date, end_date)
+    
+    Example:
+        >>> start, end = get_ytd_period(date(2025, 10, 27))
+        >>> # Returns (2025-01-01, 2025-10-27) - from January 1st
+    """
+    if end_date is None:
+        end_date = date.today()
+    
+    start_date = end_date.replace(month=1, day=1)
+    return start_date, end_date
+
+
+def get_period_dates(period_type: str, end_date: Optional[date] = None) -> Tuple[date, date]:
+    """Get period dates by period type string. Args:
+        period_type: Period type ('7day', '28day', or 'ytd')
+        end_date: End date of period (defaults to today)
+    
+    Returns:
+        Tuple of (start_date, end_date)
+    
+    Raises:
+        ValueError: If period_type is invalid
+    
+    Example:
+        >>> get_period_dates('7day', date(2025, 10, 27))
+        (datetime.date(2025, 10, 20), datetime.date(2025, 10, 27))
+    """
+    period_type = period_type.lower()
+    
+    if period_type in ['7day', '7-day', 'week', 'weekly']:
+        return get_7day_period(end_date)
+    
+    elif period_type in ['28day', '28-day', 'month', 'monthly']:
+        return get_28day_period(end_date)
+    
+    elif period_type in ['ytd', 'year-to-date', 'year']:
+        return get_ytd_period(end_date)
+    
+    else:
+        raise ValueError(f"Invalid period type: {period_type}. Expected: 7day, 28day, or ytd")
+
+
+def format_date_for_filename(dt: date, sep: str = '_') -> str:
+    """Format date for use in filenames. Args:
+        dt: Date to format
+        sep: Separator character (default: underscore)
+    
+    Returns:
+        Formatted date string (YYYY_MM_DD)
+    
+    Example:
+        >>> format_date_for_filename(date(2025, 10, 27))
+        '2025_10_27'
+        >>> format_date_for_filename(date(2025, 10, 27), sep='-')
+        '2025-10-27'
+    """
+    return dt.strftime(f'%Y{sep}%m{sep}%d')
+
+
+def parse_scrpa_cycle_id(cycle_id: str) -> Optional[dict]:
+    """Parse SCRPA cycle ID into components. SCRPA cycle IDs follow format: C{week}W{year_week}
+    Example: C11W42 = Cycle 11, Week 42
+    
+    Args:
+        cycle_id: SCRPA cycle identifier (e.g., "C11W42")
+    
+    Returns:
+        Dictionary with 'cycle' and 'week' keys, or None if invalid
+    
+    Example:
+        >>> parse_scrpa_cycle_id("C11W42")
+        {'cycle': 11, 'week': 42}
+    """
+    pattern = r'C(\d+)W(\d+)'
+    match = re.match(pattern, cycle_id)
+    
+    if match:
+        return {
+            'cycle': int(match.group(1)),
+            'week': int(match.group(2))
+        }
+    
+    return None
+
+
+def generate_scrpa_cycle_id(cycle: int, week: int) -> str:
+    """Generate SCRPA cycle ID from components. Args:
+        cycle: Cycle number
+        week: Week number
+    
+    Returns:
+        SCRPA cycle ID string
+    
+    Example:
+        >>> generate_scrpa_cycle_id(11, 42)
+        'C11W42'
+    """
+    return f"C{cycle}W{week}"
+
+
+def get_week_number(dt: date) -> int:
+    """Get ISO week number for a date. Args:
+        dt: Date to get week number for
+    
+    Returns:
+        ISO week number (1-53)
+    
+    Example:
+        >>> get_week_number(date(2025, 10, 27))
+        44
+    """
+    return dt.isocalendar()[1]
+
+
+def is_weekend(dt: date) -> bool:
+    """Check if date falls on weekend (Saturday or Sunday). Args:
+        dt: Date to check
+    
+    Returns:
+        True if weekend, False otherwise
+    
+    Example:
+        >>> is_weekend(date(2025, 10, 25))  # Saturday
+        True
+        >>> is_weekend(date(2025, 10, 27))  # Monday
+        False
+    """
+    return dt.weekday() >= 5  # 5 = Saturday, 6 = Sunday
+
+
+def get_quarter(dt: date) -> int:
+    """Get quarter (1-4) for a date. Args:
+        dt: Date to get quarter for
+    
+    Returns:
+        Quarter number (1-4)
+    
+    Example:
+        >>> get_quarter(date(2025, 10, 27))
+        4
+    """
+    return (dt.month - 1) // 3 + 1
+
+
+def add_date_parts(dt: date) -> dict:
+    """Extract all date components into a dictionary. Args:
+        dt: Date to extract parts from
+    
+    Returns:
+        Dictionary with date components
+    
+    Example:
+        >>> add_date_parts(date(2025, 10, 27))
+        {
+            'year': 2025,
+            'quarter': 4,
+            'month': 10,
+            'week': 44,
+            'day': 27,
+            'day_of_week': 0,  # Monday
+            'day_of_year': 300,
+            'is_weekend': False
+        }
+    """
+    return {
+        'year': dt.year,
+        'quarter': get_quarter(dt),
+        'month': dt.month,
+        'week': get_week_number(dt),
+        'day': dt.day,
+        'day_of_week': dt.weekday(),  # 0=Monday, 6=Sunday
+        'day_of_year': dt.timetuple().tm_yday,
+        'is_weekend': is_weekend(dt)
+    }
+
+
+def parse_time_of_day(hour: int) -> str:
+    """Categorize hour into time-of-day period.

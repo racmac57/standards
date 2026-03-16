@@ -1,0 +1,591 @@
+powershell -NoProfile -Command "New-Item -ItemType Directory -Path '!SOURCE_FOLDER!' -Force | Out-Null" >nul 2>&1
+)
+
+REM Copy the timestamped folder into the source file's folder
+xcopy "%FOUND_PATH%" "!DEST_PATH!\" /E /I /Y >nul
+
+if errorlevel 0 (
+    echo   [OK] Copied data to: docs\chatlogs\chunked\!BASENAME!\!TIMESTAMPED_FOLDER!
+) else (
+    echo [WARNING] Copy might have failed.
+) echo. echo ============================================================================
+echo  PROCESSING COMPLETE
+echo ============================================================================
+echo. echo Project:    !PROJECT_NAME! echo Raw Source:  docs\chatlogs\raw\%FILENAME%
+echo Processed:   docs\chatlogs\chunked\!BASENAME!\!TIMESTAMPED_FOLDER! echo Chunks:      %CHUNK_COUNT% files
+echo Processing time: ~%ELAPSED% seconds
+echo. echo ============================================================================
+
+timeout /t 4 /nobreak >nul
+exit /b 0
+
+```
+
+```bat
+@echo off
+REM ============================================================================
+REM Generic Chatlog Processor
+REM ============================================================================
+REM Version: 2.0.0 (Generic - works with any project directory)
+REM ============================================================================
+REM Usage:
+REM   Process_Chatlog.bat <filepath> [project_root]
+REM
+REM   If project_root is not provided, auto-detects by looking for docs\chatlogs
+REM   folder structure in the file's directory tree. REM ============================================================================
+
+setlocal enabledelayedexpansion
+
+REM External paths (shared across all projects)
+set "CHUNKER_ROOT=C:\_chunker"
+set "CHUNKER_INPUT=C:\_chunker\02_data"
+set "CHUNKER_OUTPUT=%OneDriveCommercial%\KB_Shared\04_output"
+
+REM ============================================================================
+REM CHECK: File Selection
+REM ============================================================================
+if "%~1"=="" (
+    echo [ERROR] No file selected. pause
+    exit /b 1
+)
+
+set "INPUT_FILE=%~1"
+set "FILENAME=%~nx1"
+set "BASENAME=%~n1"
+set "FILE_DIR=%~dp1"
+
+REM ============================================================================
+REM DETECT: Project Root
+REM ============================================================================
+set "PROJECT_ROOT=%~2"
+
+if "!PROJECT_ROOT! "=="" (
+    echo [INFO] Auto-detecting project root...
+    
+    REM Method 1: Check for existing sidecar JSON files in chunker output
+    REM (These contain source_path metadata from previous processing)
+    echo   [INFO] Checking for existing sidecar files...
+    for /f "delims=" %%A in ('powershell -Command "[System.Environment]::ExpandEnvironmentVariables('%CHUNKER_OUTPUT%')"') do set "EXPANDED_OUTPUT=%%A"
+    
+    REM Use PowerShell to find project root from sidecar files (more reliable)
+    for /f "delims=" %%R in ('powershell -NoProfile -Command "$output = [System.Environment]::ExpandEnvironmentVariables('%CHUNKER_OUTPUT%'); $sidecars = Get-ChildItem -Path $output -Recurse -Filter '*_sidecar.json' -ErrorAction SilentlyContinue | Select-Object -First 5; foreach ($sc in $sidecars) { try { $json = Get-Content $sc.FullName -Raw -ErrorAction SilentlyContinue | ConvertFrom-Json; if ($json.source_path) { $sourceDir = Split-Path $json.source_path -Parent; $checkDir = $sourceDir; while ($checkDir) { $chatlogsPath = Join-Path $checkDir 'docs\chatlogs'; if (Test-Path $chatlogsPath) { Write-Output $checkDir; exit; } $parent = Split-Path $checkDir -Parent; if ($parent -eq $checkDir) { break; } $checkDir = $parent; } } } catch {} }" 2^>nul') do (
+        set "PROJECT_ROOT=%%R"
+        if defined PROJECT_ROOT goto PROJECT_FOUND
+    )
+    
+    REM Method 2: Walk up directory tree looking for docs\chatlogs folder
+    REM Also check if current directory looks like a project root (has project markers)
+    set "CURRENT_DIR=!FILE_DIR!" :FIND_PROJECT_ROOT
+    REM Remove trailing backslash
+    if "!CURRENT_DIR:~-1! "=="\" set "CURRENT_DIR=!CURRENT_DIR:~0,-1!" REM Check if docs\chatlogs exists here (definitive project root)
+    if exist "!CURRENT_DIR!\docs\chatlogs\" (
+        set "PROJECT_ROOT=!CURRENT_DIR!" goto PROJECT_FOUND
+    )
+    
+    REM Check if this directory looks like a project root (has common project files/folders)
+    REM This handles first-time use when docs\chatlogs doesn't exist yet
+    if exist "!CURRENT_DIR!\README.md" (
+        REM Likely a project root - use it and create docs\chatlogs structure
+        set "PROJECT_ROOT=!CURRENT_DIR!" goto PROJECT_FOUND
+    )
+    if exist "!CURRENT_DIR!\.git\" (
+        REM Git repository root - likely a project
+        set "PROJECT_ROOT=!CURRENT_DIR!" goto PROJECT_FOUND
+    )
+    if exist "!CURRENT_DIR!\src\" (
+        REM Has src folder - likely a project
+        set "PROJECT_ROOT=!CURRENT_DIR!" goto PROJECT_FOUND
+    )
+    if exist "!CURRENT_DIR!\scripts\" (
+        REM Has scripts folder - likely a project (e.g., unified_data_dictionary)
+        set "PROJECT_ROOT=!CURRENT_DIR!" goto PROJECT_FOUND
+    )
+    
+    REM Move up one level
+    for %%P in ("!CURRENT_DIR!") do set "PARENT_DIR=%%~dpP"
+    if "!PARENT_DIR! "=="" (
+        REM Reached root, try one more check at Standards level
+        if exist "C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\docs\chatlogs\" (
+            set "PROJECT_ROOT=C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards"
+            goto PROJECT_FOUND
+        )
+        goto PROJECT_NOT_FOUND
+    )
+    
+    REM Remove trailing backslash from parent
+    if "!PARENT_DIR:~-1! "=="\" set "PARENT_DIR=!PARENT_DIR:~0,-1!" set "CURRENT_DIR=!PARENT_DIR!" goto FIND_PROJECT_ROOT
+    
+    :PROJECT_NOT_FOUND
+    echo [ERROR] Could not auto-detect project root. echo. echo Detection methods tried:
+    echo   1. Existing sidecar JSON files in chunker output
+    echo   2. Directory tree walk (looking for docs\chatlogs\)
+    echo. echo Please provide project root as second parameter:
+    echo   Process_Chatlog.bat "%INPUT_FILE%" "C:\path\to\project"
+    echo. echo Or ensure the file is within a project that has: docs\chatlogs\ folder
+    pause
+    exit /b 1
+    
+    :PROJECT_FOUND
+    echo   [OK] Detected project: !PROJECT_ROOT! echo   [DEBUG] Project root path: !PROJECT_ROOT!
+) else (
+    echo   [OK] Using provided project root: !PROJECT_ROOT! echo   [DEBUG] Project root path: !PROJECT_ROOT!
+) REM Set project-specific paths
+set "RAW_DIR=!PROJECT_ROOT!\docs\chatlogs\raw"
+set "CHUNKED_DIR=!PROJECT_ROOT!\docs\chatlogs\chunked"
+
+REM Debug: Show paths that will be used
+echo   [DEBUG] Raw directory: !RAW_DIR! echo   [DEBUG] Chunked directory: !CHUNKED_DIR! echo. REM Extract project name for display
+for %%P in ("!PROJECT_ROOT!") do set "PROJECT_NAME=%%~nxP"
+
+echo. echo ============================================================================
+echo  CHATLOG PROCESSOR v2.0.0 - !PROJECT_NAME! echo ============================================================================
+echo. echo Processing: %FILENAME%
+echo Project:    !PROJECT_ROOT! echo. REM Check if watcher is running
+echo [STEP 0/5] Checking watcher status...
+powershell -NoProfile -Command "$watcher = Get-Process python -ErrorAction SilentlyContinue | Where-Object { try { $cmdLine = (Get-WmiObject Win32_Process -Filter \"ProcessId = $($_.Id)\" -ErrorAction SilentlyContinue).CommandLine; $cmdLine -like '*watcher_splitter.py*' } catch { $false } }; if ($watcher) { exit 0 } else { exit 1 }" >nul 2>&1
+if errorlevel 1 (
+    echo   [WARNING] Watcher may not be running! echo   Please ensure watcher is running: python watcher_splitter.py
+    echo   Continuing anyway...
+    echo.
+) else (
+    echo   [OK] Watcher is running
+    echo.
+) REM ============================================================================
+REM STEP 1: Move to Project Raw Folder
+REM ============================================================================
+echo [STEP 1/5] Saving to project raw folder...
+
+REM Create full directory path if it doesn't exist (creates parent docs\chatlogs if needed)
+if not exist "!RAW_DIR!" (
+    echo   [INFO] Creating directory structure: docs\chatlogs\raw
+    echo   [DEBUG] Target path: !RAW_DIR! powershell -NoProfile -Command "New-Item -ItemType Directory -Path '!RAW_DIR!' -Force | Out-Null"
+    if errorlevel 1 (
+        echo   [ERROR] Failed to create directory: !RAW_DIR! echo   [DEBUG] Project root: !PROJECT_ROOT! pause
+        exit /b 1
+    )
+    if not exist "!RAW_DIR!" (
+        echo   [ERROR] Directory still does not exist after creation attempt: !RAW_DIR! pause
+        exit /b 1
+    )
+    echo   [OK] Directory created successfully
+)
+
+if /i "%~dp1"=="!RAW_DIR!\" (
+    echo   [INFO] File is already in raw folder.
+) else (
+    move /Y "%INPUT_FILE%" "!RAW_DIR!\" >nul
+    if errorlevel 1 (
+        echo ERROR: Failed to move to raw folder. pause
+        exit /b 1
+    )
+    echo   [OK] Saved to: docs\chatlogs\raw\%FILENAME%
+)
+
+REM ============================================================================
+REM STEP 2: Send Atomic Copy to Chunker
+REM ============================================================================
+echo. echo [STEP 2/5] Sending atomic copy to chunker...
+
+if not exist "%CHUNKER_INPUT%" (
+    echo   [ERROR] Watch folder does not exist: %CHUNKER_INPUT%
+    pause
+    exit /b 1
+)
+
+REM 1. Copy as .part (Watcher ignores this)
+copy /Y "!RAW_DIR!\%FILENAME%" "%CHUNKER_INPUT%\%FILENAME%.part" >nul 2>&1
+if errorlevel 1 (
+    echo   [ERROR] Failed to copy file to watch folder
+    pause
+    exit /b 1
+)
+
+REM 2. Rename to final (Watcher sees ONE event)
+ren "%CHUNKER_INPUT%\%FILENAME%.part" "%FILENAME%" >nul 2>&1
+if errorlevel 1 (
+    echo   [ERROR] Failed to rename file in watch folder
+    pause
+    exit /b 1
+)
+
+echo   [OK] File queued for processing
+
+REM ============================================================================
+REM STEP 3: Monitor for Output
+REM ============================================================================
+echo. echo [STEP 3/5] Waiting for processed files...
+echo   Target: %BASENAME%...
+echo   Timeout: 180 seconds (scanning every 5 seconds)
+echo. REM Expand environment variables in output path
+for /f "delims=" %%A in ('powershell -Command "[System.Environment]::ExpandEnvironmentVariables('%CHUNKER_OUTPUT%')"') do set "EXPANDED_OUTPUT=%%A"
+
+set "TIMEOUT_COUNT=0"
+set "FOUND_PATH="
+set "SCAN_INTERVAL=5"
+set "MAX_SCANS=36"
+
+:WAIT_FOR_CHUNK
+timeout /t %SCAN_INTERVAL% /nobreak >nul
+set /a TIMEOUT_COUNT+=1
+set /a ELAPSED=TIMEOUT_COUNT * %SCAN_INTERVAL%
+
+REM Show progress every 10 seconds
+set /a MOD_CHECK=%TIMEOUT_COUNT% %% 2
+if %MOD_CHECK%==0 echo   ...scanning (%ELAPSED%s)
+
+REM Look for a DIRECTORY containing the basename
+for /d %%D in ("%EXPANDED_OUTPUT%\*%BASENAME%*") do (
+    REM Check if chunks exist in the directory
+    dir /b "%%D\chunk_*.txt" >nul 2>&1
+    if not errorlevel 1 (
+        set "FOUND_PATH=%%D"
+        goto FILES_FOUND
+    )
+)
+
+REM Wait max 180 seconds (36 scans * 5 seconds)
+if %TIMEOUT_COUNT% lss %MAX_SCANS% goto WAIT_FOR_CHUNK
+
+echo. echo [ERROR] Chunking Timed Out
+echo The watcher may be busy or the file is very large. echo. echo Diagnostics:
+echo   - Timeout: 180 seconds
+echo   - Watch folder: %CHUNKER_INPUT%
+echo   - Output folder: %EXPANDED_OUTPUT%
+echo   - Target file: %BASENAME%
+echo. echo Troubleshooting:
+echo   1. Check if watcher is running: python watcher_splitter.py
+echo   2. Check watch folder for queued files: %CHUNKER_INPUT%
+echo   3. Check if file was copied: dir "%CHUNKER_INPUT%\%FILENAME%"
+echo   4. Check output folder: %EXPANDED_OUTPUT%
+echo   5. Run diagnostic: powershell -File "%CHUNKER_ROOT%\scripts\Check-Watcher-Status.ps1" -FileName "%BASENAME%"
+echo   6. For large files, increase MAX_SCANS in this script (currently %MAX_SCANS%)
+echo. pause
+exit /b 1
+
+:FILES_FOUND
+echo   [OK] Found output: %FOUND_PATH%
+
+REM ============================================================================
+REM STEP 4: Verify Chunks
+REM ============================================================================
+echo. echo [STEP 4/5] Verifying chunks...
+set "CHUNK_COUNT=0"
+for /f %%C in ('dir /b "%FOUND_PATH%\chunk_*.txt" 2^>nul ^| find /c /v ""') do set "CHUNK_COUNT=%%C"
+if %CHUNK_COUNT% gtr 0 (
+    echo   [OK] Found %CHUNK_COUNT% chunk files
+) else (
+    echo   [WARNING] No chunk files found, but directory exists
+)
+echo. REM ============================================================================
+REM STEP 5: Copy Output to Project
+REM ============================================================================
+echo [STEP 5/5] Retrieving chunked files...
+
+REM Create full directory path if it doesn't exist (creates parent docs\chatlogs if needed)
+if not exist "!CHUNKED_DIR!" (
+    echo   [INFO] Creating directory structure: docs\chatlogs\chunked
+    powershell -NoProfile -Command "New-Item -ItemType Directory -Path '!CHUNKED_DIR!' -Force | Out-Null" >nul 2>&1
+)
+timeout /t 1 /nobreak >nul
+
+REM Organize by source filename: chunked\BASENAME\TIMESTAMPED_FOLDER\
+REM This keeps each source file's chunks organized and preserves processing history
+set "SOURCE_FOLDER=!CHUNKED_DIR!\!BASENAME!" REM Extract just the folder name from FOUND_PATH (e.g., "2025_12_30_22_43_40_filename")
+for %%F in ("%FOUND_PATH%") do set "TIMESTAMPED_FOLDER=%%~nxF"
+set "DEST_PATH=!SOURCE_FOLDER!\!TIMESTAMPED_FOLDER!" REM Create source file folder if it doesn't exist
+if not exist "!SOURCE_FOLDER!" (
+    echo   [INFO] Creating folder for source file: !BASENAME! powershell -NoProfile -Command "New-Item -ItemType Directory -Path '!SOURCE_FOLDER!' -Force | Out-Null" >nul 2>&1
+)
+
+REM Copy the timestamped folder into the source file's folder
+xcopy "%FOUND_PATH%" "!DEST_PATH!\" /E /I /Y >nul
+
+if errorlevel 0 (
+    echo   [OK] Copied data to: docs\chatlogs\chunked\!BASENAME!\!TIMESTAMPED_FOLDER!
+) else (
+    echo [WARNING] Copy might have failed.
+) echo. echo ============================================================================
+echo  PROCESSING COMPLETE
+echo ============================================================================
+echo. echo Project:    !PROJECT_NAME! echo Raw Source:  docs\chatlogs\raw\%FILENAME%
+echo Processed:   docs\chatlogs\chunked\!BASENAME!\!TIMESTAMPED_FOLDER! echo Chunks:      %CHUNK_COUNT% files
+echo Processing time: ~%ELAPSED% seconds
+echo. echo ============================================================================
+
+timeout /t 4 /nobreak >nul
+exit /b 0
+
+```
+
+Checking which script the Directory Opus button calls and verifying the file exists:
+
+
+Checking which script files exist:
+
+
+Checking the actual filename and creating a test to see what's happening:
+
+
+The file is `process_chatlog.bat` (lowercase). The Directory Opus button may still point to `Process_UDD_Chatlog.bat` (the old one). Creating a diagnostic script to test what's happening:
+
+
+```bat
+@echo off
+REM ============================================================================
+REM Diagnostic Test Script for Chatlog Processing
+REM ============================================================================
+REM This script helps diagnose issues with the chatlog processing workflow
+REM ============================================================================
+
+setlocal enabledelayedexpansion
+
+echo. echo ============================================================================
+echo  CHATLOG PROCESSING DIAGNOSTIC TEST
+echo ============================================================================
+echo. REM Check if file was provided
+if "%~1"=="" (
+    echo [ERROR] No file provided
+    echo Usage: Test_Chatlog_Processing.bat "path\to\file"
+    pause
+    exit /b 1
+)
+
+set "INPUT_FILE=%~1"
+set "FILENAME=%~nx1"
+set "BASENAME=%~n1"
+set "FILE_DIR=%~dp1"
+
+echo [TEST] File Information:
+echo   Full path: %INPUT_FILE%
+echo   Filename: %FILENAME%
+echo   Basename: %BASENAME%
+echo   Directory: %FILE_DIR%
+echo. REM Test project root detection
+echo [TEST] Project Root Detection:
+set "PROJECT_ROOT="
+set "CURRENT_DIR=!FILE_DIR!" :FIND_PROJECT_ROOT
+if "!CURRENT_DIR:~-1! "=="\" set "CURRENT_DIR=!CURRENT_DIR:~0,-1!" if exist "!CURRENT_DIR!\docs\chatlogs\" (
+    set "PROJECT_ROOT=!CURRENT_DIR!" goto PROJECT_FOUND
+)
+
+if exist "!CURRENT_DIR!\README.md" (
+    set "PROJECT_ROOT=!CURRENT_DIR!" goto PROJECT_FOUND
+)
+if exist "!CURRENT_DIR!\.git\" (
+    set "PROJECT_ROOT=!CURRENT_DIR!" goto PROJECT_FOUND
+)
+if exist "!CURRENT_DIR!\src\" (
+    set "PROJECT_ROOT=!CURRENT_DIR!" goto PROJECT_FOUND
+)
+if exist "!CURRENT_DIR!\scripts\" (
+    set "PROJECT_ROOT=!CURRENT_DIR!" goto PROJECT_FOUND
+)
+
+for %%P in ("!CURRENT_DIR!") do set "PARENT_DIR=%%~dpP"
+if "!PARENT_DIR! "=="" goto PROJECT_NOT_FOUND
+
+if "!PARENT_DIR:~-1! "=="\" set "PARENT_DIR=!PARENT_DIR:~0,-1!" set "CURRENT_DIR=!PARENT_DIR!" goto FIND_PROJECT_ROOT
+
+:PROJECT_NOT_FOUND
+echo   [FAIL] Could not detect project root
+echo   [INFO] Checked up to: !FILE_DIR! pause
+exit /b 1
+
+:PROJECT_FOUND
+echo   [OK] Project root detected: !PROJECT_ROOT! echo. REM Test directory creation
+set "RAW_DIR=!PROJECT_ROOT!\docs\chatlogs\raw"
+set "CHUNKED_DIR=!PROJECT_ROOT!\docs\chatlogs\chunked"
+
+echo [TEST] Directory Paths:
+echo   Raw: !RAW_DIR! echo   Chunked: !CHUNKED_DIR! echo. echo [TEST] Directory Creation:
+if not exist "!RAW_DIR!" (
+    echo   [INFO] Creating: !RAW_DIR! powershell -NoProfile -Command "New-Item -ItemType Directory -Path '!RAW_DIR!' -Force"
+    if errorlevel 1 (
+        echo   [FAIL] Failed to create raw directory
+    ) else (
+        echo   [OK] Raw directory created
+    )
+) else (
+    echo   [OK] Raw directory already exists
+)
+
+if not exist "!CHUNKED_DIR!" (
+    echo   [INFO] Creating: !CHUNKED_DIR! powershell -NoProfile -Command "New-Item -ItemType Directory -Path '!CHUNKED_DIR!' -Force"
+    if errorlevel 1 (
+        echo   [FAIL] Failed to create chunked directory
+    ) else (
+        echo   [OK] Chunked directory created
+    )
+) else (
+    echo   [OK] Chunked directory already exists
+)
+
+echo. echo [TEST] Verification:
+if exist "!RAW_DIR!" (
+    echo   [OK] Raw directory exists: !RAW_DIR!
+) else (
+    echo   [FAIL] Raw directory missing: !RAW_DIR!
+) if exist "!CHUNKED_DIR!" (
+    echo   [OK] Chunked directory exists: !CHUNKED_DIR!
+) else (
+    echo   [FAIL] Chunked directory missing: !CHUNKED_DIR!
+) echo. echo ============================================================================
+echo  DIAGNOSTIC COMPLETE
+echo ============================================================================
+echo. pause
+
+```
+
+Created a diagnostic script. Checking which script your Directory Opus button calls. Please run this test:
+
+
+The old `Process_UDD_Chatlog.bat` uses `mkdir`, which only creates one level. If `docs\chatlogs` doesn't exist, it fails. Updating the old script to create the full path:
+
+
+```bat
+@echo off
+REM ============================================================================
+REM Process Chatlog for unified_data_dictionary
+REM ============================================================================
+REM Version: 1.0.8 (Fixed: Increased timeout, improved watcher detection)
+REM ============================================================================
+
+setlocal enabledelayedexpansion
+
+REM Project paths
+set "PROJECT_ROOT=C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\unified_data_dictionary"
+set "RAW_DIR=%PROJECT_ROOT%\docs\chatlogs\raw"
+set "CHUNKED_DIR=%PROJECT_ROOT%\docs\chatlogs\chunked"
+set "CHUNKER_ROOT=C:\_chunker"
+
+REM External paths
+set "CHUNKER_INPUT=C:\_chunker\02_data"
+set "CHUNKER_OUTPUT=%OneDriveCommercial%\KB_Shared\04_output"
+
+REM ============================================================================
+REM CHECK: File Selection
+REM ============================================================================
+if "%~1"=="" (
+    echo [ERROR] No file selected. pause
+    exit /b 1
+)
+
+set "INPUT_FILE=%~1"
+set "FILENAME=%~nx1"
+set "BASENAME=%~n1"
+
+echo. echo ============================================================================
+echo  UNIFIED DATA DICTIONARY - CHATLOG PROCESSOR v1.0.8
+echo ============================================================================
+echo. echo Processing: %FILENAME%
+echo. REM Check if watcher is running
+echo [STEP 0/5] Checking watcher status...
+powershell -NoProfile -Command "$watcher = Get-Process python -ErrorAction SilentlyContinue | Where-Object { try { $cmdLine = (Get-WmiObject Win32_Process -Filter \"ProcessId = $($_.Id)\" -ErrorAction SilentlyContinue).CommandLine; $cmdLine -like '*watcher_splitter.py*' } catch { $false } }; if ($watcher) { exit 0 } else { exit 1 }" >nul 2>&1
+if errorlevel 1 (
+    echo   [WARNING] Watcher may not be running! echo   Please ensure watcher is running: python watcher_splitter.py
+    echo   Continuing anyway...
+    echo.
+) else (
+    echo   [OK] Watcher is running
+    echo.
+) REM ============================================================================
+REM STEP 1: Move to Project Raw Folder
+REM ============================================================================
+echo [STEP 1/5] Saving to project raw folder...
+
+REM Create full directory path if it doesn't exist (creates parent docs\chatlogs if needed)
+if not exist "%RAW_DIR%" (
+    echo   [INFO] Creating directory structure: docs\chatlogs\raw
+    powershell -NoProfile -Command "New-Item -ItemType Directory -Path '%RAW_DIR%' -Force | Out-Null"
+    if errorlevel 1 (
+        echo   [ERROR] Failed to create directory: %RAW_DIR%
+        pause
+        exit /b 1
+    )
+)
+
+if /i "%~dp1"=="%RAW_DIR%\" (
+    echo   [INFO] File is already in raw folder.
+) else (
+    move /Y "%INPUT_FILE%" "%RAW_DIR%\" >nul
+    if errorlevel 1 (
+        echo ERROR: Failed to move to raw folder. pause
+        exit /b 1
+    )
+    echo   [OK] Saved to: docs\chatlogs\raw\%FILENAME%
+)
+
+REM ============================================================================
+REM STEP 2: Send Atomic Copy to Chunker
+REM ============================================================================
+echo. echo [STEP 2/5] Sending atomic copy to chunker...
+
+if not exist "%CHUNKER_INPUT%" (
+    echo   [ERROR] Watch folder does not exist: %CHUNKER_INPUT%
+    pause
+    exit /b 1
+)
+
+REM 1. Copy as .part (Watcher ignores this)
+copy /Y "%RAW_DIR%\%FILENAME%" "%CHUNKER_INPUT%\%FILENAME%.part" >nul 2>&1
+if errorlevel 1 (
+    echo   [ERROR] Failed to copy file to watch folder
+    pause
+    exit /b 1
+)
+
+REM 2. Rename to final (Watcher sees ONE event)
+ren "%CHUNKER_INPUT%\%FILENAME%.part" "%FILENAME%" >nul 2>&1
+if errorlevel 1 (
+    echo   [ERROR] Failed to rename file in watch folder
+    pause
+    exit /b 1
+)
+
+echo   [OK] File queued for processing
+
+REM ============================================================================
+REM STEP 3: Monitor for Output
+REM ============================================================================
+echo. echo [STEP 3/5] Waiting for processed files...
+echo   Target: %BASENAME%...
+echo   Timeout: 180 seconds (scanning every 5 seconds)
+echo. REM Expand environment variables in output path
+for /f "delims=" %%A in ('powershell -Command "[System.Environment]::ExpandEnvironmentVariables('%CHUNKER_OUTPUT%')"') do set "EXPANDED_OUTPUT=%%A"
+
+set "TIMEOUT_COUNT=0"
+set "FOUND_PATH="
+set "SCAN_INTERVAL=5"
+set "MAX_SCANS=36"
+
+:WAIT_FOR_CHUNK
+timeout /t %SCAN_INTERVAL% /nobreak >nul
+set /a TIMEOUT_COUNT+=1
+set /a ELAPSED=TIMEOUT_COUNT * %SCAN_INTERVAL%
+
+REM Show progress every 10 seconds
+set /a MOD_CHECK=%TIMEOUT_COUNT% %% 2
+if %MOD_CHECK%==0 echo   ...scanning (%ELAPSED%s)
+
+REM Look for a DIRECTORY containing the basename
+for /d %%D in ("%EXPANDED_OUTPUT%\*%BASENAME%*") do (
+    REM Check if chunks exist in the directory
+    dir /b "%%D\chunk_*.txt" >nul 2>&1
+    if not errorlevel 1 (
+        set "FOUND_PATH=%%D"
+        goto FILES_FOUND
+    )
+)
+
+REM Wait max 180 seconds (36 scans * 5 seconds)
+if %TIMEOUT_COUNT% lss %MAX_SCANS% goto WAIT_FOR_CHUNK
+
+echo. echo [ERROR] Chunking Timed Out
+echo The watcher may be busy or the file is very large. echo. echo Diagnostics:
+echo   - Timeout: 180 seconds
+echo   - Watch folder: %CHUNKER_INPUT%
+echo   - Output folder: %EXPANDED_OUTPUT%
+echo   - Target file: %BASENAME%
+echo. echo Troubleshooting:
+echo   1. Check if watcher is running: python watcher_splitter.py
+echo   2.

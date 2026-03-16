@@ -1,0 +1,162 @@
+# Master Task Registry
+# Last Updated: 2026-01-30
+# Sync to Obsidian: python scripts/sync_yaml_to_obsidian.py tasks.yaml --kanban-dir ./kanban
+
+metadata:
+  version: "1.0"
+  created: 2026-01-30
+  updated: 2026-01-30
+  owner: "R. Carucci"
+  project: "CAD/RMS Data Pipeline"
+
+tasks:
+  - id: TASK-001
+    title: "Validate ESRI CSV exports for ArcGIS Pro compatibility"
+    status: "Done"
+    priority: "High"
+    assigned_to: "R. Carucci"
+    due: 2026-01-30
+    created: 2026-01-30
+    updated: 2026-01-30
+    category: "ETL"
+    tags: [cad, esri, export, validation]
+    related_files:
+      - "_CAD/csv/yearly/"
+      - "_CAD/csv/monthly/"
+      - "scripts/export_esri_cad.py"
+    blocked_by: []
+    blocks: []
+    comments: |
+      Completed 17 ESRI CSV exports.
+      All files validated with correct column structure.
+
+  - id: TASK-002
+    title: "Archive legacy schema files in Standards/schemas/udd"
+    status: "Done"
+    priority: "Medium"
+    assigned_to: "R. Carucci"
+    due: 2026-01-30
+    created: 2026-01-30
+    updated: 2026-01-30
+    category: "Schema"
+    tags: [schema, cleanup, archive]
+    related_files:
+      - "Standards/schemas/udd/canonical_schema.json"
+      - "Standards/archive/schema_drafts/"
+    blocked_by: []
+    blocks: []
+    comments: |
+      Archived duplicate/draft schemas.
+      Retained canonical_schema.json as authoritative.
+
+  - id: TASK-003
+    title: "Consolidate _CAD archive directories"
+    status: "To Do"
+    priority: "Medium"
+    assigned_to: "R. Carucci"
+    due: 2026-02-05
+    created: 2026-01-30
+    updated: 2026-01-30
+    category: "Directory"
+    tags: [cad, cleanup, organization]
+    related_files:
+      - "_CAD/archive/"
+      - "_CAD/archived/"
+    blocked_by: []
+    blocks: [TASK-005]
+    comments: |
+      Merge archived/ into archive/.
+      Update README with final structure.
+
+  - id: TASK-004
+    title: "Remove deprecated full_year_export directory"
+    status: "Done"
+    priority: "High"
+    assigned_to: "R. Carucci"
+    due: 2026-01-30
+    created: 2026-01-30
+    updated: 2026-01-30
+    category: "Directory"
+    tags: [cad, cleanup]
+    related_files:
+      - "_CAD/full_year_export/"
+    blocked_by: []
+    blocks: []
+    comments: |
+      Directory deleted.
+      Content migrated to yearly/ canonical structure.
+
+  - id: TASK-005
+    title: "Document CAD export naming conventions"
+    status: "To Do"
+    priority: "Medium"
+    assigned_to: "R. Carucci"
+    due: 2026-02-10
+    created: 2026-01-30
+    updated: 2026-01-30
+    category: "Documentation"
+    tags: [cad, documentation, standards]
+    related_files:
+      - "_CAD/README.md"
+    blocked_by: [TASK-003]
+    blocks: []
+    comments: |
+      Create comprehensive README for _CAD directory.
+      Include naming standards and ETL workflow.
+
+  - id: TASK-006
+    title: "Implement geocoding for CAD records"
+    status: "To Do"
+    priority: "Low"
+    assigned_to: ""
+    due: 2026-03-01
+    created: 2026-01-30
+    updated: 2026-01-30
+    category: "ETL"
+    tags: [cad, geocoding, esri]
+    related_files:
+      - "scripts/geocode.py"
+      - "_CAD/csv/yearly/"
+    blocked_by: [TASK-001]
+    blocks: []
+    comments: |
+      Populate latitude/longitude columns in ESRI exports.
+      Use City of Hackensack address locator.
+
+  - id: TASK-007
+    title: "Set up Obsidian task tracking system"
+    status: "Done"
+    priority: "High"
+    assigned_to: "R. Carucci"
+    due: 2026-01-31
+    created: 2026-01-30
+    updated: 2026-01-30
+    category: "Infrastructure"
+    tags: [obsidian, tasks, automation]
+    related_files:
+      - "task_templates/"
+      - "task_templates/scripts/"
+    blocked_by: []
+    blocks: []
+    comments: |
+      Created YAML-based task system for Obsidian.
+      Includes Kanban board and sync scripts.
+
+  - id: TASK-008
+    title: "Validate RMS export schema compliance"
+    status: "To Do"
+    priority: "Medium"
+    assigned_to: ""
+    due: 2026-02-15
+    created: 2026-01-30
+    updated: 2026-01-30
+    category: "Validation"
+    tags: [rms, schema, validation]
+    related_files:
+      - "Standards/validate_rms_export.py"
+      - "Standards/schemas/udd/rms_fields_schema_latest.json"
+    blocked_by: []
+    blocks: []
+    comments: |
+      Run validation script against recent RMS exports.
+      Generate HTML report for review.

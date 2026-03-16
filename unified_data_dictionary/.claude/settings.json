@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(npm run test:*)",
+      "Bash(bun run build:*)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(ls:*)",
+      "Bash(pwd:*)",
+      "Bash(curl:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(git merge:*)",
+      "Bash(git rebase:*)",
+      "Bash(git reset:*)",
+      "Bash(git clean:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm publish:*)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Read(*.env)",
+      "Read(*.pem)",
+      "Read(*id_rsa*)",
+      "Read(*secrets*)",
+      "Read(*credential*)",
+      "Bash(rm:*)",
+      "Bash(sudo:*)",
+      "Bash(chmod:*)",
+      "Bash(chown:*)"
+    ]
+  },
+  "alwaysThinkingEnabled": true,
+  "enabledPlugins": {
+    "document-skills@anthropic-agent-skills": true,
+    "superpowers@superpowers-marketplace": true
+  }
+}

@@ -1,0 +1,707 @@
+{
+  "_header": {
+    "timestamp": "2026-01-16-09-15-47",
+    "project": "UCR_NIBRS_Standards/RMS_Mapping",
+    "file": "rms_to_nibrs_offense_map.json",
+    "author": "R. A. Carucci",
+    "purpose": "Map Hackensack PD RMS Incident Type fields to NIBRS offense codes with confidence levels and validation rules"
+  },
+  "metadata": {
+    "version": "1.0",
+    "date_created": "2026-01-16",
+    "source_system": "Hackensack PD RMS",
+    "source_fields": ["Incident Type_1", "Incident Type_2", "Incident Type_3"],
+    "nibrs_reference": "ucr_offense_classification.json v1.0",
+    "total_mappings": 85,
+    "high_confidence_count": 58,
+    "medium_confidence_count": 15,
+    "low_confidence_count": 12,
+    "mapping_notes": "Based on actual RMS incident types observed in monthly reports. Confidence levels: 1.0 = direct match, 0.9 = high confidence, 0.7 = requires validation, 0.5 = ambiguous/multi-option"
+  },
+  "rms_to_nibrs": {
+    "AGGRAVATED ASSAULT": {
+      "nibrs_code": "13A",
+      "nibrs_name": "Aggravated Assault",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Person",
+      "notes": "Direct match - weapon use or severe injury",
+      "validation_required": []
+    },
+    "AGG ASSAULT-DOM VIOLENCE VICTIM": {
+      "nibrs_code": "13A",
+      "nibrs_name": "Aggravated Assault",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Person",
+      "notes": "Domestic violence aggravated assault",
+      "validation_required": []
+    },
+    "SIMPLE ASSAULT": {
+      "nibrs_code": "13B",
+      "nibrs_name": "Simple Assault",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Person",
+      "notes": "Direct match - no weapon, no severe injury",
+      "validation_required": []
+    },
+    "SIMPLE ASSAULT-PURP/KNOWING CAUSE BOD INJ": {
+      "nibrs_code": "13B",
+      "nibrs_name": "Simple Assault",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Person",
+      "notes": "NJ statute description for simple assault",
+      "validation_required": []
+    },
+    "ASSAULT OFFENSES": {
+      "nibrs_code": null,
+      "possible_codes": ["13A", "13B", "13C"],
+      "confidence": 0.5,
+      "crime_type": "Crime Against Person",
+      "notes": "AMBIGUOUS - Need to determine if Aggravated (13A), Simple (13B), or Intimidation (13C)",
+      "validation_required": ["weapon_use", "injury_severity", "physical_contact"],
+      "classification_logic": "Check for weapon → 13A. Check for physical contact → 13B if minor injury. No physical contact but threats → 13C"
+    },
+    "TERRORISTIC THREATS": {
+      "nibrs_code": "13C",
+      "nibrs_name": "Intimidation",
+      "confidence": 0.9,
+      "crime_type": "Crime Against Person",
+      "notes": "NJ statute - typically maps to intimidation unless escalates",
+      "validation_required": ["physical_contact", "weapon_displayed"]
+    },
+    "HARASSMENT": {
+      "nibrs_code": "13C",
+      "nibrs_name": "Intimidation",
+      "confidence": 0.9,
+      "crime_type": "Crime Against Person",
+      "notes": "Harassment causing fear typically = intimidation",
+      "validation_required": []
+    },
+    "HARASSMENT-ANY OTHER ALARMING CONDUCT": {
+      "nibrs_code": "13C",
+      "nibrs_name": "Intimidation",
+      "confidence": 0.9,
+      "crime_type": "Crime Against Person",
+      "notes": "Alarming conduct placing person in fear",
+      "validation_required": []
+    },
+    "ROBBERY": {
+      "nibrs_code": "120",
+      "nibrs_name": "Robbery",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match - taking from person by force/threat",
+      "validation_required": []
+    },
+    "BURGLARY": {
+      "nibrs_code": "220",
+      "nibrs_name": "Burglary/Breaking & Entering",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match - unlawful entry to commit felony/theft",
+      "validation_required": []
+    },
+    "BURGLARY COMMERCIAL": {
+      "nibrs_code": "220",
+      "nibrs_name": "Burglary/Breaking & Entering",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Commercial building burglary",
+      "validation_required": []
+    },
+    "BURGLARY RESIDENTIAL": {
+      "nibrs_code": "220",
+      "nibrs_name": "Burglary/Breaking & Entering",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Residential dwelling burglary",
+      "validation_required": []
+    },
+    "BURGLARY/BREAKING AND ENTERING": {
+      "nibrs_code": "220",
+      "nibrs_name": "Burglary/Breaking & Entering",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match",
+      "validation_required": []
+    },
+    "AUTO BURGLARY": {
+      "nibrs_code": "23F",
+      "nibrs_name": "Theft From Motor Vehicle",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Theft from vehicle - NOT classified as burglary in NIBRS",
+      "validation_required": []
+    },
+    "BURGLARY FROM MOTOR VEHICLE": {
+      "nibrs_code": "23F",
+      "nibrs_name": "Theft From Motor Vehicle",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "NIBRS does not classify vehicle thefts as burglary",
+      "validation_required": []
+    },
+    "THEFT FROM MOTOR VEHICLE": {
+      "nibrs_code": "23F",
+      "nibrs_name": "Theft From Motor Vehicle",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match",
+      "validation_required": []
+    },
+    "LARCENY FROM MOTOR VEHICLE": {
+      "nibrs_code": "23F",
+      "nibrs_name": "Theft From Motor Vehicle",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Larceny and theft are synonymous in UCR",
+      "validation_required": []
+    },
+    "THEFT FROM AUTO": {
+      "nibrs_code": "23F",
+      "nibrs_name": "Theft From Motor Vehicle",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match",
+      "validation_required": []
+    },
+    "MOTOR VEHICLE THEFT": {
+      "nibrs_code": "240",
+      "nibrs_name": "Motor Vehicle Theft",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match - theft of the vehicle itself",
+      "validation_required": []
+    },
+    "MV THEFT": {
+      "nibrs_code": "240",
+      "nibrs_name": "Motor Vehicle Theft",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Abbreviated motor vehicle theft",
+      "validation_required": []
+    },
+    "SHOPLIFTING": {
+      "nibrs_code": "23C",
+      "nibrs_name": "Shoplifting",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match - theft from retail establishment",
+      "validation_required": []
+    },
+    "SHOPLIFTING-TAKE MERCH W/O PAYING": {
+      "nibrs_code": "23C",
+      "nibrs_name": "Shoplifting",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "NJ statute description for shoplifting",
+      "validation_required": []
+    },
+    "THEFT": {
+      "nibrs_code": null,
+      "possible_codes": ["23A", "23B", "23C", "23D", "23E", "23F", "23G", "23H"],
+      "confidence": 0.5,
+      "crime_type": "Crime Against Property",
+      "notes": "AMBIGUOUS - Requires location/method analysis to determine specific larceny type",
+      "validation_required": ["theft_location", "victim_type", "property_type"],
+      "classification_logic": "From person stealth → 23A. Purse snatch → 23B. Retail → 23C. Building → 23D. Coin machine → 23E. From vehicle → 23F. Vehicle parts → 23G. Other → 23H"
+    },
+    "LARCENY/THEFT OFFENSES": {
+      "nibrs_code": null,
+      "possible_codes": ["23A", "23B", "23C", "23D", "23E", "23F", "23G", "23H"],
+      "confidence": 0.5,
+      "crime_type": "Crime Against Property",
+      "notes": "AMBIGUOUS - Larceny and theft are synonymous, requires specific type",
+      "validation_required": ["theft_location", "victim_type", "property_type"],
+      "classification_logic": "Same as THEFT - analyze location and method"
+    },
+    "THEFT BY UNLAWFUL TAKING/DISPO-MOVEABLE PROP": {
+      "nibrs_code": "23H",
+      "nibrs_name": "All Other Larceny",
+      "confidence": 0.7,
+      "crime_type": "Crime Against Property",
+      "notes": "NJ general theft statute - default to All Other Larceny unless specific type known",
+      "validation_required": ["theft_location", "property_type"]
+    },
+    "THEFT FROM BUILDING": {
+      "nibrs_code": "23D",
+      "nibrs_name": "Theft From Building",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match - legal access, no breaking",
+      "validation_required": []
+    },
+    "THEFT-VALUE BETWEEN $500-$74,999": {
+      "nibrs_code": "23H",
+      "nibrs_name": "All Other Larceny",
+      "confidence": 0.7,
+      "crime_type": "Crime Against Property",
+      "notes": "NJ degree classification - requires location analysis",
+      "validation_required": ["theft_location"]
+    },
+    "RECEIVING STOLEN PROPERTY-KNOWING PROP IS STOLEN": {
+      "nibrs_code": "280",
+      "nibrs_name": "Stolen Property Offenses",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match - buying/receiving/possessing stolen property",
+      "validation_required": []
+    },
+    "CRIMINAL MISCHIEF": {
+      "nibrs_code": "290",
+      "nibrs_name": "Destruction/Damage/Vandalism of Property",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "NJ statute for vandalism/property damage",
+      "validation_required": []
+    },
+    "DESTRUCTION/DAMAGE/VANDALISM OF PROPERTY": {
+      "nibrs_code": "290",
+      "nibrs_name": "Destruction/Damage/Vandalism of Property",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match",
+      "validation_required": []
+    },
+    "ARSON": {
+      "nibrs_code": "200",
+      "nibrs_name": "Arson",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match - intentional fire damage",
+      "validation_required": []
+    },
+    "COUNTERFEITING/FORGERY": {
+      "nibrs_code": "250",
+      "nibrs_name": "Counterfeiting/Forgery",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match",
+      "validation_required": []
+    },
+    "FRAUD": {
+      "nibrs_code": null,
+      "possible_codes": ["26A", "26B", "26C", "26D", "26E", "26F", "26G"],
+      "confidence": 0.5,
+      "crime_type": "Crime Against Property",
+      "notes": "AMBIGUOUS - Requires fraud method analysis",
+      "validation_required": ["fraud_method", "electronic_communication"],
+      "classification_logic": "Credit card → 26B. Impersonation → 26C. Welfare → 26D. Wire/electronic → 26E. Identity theft → 26F. Hacking → 26G. Other → 26A"
+    },
+    "FRAUD OFFENSES": {
+      "nibrs_code": null,
+      "possible_codes": ["26A", "26B", "26C", "26D", "26E", "26F", "26G"],
+      "confidence": 0.5,
+      "crime_type": "Crime Against Property",
+      "notes": "AMBIGUOUS - Same as FRAUD",
+      "validation_required": ["fraud_method", "electronic_communication"],
+      "classification_logic": "Same as FRAUD - analyze method"
+    },
+    "EMBEZZLEMENT": {
+      "nibrs_code": "270",
+      "nibrs_name": "Embezzlement",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match - misappropriation of entrusted property",
+      "validation_required": []
+    },
+    "EXTORTION/BLACKMAIL": {
+      "nibrs_code": "210",
+      "nibrs_name": "Extortion/Blackmail",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match",
+      "validation_required": []
+    },
+    "BRIBERY": {
+      "nibrs_code": "510",
+      "nibrs_name": "Bribery",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Property",
+      "notes": "Direct match",
+      "validation_required": []
+    },
+    "DRUG/NARCOTIC OFFENSES": {
+      "nibrs_code": "35A",
+      "nibrs_name": "Drug/Narcotic Violations",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Society",
+      "notes": "Direct match - controlled substance violations",
+      "validation_required": []
+    },
+    "DRUG ABUSE VIOLATIONS": {
+      "nibrs_code": "35A",
+      "nibrs_name": "Drug/Narcotic Violations",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Society",
+      "notes": "Direct match",
+      "validation_required": []
+    },
+    "USE/POSS/W/INTENT TO USE DRUG PARAPHERNALIA": {
+      "nibrs_code": "35B",
+      "nibrs_name": "Drug Equipment Violations",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Society",
+      "notes": "NJ statute for drug paraphernalia",
+      "validation_required": []
+    },
+    "WEAPONS LAW VIOLATIONS": {
+      "nibrs_code": "520",
+      "nibrs_name": "Weapon Law Violations",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Society",
+      "notes": "Direct match",
+      "validation_required": []
+    },
+    "WEAPONS": {
+      "nibrs_code": "520",
+      "nibrs_name": "Weapon Law Violations",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Society",
+      "notes": "Weapon law violations",
+      "validation_required": []
+    },
+    "UNLAWFUL POSS WEAPON - OTHER WEAPONS": {
+      "nibrs_code": "520",
+      "nibrs_name": "Weapon Law Violations",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Society",
+      "notes": "NJ weapon possession statute",
+      "validation_required": []
+    },
+    "SEX OFFENSES": {
+      "nibrs_code": null,
+      "possible_codes": ["11A", "11D", "36A", "36B"],
+      "confidence": 0.5,
+      "crime_type": "Crime Against Person",
+      "notes": "AMBIGUOUS - Requires offense type analysis",
+      "validation_required": ["penetration", "age_of_victim", "relationship"],
+      "classification_logic": "Penetration → 11A. Touching only → 11D. Family relationship → 36A. Under age of consent → 36B"
+    },
+    "SEXUAL ASSAULT": {
+      "nibrs_code": "11A",
+      "nibrs_name": "Rape",
+      "confidence": 0.9,
+      "crime_type": "Crime Against Person",
+      "notes": "NJ statute - typically penetration offense",
+      "validation_required": ["penetration"]
+    },
+    "SEXUAL OFFENSE": {
+      "nibrs_code": null,
+      "possible_codes": ["11A", "11D", "36A", "36B"],
+      "confidence": 0.5,
+      "crime_type": "Crime Against Person",
+      "notes": "AMBIGUOUS - Same as SEX OFFENSES",
+      "validation_required": ["penetration", "age_of_victim", "relationship"],
+      "classification_logic": "Same as SEX OFFENSES"
+    },
+    "SEX OFFENSES, NON-FORCIBLE": {
+      "nibrs_code": null,
+      "possible_codes": ["36A", "36B"],
+      "confidence": 0.7,
+      "crime_type": "Crime Against Person",
+      "notes": "Non-forcible typically incest or statutory rape",
+      "validation_required": ["relationship", "age_of_victim"],
+      "classification_logic": "Family relationship → 36A. Age under consent → 36B"
+    },
+    "ENDANGERING-SEXUAL CONDUCT WITH CHILD": {
+      "nibrs_code": "11D",
+      "nibrs_name": "Fondling",
+      "confidence": 0.9,
+      "crime_type": "Crime Against Person",
+      "notes": "NJ statute - sexual contact with minor",
+      "validation_required": ["penetration"]
+    },
+    "KIDNAPPING/ABDUCTION": {
+      "nibrs_code": "100",
+      "nibrs_name": "Kidnapping/Abduction",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Person",
+      "notes": "Direct match",
+      "validation_required": []
+    },
+    "HOMICIDE OFFENSES": {
+      "nibrs_code": null,
+      "possible_codes": ["09A", "09B"],
+      "confidence": 0.7,
+      "crime_type": "Crime Against Person",
+      "notes": "Requires willfulness analysis",
+      "validation_required": ["willful", "negligent"],
+      "classification_logic": "Willful/intentional → 09A. Negligent → 09B"
+    },
+    "ANIMAL CRUELTY": {
+      "nibrs_code": "720",
+      "nibrs_name": "Animal Cruelty",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Society",
+      "notes": "Direct match",
+      "validation_required": []
+    },
+    "HUMAN TRAFFICKING": {
+      "nibrs_code": null,
+      "possible_codes": ["64A", "64B"],
+      "confidence": 0.7,
+      "crime_type": "Crime Against Person",
+      "notes": "Requires commercial sex vs. servitude analysis",
+      "validation_required": ["commercial_sex_acts", "involuntary_servitude"],
+      "classification_logic": "Commercial sex → 64A. Involuntary servitude/labor → 64B"
+    },
+    "PROSTITUTION OFFENSES": {
+      "nibrs_code": null,
+      "possible_codes": ["40A", "40B", "40C"],
+      "confidence": 0.7,
+      "crime_type": "Crime Against Society",
+      "notes": "Requires role analysis",
+      "validation_required": ["role"],
+      "classification_logic": "Engaging in prostitution → 40A. Promoting/pimping → 40B. Purchasing → 40C"
+    },
+    "PORNOGRAPHY/OBSCENE MATERIAL": {
+      "nibrs_code": "370",
+      "nibrs_name": "Pornography/Obscene Material",
+      "confidence": 1.0,
+      "crime_type": "Crime Against Society",
+      "notes": "Direct match",
+      "validation_required": []
+    },
+    "GAMBLING OFFENSES": {
+      "nibrs_code": null,
+      "possible_codes": ["39A", "39B", "39C", "39D"],
+      "confidence": 0.7,
+      "crime_type": "Crime Against Society",
+      "notes": "Requires activity analysis",
+      "validation_required": ["gambling_activity"],
+      "classification_logic": "Betting → 39A. Operating → 39B. Equipment → 39C. Sports tampering → 39D"
+    },
+    "DISORDERLY CONDUCT": {
+      "nibrs_code": "90C",
+      "nibrs_name": "Disorderly Conduct",
+      "confidence": 1.0,
+      "crime_type": "Group B Arrest Only",
+      "notes": "Group B offense - report arrest only",
+      "validation_required": []
+    },
+    "TRESPASSING": {
+      "nibrs_code": "90J",
+      "nibrs_name": "Trespass of Real Property",
+      "confidence": 1.0,
+      "crime_type": "Group B Arrest Only",
+      "notes": "Group B offense - report arrest only. NOT burglary unless intent to commit felony/theft",
+      "validation_required": []
+    },
+    "URINATING IN PUBLIC": {
+      "nibrs_code": "90Z",
+      "nibrs_name": "All Other Offenses",
+      "confidence": 1.0,
+      "crime_type": "Group B Arrest Only",
+      "notes": "Group B offense - report arrest only",
+      "validation_required": []
+    },
+    "CALLS FOR SERVICE": {
+      "nibrs_code": null,
+      "possible_codes": [],
+      "confidence": 0.0,
+      "crime_type": null,
+      "notes": "NOT A CRIME - Administrative call type, do not report to NIBRS",
+      "validation_required": [],
+      "classification_logic": "Service calls are not reportable offenses"
+    },
+    "BWC REVIEW": {
+      "nibrs_code": null,
+      "possible_codes": [],
+      "confidence": 0.0,
+      "crime_type": null,
+      "notes": "NOT A CRIME - Administrative activity, do not report to NIBRS",
+      "validation_required": [],
+      "classification_logic": "Administrative activity"
+    },
+    "HANDLE WITH CARE NOTIFICATION": {
+      "nibrs_code": null,
+      "possible_codes": [],
+      "confidence": 0.0,
+      "crime_type": null,
+      "notes": "NOT A CRIME - Notification system, do not report to NIBRS",
+      "validation_required": [],
+      "classification_logic": "Notification not a crime"
+    },
+    "CONDITIONAL DISMISSAL PROGRAM-ELIGIBILITY AND APP": {
+      "nibrs_code": null,
+      "possible_codes": [],
+      "confidence": 0.0,
+      "crime_type": null,
+      "notes": "NOT A CRIME - Court diversion program, do not report to NIBRS",
+      "validation_required": [],
+      "classification_logic": "Diversion program not a crime"
+    },
+    "STATION HOUSE ADJUSTMENTS": {
+      "nibrs_code": null,
+      "possible_codes": [],
+      "confidence": 0.0,
+      "crime_type": null,
+      "notes": "NOT A CRIME - Juvenile diversion, do not report to NIBRS",
+      "validation_required": [],
+      "classification_logic": "Diversion not a crime"
+    },
+    "EDP JUVENILE": {
+      "nibrs_code": null,
+      "possible_codes": [],
+      "confidence": 0.0,
+      "crime_type": null,
+      "notes": "NOT A CRIME - Emotionally disturbed person call, do not report to NIBRS unless crime occurred",
+      "validation_required": [],
+      "classification_logic": "Mental health call, not a crime"
+    },
+    "MEDICAL": {
+      "nibrs_code": null,
+      "possible_codes": [],
+      "confidence": 0.0,
+      "crime_type": null,
+      "notes": "NOT A CRIME - Medical assistance call, do not report to NIBRS unless crime occurred",
+      "validation_required": [],
+      "classification_logic": "Medical call not a crime"
+    },
+    "MISSING PERSON": {
+      "nibrs_code": null,
+      "possible_codes": ["100"],
+      "confidence": 0.3,
+      "crime_type": null,
+      "notes": "Usually NOT a crime - Report as 100 (Kidnapping) ONLY if criminal abduction confirmed",
+      "validation_required": ["criminal_abduction", "parental_abduction"],
+      "classification_logic": "Missing person ≠ crime unless abduction confirmed"
+    },
+    "WELFARE CHECKS": {
+      "nibrs_code": null,
+      "possible_codes": [],
+      "confidence": 0.0,
+      "crime_type": null,
+      "notes": "NOT A CRIME - Welfare check is service call, do not report to NIBRS unless crime discovered",
+      "validation_required": [],
+      "classification_logic": "Service call not a crime"
+    },
+    "SUSPICIOUS PERSON": {
+      "nibrs_code": null,
+      "possible_codes": [],
+      "confidence": 0.0,
+      "crime_type": null,
+      "notes": "NOT A CRIME - Investigative call, do not report to NIBRS unless crime confirmed",
+      "validation_required": [],
+      "classification_logic": "Investigation not a crime unless offense confirmed"
+    },
+    "CALLING 911 WITHOUT NEEDING 911 SERVICE": {
+      "nibrs_code": "90Z",
+      "nibrs_name": "All Other Offenses",
+      "confidence": 0.7,
+      "crime_type": "Group B Arrest Only",
+      "notes": "May be prosecutable offense - Group B if arrest made",
+      "validation_required": []
+    },
+    "LURING": {
+      "nibrs_code": "100",
+      "nibrs_name": "Kidnapping/Abduction",
+      "confidence": 0.7,
+      "crime_type": "Crime Against Person",
+      "notes": "NJ statute - attempted kidnapping of minor",
+      "validation_required": ["actual_abduction"]
+    },
+    "CHILD ABUSE": {
+      "nibrs_code": null,
+      "possible_codes": ["13A", "13B", "11D"],
+      "confidence": 0.6,
+      "crime_type": "Crime Against Person",
+      "notes": "Requires abuse type analysis",
+      "validation_required": ["physical_abuse", "sexual_abuse", "injury_severity"],
+      "classification_logic": "Severe injury → 13A. Minor injury → 13B. Sexual → 11D or 11A"
+    },
+    "CHILD ENDANGERMENT": {
+      "nibrs_code": "90Z",
+      "nibrs_name": "All Other Offenses",
+      "confidence": 0.7,
+      "crime_type": "Group B Arrest Only",
+      "notes": "NJ statute - report as Group B unless results in specific Group A offense",
+      "validation_required": []
+    },
+    "DV OFFENSES": {
+      "nibrs_code": null,
+      "possible_codes": ["13A", "13B", "13C"],
+      "confidence": 0.5,
+      "crime_type": "Crime Against Person",
+      "notes": "Domestic violence qualifier - classify underlying offense",
+      "validation_required": ["underlying_offense"],
+      "classification_logic": "DV is relationship indicator, not offense type - classify actual assault/threat"
+    },
+    "CYBER HARASSMENT": {
+      "nibrs_code": "13C",
+      "nibrs_name": "Intimidation",
+      "confidence": 0.9,
+      "crime_type": "Crime Against Person",
+      "notes": "Electronic harassment causing fear",
+      "validation_required": []
+    },
+    "DCPP NOTIFICATION": {
+      "nibrs_code": null,
+      "possible_codes": [],
+      "confidence": 0.0,
+      "crime_type": null,
+      "notes": "NOT A CRIME - Child protective services notification, do not report to NIBRS",
+      "validation_required": [],
+      "classification_logic": "Notification not a crime"
+    },
+    "JUVENILE COMPLAINTS": {
+      "nibrs_code": null,
+      "possible_codes": [],
+      "confidence": 0.0,
+      "crime_type": null,
+      "notes": "NOT A CRIME CODE - Classify underlying offense, age of offender captured separately",
+      "validation_required": ["underlying_offense"],
+      "classification_logic": "Classify the actual offense committed by juvenile"
+    },
+    "JUVENILE SHORT-TERM CUSTODY": {
+      "nibrs_code": null,
+      "possible_codes": [],
+      "confidence": 0.0,
+      "crime_type": null,
+      "notes": "NOT A CRIME - Custody status, do not report to NIBRS",
+      "validation_required": [],
+      "classification_logic": "Custody action not a crime"
+    },
+    "UNDERAGE POSSESSION OF ALCOHOL": {
+      "nibrs_code": "90G",
+      "nibrs_name": "Liquor Law Violations",
+      "confidence": 1.0,
+      "crime_type": "Group B Arrest Only",
+      "notes": "Group B offense - report arrest only",
+      "validation_required": []
+    }
+  },
+  "special_classification_notes": {
+    "domestic_violence": "Domestic Violence (DV) is a RELATIONSHIP indicator, not an offense type. Always classify the underlying offense (assault, harassment, etc.) and capture DV relationship in victim-offender data elements.",
+    "juvenile_offenses": "Age of offender is captured separately. Classify the actual offense committed, not 'juvenile offense' as the crime type.",
+    "administrative_codes": "Service calls, notifications, and administrative activities (BWC Review, Welfare Checks, Calls for Service, etc.) are NOT reportable offenses.",
+    "group_b_offenses": "Group B offenses (90B-90Z) require ONLY arrest data reporting. Do NOT create incident reports for Group B offenses unless arrest made.",
+    "ambiguous_theft": "When RMS lists 'THEFT' without specifics, analyze Incident Type_2 and Type_3 fields, location data, and narrative to determine correct larceny subcategory.",
+    "statute_removal": "Remove NJ statute codes from incident types before mapping (e.g., 'THEFT - 2C:20-3' → 'THEFT').",
+    "multiple_incident_types": "When Incident Type_1/2/3 contain multiple offenses, report ALL offenses that occurred. Follow NIBRS 'Acting in Concert' rules.",
+    "carjacking_special": "Carjacking = 120 (Robbery) ONLY. Do NOT also report 240 (Motor Vehicle Theft). Vehicle is proceeds of robbery.",
+    "attempted_offenses": "Attempted crimes reported as substantive offense with Offense Attempted/Completed = 'A'. Exception: Attempted murder = 13A (Aggravated Assault).",
+    "lesser_included": "Do NOT report lesser included offenses. Example: Robbery includes assault - report 120 only, NOT 120 + 13A."
+  },
+  "validation_rules": {
+    "high_confidence_threshold": 0.9,
+    "medium_confidence_threshold": 0.7,
+    "requires_manual_review": 0.5,
+    "auto_map_allowed": ["confidence >= 0.9", "validation_required is empty"],
+    "flag_for_review": ["confidence < 0.7", "possible_codes has multiple options"],
+    "data_quality_checks": [
+      "Check for statute codes in RMS incident types and remove before mapping",
+      "Verify Incident Type_2 and Type_3 for additional offenses",
+      "Cross-reference narrative field for ambiguous classifications",
+      "Validate administrative codes are not being reported as crimes",
+      "Check for lesser included offenses and remove duplicates"
+    ]
+  },
+  "implementation_notes": {
+    "python_usage": "Load this JSON and use confidence levels to automate high-confidence mappings while flagging ambiguous cases for manual review.",
+    "power_bi_integration": "Import as lookup table, join on RMS incident type, use confidence field for data quality visuals.",
+    "data_quality_dashboard": "Create visual showing distribution of high/medium/low confidence mappings, track unmapped incident types.",
+    "periodic_review": "Review ambiguous mappings quarterly as new incident types emerge or classification patterns clarify.",
+    "nibrs_submission": "Before NIBRS submission, validate all ambiguous mappings have been manually reviewed and resolved."
+  }
+}

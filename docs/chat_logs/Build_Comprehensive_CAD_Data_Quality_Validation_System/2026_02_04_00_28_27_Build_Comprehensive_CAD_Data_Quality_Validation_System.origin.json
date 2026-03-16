@@ -1,0 +1,38 @@
+{
+  "tags": [
+    "ai",
+    "code",
+    "data",
+    "docs",
+    "excel",
+    "json",
+    "markdown",
+    "police",
+    "python",
+    "sql"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "let",
+        "phase",
+        "data",
+        "validation",
+        "now",
+        "create"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "# Police CAD data quality project\n_Exported on 2/4/2026 at 00:28:12 EST from Cursor (2.4.27)_\n\n---\n\n**User**\n\nHi Opus! I'm handing off a data quality project to you.",
+      "first_line": "# Police CAD data quality project"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2026-02-04T00:28:27.521397",
+  "department": "admin"
+}

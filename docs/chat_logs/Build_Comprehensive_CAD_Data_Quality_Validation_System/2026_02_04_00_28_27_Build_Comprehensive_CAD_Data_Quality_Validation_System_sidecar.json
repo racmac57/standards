@@ -1,0 +1,103 @@
+{
+  "source_file": "Build_Comprehensive_CAD_Data_Quality_Validation_System.md",
+  "source_path": "C:\\_chunker\\02_data\\Build_Comprehensive_CAD_Data_Quality_Validation_System.md",
+  "manifest_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\KB_Shared\\04_output\\Build_Comprehensive_CAD_Data_Quality_Validation_System\\2026_02_04_00_28_27_Build_Comprehensive_CAD_Data_Quality_Validation_System.origin.json",
+  "created_at": "2026_02_04_00_28_27",
+  "tags": [
+    "ai",
+    "code",
+    "data",
+    "docs",
+    "excel",
+    "json",
+    "markdown",
+    "police",
+    "python",
+    "sql"
+  ],
+  "metadata": {
+    "project_name": "02_data",
+    "source_type": "documentation",
+    "language": "en",
+    "department": "admin",
+    "key_terms": [
+      "let",
+      "phase",
+      "data",
+      "validation",
+      "now",
+      "create"
+    ],
+    "enrichment_version": "1.0.0"
+  },
+  "summaries": {
+    "file_summary": "# Police CAD data quality project\n_Exported on 2/4/2026 at 00:28:12 EST from Cursor (2.4.27)_\n\n---\n\n**User**\n\nHi Opus! I'm handing off a data quality project to you.",
+    "first_line": "# Police CAD data quality project"
+  },
+  "chunks": [
+    {
+      "chunk_id": "2026-02-04T00:28:27+00:00_Build_Comprehensive_CAD_Data_Quality_Validation_System_chunk1",
+      "chunk_index": 1,
+      "file": "chunk_00000.txt",
+      "tags": [
+        "ai",
+        "code",
+        "data",
+        "docs",
+        "excel",
+        "file",
+        "json",
+        "markdown",
+        "phase",
+        "police",
+        "python",
+        "sql",
+        "validation"
+      ],
+      "key_terms": [
+        "let",
+        "data",
+        "phase",
+        "file",
+        "validation",
+        "you"
+      ],
+      "summary": "# Police CAD data quality project\n_Exported on 2/4/2026 at 00:28:12 EST from Cursor (2.4.27)_\n\n---\n\n**User**\n\nHi Opus!",
+      "char_length": 9569,
+      "byte_length": 9766
+    },
+    {
+      "chunk_id": "2026-02-04T00:28:27+00:00_Build_Comprehensive_CAD_Data_Quality_Validation_System_chunk2",
+      "chunk_index": 2,
+      "file": "chunk_00001.txt",
+      "tags": [
+        "ai",
+        "code",
+        "complete",
+        "data",
+        "docs",
+        "excel",
+        "json",
+        "markdown",
+        "phase",
+        "police",
+        "python",
+        "sql",
+        "validation",
+        "validators"
+      ],
+      "key_terms": [
+        "phase",
+        "let",
+        "complete",
+        "validators",
+        "validation",
+        "now"
+      ],
+      "summary": "Now I have all the information needed.",
+      "char_length": 4659,
+      "byte_length": 4760
+    }
+  ],
+  "enrichment_version": "1.0.0"
+}

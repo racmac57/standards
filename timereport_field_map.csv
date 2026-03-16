@@ -1,0 +1,21 @@
+system,source_field_name,internal_field_name,esri_field_name
+timereport,ReportNumberNew,ReportNumberNew,ReportNumberNew
+timereport,Incident,Incident,Incident
+timereport,How Reported,HowReported,How Reported
+timereport,FullAddress2,FullAddress2,FullAddress2
+timereport,PDZone,PDZone,PDZone
+timereport,Grid,Grid,Grid
+timereport,Time of Call,TimeOfCall,TimeOfCall
+timereport,cYear,cYear,cYear
+timereport,cMonth,cMonth,cMonth
+timereport,HourMinuetsCalc,Hour,Hour
+timereport,DayofWeek,DayofWeek,DayofWeek
+timereport,Time Dispatched,TimeDispatched,
+timereport,Time Out,TimeOut,
+timereport,Time In,TimeIn,
+timereport,Time Spent,TimeSpent,
+timereport,Time Response,TimeResponse,
+timereport,Officer,Officer,Officer
+timereport,Disposition,Disposition,Disposition
+timereport,Response Type,Response_Type,Response_Type
+timereport,CADNotes,CADNotes,

@@ -1,0 +1,42 @@
+{
+  "tags": [
+    "ai",
+    "code",
+    "conversation",
+    "data",
+    "docs",
+    "excel",
+    "it-ops",
+    "json",
+    "legal",
+    "markdown",
+    "police",
+    "powershell",
+    "python",
+    "sql"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "data",
+        "hackensack",
+        "values",
+        "you",
+        "users",
+        "carucci_r"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "# How reported data discrepancy\n_Exported on 2/4/2026 at 00:27:41 EST from Cursor (2.4.27)_\n\n---\n\n**User**\n\nI recently updated the CAD data for a dashboard. that's powered by ArcGIS Pro.",
+      "first_line": "# How reported data discrepancy"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2026-02-04T00:28:02.346305",
+  "department": "admin"
+}

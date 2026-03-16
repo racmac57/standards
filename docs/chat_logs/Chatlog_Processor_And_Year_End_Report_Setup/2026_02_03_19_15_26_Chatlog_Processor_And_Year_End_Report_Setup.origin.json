@@ -1,0 +1,42 @@
+{
+  "tags": [
+    "ai",
+    "code",
+    "conversation",
+    "data",
+    "docs",
+    "excel",
+    "it-ops",
+    "json",
+    "legal",
+    "markdown",
+    "police",
+    "powershell",
+    "python",
+    "sql"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "echo",
+        "rem",
+        "set",
+        "project",
+        "file",
+        "folder"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "# Directory Opus chatlog processing command\n_Exported on 2/3/2026 at 19:15:08 EST from Cursor (2.4.27)_\n\n---\n\n**User**\n\n@unified_data_dictionary/scripts/Process_UDD_Chatlog.bat @nodeselect\n\"C:\\Users\\carucci_r\\OneDrive - City of Hackensac...",
+      "first_line": "# Directory Opus chatlog processing command"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2026-02-03T19:15:26.247099",
+  "department": "admin"
+}

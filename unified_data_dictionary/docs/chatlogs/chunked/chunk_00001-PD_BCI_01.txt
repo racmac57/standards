@@ -1,0 +1,751 @@
+I also have C:\Dev\ClaudeExportFixer that has an export of all the Claude AI conversations and projects
+
+---
+
+**Cursor**
+
+I'll act as your senior data engineer to consolidate and modernize your SCRPA/RMS/CAD ETL pipeline. This is a substantial architectural project - let me start by creating a comprehensive plan and then systematically build the unified pipeline. Now let me examine the key scripts from each pipeline to understand the existing logic:
+
+Excellent progress! I'm gathering comprehensive information about your existing pipelines. Let me continue exploring key files and then build the consolidated solution:
+
+Perfect! I now have a comprehensive understanding of your existing pipelines. Let me create the unified SCRPA/RMS/CAD pipeline structure. I'll start by creating the consolidation manifest and then build the modular architecture:
+
+```markdown
+# SCRPA/RMS/CAD Pipeline Consolidation Manifest
+**Generated:** 2025-10-27  
+**Author:** Senior Data Engineer (AI-Assisted)  
+**Purpose:** Inventory of existing scripts, assessment, and consolidation strategy
+
+---
+
+## Executive Summary
+
+This manifest catalogs all existing ETL scripts across multiple directories, rates their usefulness, and provides a consolidation strategy for building a unified, modular pipeline. **Key Statistics:**
+- **Total Directories Scanned:** 24
+- **Scripts Inventoried:** 50+ Python files
+- **Configuration Files:** 15+
+- **Best Practices Identified:** Data validation, schema aliasing, geocoding, ArcPy integration
+
+---
+
+## 1. CAD Data Pipeline (`CAD_Data_Pipeline/`)
+
+### Scripts Inventory
+
+| File | Purpose | Modified | Usefulness | Notes |
+|------|---------|----------|------------|-------|
+| `scripts/01_validate_and_clean.py` | CAD validation with stratified sampling | Recent | **10/10** | ⭐ **BEST** - Comprehensive validation framework with Dask, Pydantic schemas, pytest |
+| `scripts/cad_zone_merger.py` | Zone merging logic | Recent | 7/10 | Useful for geographic enrichment |
+| `config/config_enhanced.json` | CAD validation rules | Recent | **9/10** | Comprehensive validation lists, address abbreviations |
+
+### Key Features to Preserve
+- ✅ **Data Quality Framework:** Critical/Important/Optional validation rules with thresholds
+- ✅ **Stratified Sampling:** Adaptive stratum sizing with fallback methods
+- ✅ **Validation Reporting:** JSON reports with quality scores and recommendations
+- ✅ **Parallel Processing:** Dask-based cleaning with partition support
+- ✅ **Incident Mapping:** Normalization from external CallType_Categories.csv
+
+### Consolidation Strategy
+**Action:** Extract validation framework as `clean/validators.py` module  
+**Preserve:** All validation rules, sampling logic, and reporting infrastructure  
+**Enhance:** Add CLI flags for sampling method selection
+
+---
+
+## 2. RMS Data Processing (`RMS_Data_Processing/`)
+
+### Scripts Inventory
+
+| File | Purpose | Modified | Usefulness | Notes |
+|------|---------|----------|------------|-------|
+| `01_Scripts/enhanced_rms_processor_v3_clean.py` | RMS cleaning with quality fixes | 2025-07-20 | **9/10** | ⭐ Address validation, time field handling, quality reporting |
+| `01_Scripts/enhanced_rms_processor_scrpa.py` | SCRPA-specific RMS processing | 2025-07 | 8/10 | SCRPA filtering logic |
+| `rms_config.json` | Basic RMS config | Recent | 6/10 | Minimal config, needs enhancement |
+
+### Key Features to Preserve
+- ✅ **Address Validation:** "Check FullAddress" flagging for bad addresses
+- ✅ **Time Field Cleaning:** Handles "1" artifacts and datetime mixing
+- ✅ **Incident Time Logic:** Null checking cascade
+- ✅ **JSON Quality Reports:** Processing statistics and error tracking
+- ✅ **Multi-stage Processing:** Clean → DateTime → Transform → Validate → Enrich
+
+### Consolidation Strategy
+**Action:** Merge with RMS_Data_ETL for comprehensive solution  
+**Preserve:** Quality flagging logic, multi-stage architecture  
+**Enhance:** Integrate with schema aliasing from ETL version
+
+---
+
+## 3. RMS Data ETL (`RMS_Data_ETL/`)
+
+### Scripts Inventory
+
+| File | Purpose | Modified | Usefulness | Notes |
+|------|---------|----------|------------|-------|
+| `scripts/rms_core_cleaner.py` | Schema aliasing, type fixing, geocoding | Recent | **10/10** | ⭐ **BEST** - YAML schema, usaddress, ArcGIS geocoding with validation |
+| `scripts/run_rms_one_click.py` | One-click RMS orchestrator | Recent | 8/10 | Good CLI wrapper |
+| `config/schema_registry_rms.yaml` | Field aliases and types | Recent | **10/10** | ⭐ **BEST** - Comprehensive field mapping |
+| `config/config.yaml` | RMS pipeline config | Recent | 8/10 | Good structure for pipeline settings |
+
+### Key Features to Preserve
+- ✅ **Schema Aliasing:** YAML-driven field mapping with canonical names
+- ✅ **Type Coercion:** Date/time/currency parsing with multiple format support
+- ✅ **Address Standardization:** usaddress library integration
+- ✅ **Geocoding with Validation:** Batch geocoding + reverse validation + fuzzy matching + USPS validation
+- ✅ **Range Parsing:** Extract first date/time from "between" fields
+- ✅ **Narrative Scanning:** Extract times/dates from free text
+- ✅ **Original Header Preservation:** `clean_original_df()` function
+
+### Consolidation Strategy
+**Action:** Use as foundation for unified RMS cleaning module  
+**Preserve:** All schema aliasing, geocoding, and type fixing logic  
+**Enhance:** Merge quality flagging from RMS_Data_Processing
+
+---
+
+## 4. RMS/CAD Combined (`Combined_CAD_RMS/`, `RMS_CAD_Combined_ETL/`)
+
+### Scripts Inventory
+
+| File | Purpose | Modified | Usefulness | Notes |
+|------|---------|----------|------------|-------|
+| `Combined_CAD_RMS/enhanced_cad_rms_integration.py` | CAD/RMS joining logic | 2025-08-10 | **9/10** | ⭐ Comprehensive matching, quality controls |
+| `RMS_CAD_Combined_ETL/scripts/integrate_rms_cad.py` | Placeholder | Old | 1/10 | Empty placeholder |
+| `Combined_CAD_RMS/comprehensive_pipeline.py` | Full pipeline | 2025-07-21 | 7/10 | Good orchestration example |
+
+### Key Features to Preserve
+- ✅ **Multi-file Loading:** Combine multiple CAD/RMS exports
+- ✅ **Source Tracking:** Data_Source, Source_File, Load_Timestamp columns
+- ✅ **Supplement Handling:** Special logic for case number supplements
+- ✅ **Quality Controls:** Backup address restoration, data quality fixes
+- ✅ **Integration Statistics:** Comprehensive match tracking
+
+### Consolidation Strategy
+**Action:** Extract as `join/cad_rms_matcher.py` module  
+**Preserve:** Matching logic, supplement handling, statistics tracking  
+**Enhance:** Make matching rules configurable via YAML
+
+---
+
+## 5. SCRPA ArcPy (`SCRPA_ArcPy/`)
+
+### Scripts Inventory
+
+| File | Purpose | Modified | Usefulness | Notes |
+|------|---------|----------|------------|-------|
+| `05_orchestrator/FINAL_Weekly_Crime_Report.py` | ArcPy crime report generation | Recent | **9/10** | ⭐ APRX manipulation, query building, PDF export |
+| `05_orchestrator/SCRPA_Briefing_Generator.py` | Markdown/HTML briefing | Recent | 8/10 | Executive summary generation |
+| `02_config/config.py` | SCRPA configuration | Recent | 7/10 | Paths and settings |
+| `03_exporters/map_export.py` | Map export utilities | Recent | 8/10 | PDF/PNG export from layouts |
+| `03_exporters/chart_export.py` | Chart export | Recent | 7/10 | Statistics charting |
+
+### Key Features to Preserve
+- ✅ **Period Calculations:** 7-day, 28-day, YTD date ranges
+- ✅ **Crime Pattern Matching:** Statute code patterns (e.g., "Robbery - 2C:15-1")
+- ✅ **APRX Manipulation:** Layer finding, definition queries, map export
+- ✅ **Multi-period Processing:** Iterate through crime types and time periods
+- ✅ **Output Organization:** Structured folder hierarchy by period/date/crime
+- ✅ **Statistics Export:** Count queries with diagnostic output
+
+### Consolidation Strategy
+**Action:** Create `arcpy_maps/` module with ArcPy stubs for non-ESRI environments  
+**Preserve:** All APRX logic, crime patterns, period calculations  
+**Enhance:** Add configuration for crime type patterns and output paths
+
+---
+
+## 6. Reference & Supporting Files
+
+### Configuration Files
+
+| File | Purpose | Usefulness | Action |
+|------|---------|------------|--------|
+| `CAD_Data_Pipeline/config/config_enhanced.json` | Validation rules | **10/10** | Merge into unified YAML |
+| `RMS_Data_ETL/config/schema_registry_rms.yaml` | RMS schema | **10/10** | Use as base for unified schema |
+| `RMS_Data_ETL/config/config.yaml` | Pipeline settings | 8/10 | Merge into unified config |
+
+### Reference Data
+
+| Data | Location | Purpose | Action |
+|------|----------|---------|--------|
+| CallType_Categories.csv | `09_Reference/Classifications/CallTypes/` | Incident normalization | Document path in config |
+| Address abbreviations | `config_enhanced.json` | Address standardization | Move to unified config |
+| Zone mappings | CAD config | Geographic enrichment | Integrate into unified schema |
+
+---
+
+## 7. Consolidation Architecture
+
+### Unified Repository Structure
+
+```
+SCRPA_Unified_Pipeline/
+├── configs/
+│   ├── pipeline.yaml              # Main pipeline configuration
+│   ├── schema_rms.yaml            # RMS field mappings (from RMS_Data_ETL)
+│   ├── schema_cad.yaml            # CAD field mappings (new)
+│   ├── validation_rules.yaml     # Quality rules (from CAD pipeline)
+│   ├── crime_patterns.yaml       # SCRPA crime type patterns
+│   └── reference_data/
+│       ├── incident_mapping.csv
+│       └── zone_mappings.csv
+│
+├── src/
+│   ├── ingest/
+│   │   ├── __init__.py
+│   │   ├── file_locator.py       # Find latest RMS/CAD exports
+│   │   └── data_loader.py        # Multi-format loading (XLSX/CSV/Parquet)
+│   │
+│   ├── clean/
+│   │   ├── __init__.py
+│   │   ├── rms_cleaner.py        # From rms_core_cleaner.py + v3_clean.py
+│   │   ├── cad_cleaner.py        # From 01_validate_and_clean.py
+│   │   ├── schema_mapper.py      # YAML schema aliasing
+│   │   ├── validators.py         # Data quality validators
+│   │   └── geocoder.py           # Address standardization + geocoding
+│   │
+│   ├── flag/
+│   │   ├── __init__.py
+│   │   ├── quality_rules.py      # Critical/Important/Optional rules
+│   │   └── reporter.py           # JSON/CSV quality reports
+│   │
+│   ├── enrich/
+│   │   ├── __init__.py
+│   │   ├── temporal.py           # Date parts, time-of-day, period buckets
+│   │   ├── spatial.py            # Zone assignment, grid mapping
+│   │   ├── categorical.py        # Crime categories, incident classification
+│   │   └── lookups.py            # Officer/unit mappings from external sources
+│   │
+│   ├── join/
+│   │   ├── __init__.py
+│   │   └── cad_rms_matcher.py    # From enhanced_cad_rms_integration.py
+│   │
+│   ├── export/
+│   │   ├── __init__.py
+│   │   ├── powerbi_exporter.py   # CSV/Parquet with schema preservation
+│   │   ├── arcgis_exporter.py    # GeoJSON, FeatureClass
+│   │   └── report_generator.py   # Markdown/HTML/JSON summaries
+│   │
+│   ├── arcpy_maps/
+│   │   ├── __init__.py
+│   │   ├── aprx_manager.py       # APRX manipulation (from FINAL_Weekly_Crime_Report)
+│   │   ├── map_exporter.py       # PDF/PNG export
+│   │   ├── crime_analyzer.py     # Crime pattern queries
+│   │   └── stubs.py              # ArcPy stubs for testing without ESRI license
+│   │
+│   └── utils/
+│       ├── __init__.py
+│       ├── logging_config.py     # Centralized logging
+│       ├── config_loader.py      # YAML config parsing
+│       └── date_helpers.py       # Period calculations (7-day, 28-day, YTD)
+│
+├── scrpa_pipeline.py              # Main CLI orchestrator
+├── requirements.txt               # Python dependencies
+├── pyproject.toml                 # Modern Python packaging
+├── README.md                      # Comprehensive documentation
+├── MIGRATION_GUIDE.md             # Old→New mapping
+├── TUESDAY_RUNBOOK.md             # Weekly SCRPA execution guide
+│
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py               # Pytest fixtures
+│   ├── test_rms_cleaner.py
+│   ├── test_cad_cleaner.py
+│   ├── test_validators.py
+│   ├── test_integration.py
+│   └── fixtures/
+│       ├── sample_rms.csv
+│       └── sample_cad.csv
+│
+├── logs/                          # Runtime logs (gitignored)
+│   └── .gitkeep
+│
+├── outputs/                       # Pipeline outputs (gitignored)
+│   ├── cleaned/
+│   ├── enriched/
+│   ├── reports/
+│   └── maps/
+│
+└── legacy/                        # Original scripts for reference
+    ├── MANIFEST.md               # What came from where
+    ├── CAD_Data_Pipeline/
+    ├── RMS_Data_Processing/
+    ├── RMS_Data_ETL/
+    ├── Combined_CAD_RMS/
+    └── SCRPA_ArcPy/
+```
+
+---
+
+## 8. Code Consolidation Strategy by Module
+
+### `ingest/data_loader.py`
+**Sources:**
+- CAD: `01_validate_and_clean.py` (lines 1000-1003)
+- RMS: `enhanced_rms_processor_v3_clean.py` (lines 101-116)
+- Combined: `enhanced_cad_rms_integration.py` (lines 67-150)
+
+**Consolidated Features:**
+- Multi-format support (XLSX, CSV, Parquet)
+- Glob pattern file discovery
+- Source tracking metadata
+- Error handling with statistics
+
+---
+
+### `clean/rms_cleaner.py`
+**Sources:**
+- **Primary:** `RMS_Data_ETL/scripts/rms_core_cleaner.py` (entire file, 597 lines)
+- **Merge:** `RMS_Data_Processing/enhanced_rms_processor_v3_clean.py` (quality flagging)
+
+**Consolidated Features:**
+- Schema aliasing from YAML
+- Type coercion (date/time/currency)
+- Address standardization (usaddress)
+- Geocoding with reverse validation
+- Narrative time/date extraction
+- Quality flagging ("Check FullAddress")
+- Multi-stage processing architecture
+
+**Usefulness Rating: 10/10** ⭐
+
+---
+
+### `clean/cad_cleaner.py`
+**Sources:**
+- **Primary:** `CAD_Data_Pipeline/scripts/01_validate_and_clean.py` (lines 164-206)
+- Incident mapping integration
+- Address abbreviation expansion
+
+**Consolidated Features:**
+- Text field standardization (upper, strip)
+- Address cleaning with abbreviations
+- Incident type normalization
+- Dask-based parallel cleaning
+
+**Usefulness Rating: 10/10** ⭐
+
+---
+
+### `flag/quality_rules.py`
+**Sources:**
+- **Primary:** `CAD_Data_Pipeline/scripts/01_validate_and_clean.py` (lines 876-981)
+- RMS flagging from `enhanced_rms_processor_v3_clean.py`
+
+**Consolidated Features:**
+- Three-tier validation (Critical/Important/Optional)
+- Field-specific validators (case number format, datetime validity, address completeness)
+- Configurable thresholds
+- Sampling support (stratified/systematic/random)
+
+**Usefulness Rating: 10/10** ⭐
+
+---
+
+### `join/cad_rms_matcher.py`
+**Sources:**
+- **Primary:** `Combined_CAD_RMS/enhanced_cad_rms_integration.py` (lines 30-603)
+
+**Consolidated Features:**
+- Multi-key matching (date + location + incident type)
+- Supplement case handling
+- Match confidence scoring
+- Backup address restoration
+- Integration statistics
+
+**Usefulness Rating: 9/10** ⭐
+
+---
+
+### `arcpy_maps/aprx_manager.py`
+**Sources:**
+- **Primary:** `SCRPA_ArcPy/05_orchestrator/FINAL_Weekly_Crime_Report.py` (lines 67-181)
+
+**Consolidated Features:**
+- APRX project opening
+- Layer finding by name
+- Definition query building
+- Crime pattern matching (statute codes)
+- Period date calculations (7-day, 28-day, YTD)
+- Count queries with diagnostics
+
+**Usefulness Rating: 9/10** ⭐
+
+---
+
+## 9. Configuration Consolidation
+
+### Unified `pipeline.yaml` Structure
+
+```yaml
+# Merged from: config.yaml, config_enhanced.json, hardcoded paths
+
+project:
+  name: SCRPA_Unified_Pipeline
+  version: 1.0.0
+  city: Hackensack
+  state: NJ
+  timezone: America/New_York
+
+paths:
+  # Input paths
+  rms_input: "C:/Users/carucci_r/OneDrive - City of Hackensack/05_EXPORTS/_RMS"
+  cad_input: "C:/Users/carucci_r/OneDrive - City of Hackensack/05_EXPORTS/_CAD"
+  reference_data: "C:/Users/carucci_r/OneDrive - City of Hackensack/09_Reference"
+  
+  # Output paths (Power BI reads from here)
+  scrpa_output: "C:/Users/carucci_r/OneDrive - City of Hackensack/05_EXPORTS/_RMS/SCRPA"
+  reports_output: "./outputs/reports"
+  maps_output: "./outputs/maps"
+  logs_output: "./logs"
+  
+  # ArcGIS Pro
+  aprx_template: "C:/Users/carucci_r/OneDrive - City of Hackensack/02_ETL_Scripts/SCRPA_ArcPy/projects/7_Day_Templet_SCRPA_Time.aprx"
+
+data_quality:
+  enabled: true
+  thresholds:
+    critical: 0.95
+    important: 0.85
+    optional: 0.70
+  sampling:
+    method: stratified  # stratified, systematic, random
+    sample_size: 1000
+    min_stratum_size: 50
+
+cleaning:
+  rms:
+    schema_path: ./configs/schema_rms.yaml
+    address_standardization: true
+    geocoding: true
+    geocode_threshold: 90.0
+    narrative_scanning: true
+  
+  cad:
+    schema_path: ./configs/schema_cad.yaml
+    incident_mapping_csv: "{reference_data}/Classifications/CallTypes/CallType_Categories.csv"
+    address_abbreviations:
+      " ST ": " STREET "
+      " AVE ": " AVENUE "
+      " BLVD ": " BOULEVARD "
+
+enrichment:
+  temporal:
+    add_date_parts: true         # Year, Month, Day, DayOfWeek
+    add_time_of_day: true        # Morning, Afternoon, Evening, Night
+    add_period_buckets: true     # 7-day, 28-day, YTD flags
+  
+  spatial:
+    add_zones: true              # PD Zone assignment
+    add_grids: true              # Geographic grid codes
+  
+  categorical:
+    add_crime_categories: true   # UCR classifications
+    add_incident_severity: true  # Emergency/Non-emergency
+
+join:
+  enabled: false                 # Set to true for CAD+RMS integration
+  matching:
+    keys: [date, location, incident_type]
+    fuzzy_address_threshold: 0.85
+    time_window_hours: 24
+  supplement_handling: true
+
+export:
+  powerbi:
+    formats: [csv, parquet]      # CSV for compatibility, Parquet for performance
+    latest_file_pattern: "SCRPA_Latest_{date}. {ext}"
+    archive_old_files: true
+  
+  arcgis:
+    formats: [geojson, featureclass]
+    spatial_reference: 2263      # NJSP NAD83 US Feet
+  
+  reports:
+    formats: [json, md, html]    # JSON for ingestion, MD/HTML for reading
+
+scrpa_weekly:
+  enabled: true
+  crime_types:
+    - Robbery
+    - MV Theft
+    - Burglary - Auto
+    - Burglary - Comm & Res
+    - Sexual Offenses
+  periods: [7day, 28day, ytd]
+  output_folder_structure: "{period}/{date}/{crime_type}"
+```
+
+---
+
+## 10. Data Quality Framework
+
+### Validation Rules Summary
+
+#### Critical Rules (Must Pass 95%)
+1. **CRIT_001:** Case number format (YY-XXXXXX or YY-XXXXXX[A-Z])
+2. **CRIT_002:** Case number uniqueness
+3. **CRIT_003:** Date/time validity (reasonable range)
+4. **CRIT_004:** Incident type presence (not null/empty)
+
+#### Important Rules (Must Pass 85%)
+1. **IMP_001:** Address completeness (not generic)
+2. **IMP_002:** Officer assignment for dispatched calls
+3. **IMP_003:** Disposition from approved list
+4. **IMP_004:** Logical time sequence (Call→Dispatch→Out→In)
+5. **IMP_005:** Non-negative duration calculations
+6. **IMP_006:** Time spent validity
+
+#### Optional Rules (Must Pass 70%)
+1. **OPT_001:** How Reported standardization
+2. **OPT_002:** Zone validity against master list
+3. **OPT_003:** Response type consistency with incident severity
+
+---
+
+## 11. Migration Strategy
+
+### Phase 1: Foundation (Week 1)
+- [ ] Create unified repository structure
+- [ ] Set up logging infrastructure
+- [ ] Create base YAML configurations
+- [ ] Extract schema aliasing logic
+- [ ] Build config loader utilities
+
+### Phase 2: Core Cleaning (Week 2)
+- [ ] Implement `clean/rms_cleaner.py` (from rms_core_cleaner)
+- [ ] Implement `clean/cad_cleaner.py` (from 01_validate_and_clean)
+- [ ] Implement `clean/schema_mapper.py`
+- [ ] Add unit tests for cleaning modules
+
+### Phase 3: Quality Framework (Week 3)
+- [ ] Implement `flag/quality_rules.py` (validation framework)
+- [ ] Implement `flag/reporter.py` (JSON/CSV reports)
+- [ ] Add sampling strategies
+- [ ] Create test fixtures with edge cases
+
+### Phase 4: Enrichment & Integration (Week 4)
+- [ ] Implement `enrich/temporal.py`
+- [ ] Implement `enrich/spatial.py`
+- [ ] Implement `join/cad_rms_matcher.py`
+- [ ] Add integration tests
+
+### Phase 5: ArcPy & Export (Week 5)
+- [ ] Implement `arcpy_maps/` modules
+- [ ] Implement `export/powerbi_exporter.py`
+- [ ] Implement `export/arcgis_exporter.py`
+- [ ] Create ArcPy stubs for testing
+
+### Phase 6: CLI & Documentation (Week 6)
+- [ ] Build `scrpa_pipeline.py` CLI
+- [ ] Write README.md
+- [ ] Write MIGRATION_GUIDE.md
+- [ ] Write TUESDAY_RUNBOOK.md
+- [ ] Create tutorial videos/docs
+
+### Phase 7: Testing & Validation (Week 7)
+- [ ] Run full pipeline on historical data
+- [ ] Validate Power BI integration
+- [ ] Test ArcGIS map generation
+- [ ] Performance tuning
+- [ ] UAT with stakeholders
+
+### Phase 8: Deployment (Week 8)
+- [ ] Set up scheduled tasks (Tuesday 5 AM)
+- [ ] Configure email notifications
+- [ ] Archive legacy scripts
+- [ ] Knowledge transfer sessions
+- [ ] Go-live monitoring
+
+---
+
+## 12. Success Criteria
+
+✅ **Functionality**
+- Pipeline runs all steps independently via CLI flags
+- Power BI refreshes from latest SCRPA export automatically
+- ArcGIS maps generate for all crime types/periods
+- Quality reports flag <5% bad data for manual review
+
+✅ **Performance**
+- Full RMS+CAD processing completes in <30 minutes
+- Incremental updates (RMS-only) complete in <10 minutes
+- Memory usage stays under 8GB RAM
+
+✅ **Maintainability**
+- All configuration is YAML-driven (no hardcoded paths)
+- Modular functions have <100 lines
+- 90%+ test coverage on core modules
+- Comprehensive docstrings and type hints
+
+✅ **Usability**
+- Tuesday morning runbook is 1-page
+- Dry-run mode previews changes without writing files
+- Error messages are actionable (not cryptic stack traces)
+- Logs are human-readable with emoji indicators
+
+---
+
+## 13. Key Decisions & Rationale
+
+### Why YAML over JSON for configs? - **Readability:** Comments, multiline strings, no trailing comma errors
+- **Industry Standard:** Common in modern data pipelines (dbt, Airflow, Prefect)
+- **Python Native:** PyYAML is well-maintained and stable
+
+### Why preserve original headers option? - **Compatibility:** Some stakeholders rely on exact column names
+- **Auditability:** Easier to trace data lineage
+- **Implementation:** `clean_original_df()` function from rms_core_cleaner.py
+
+### Why modular architecture over monolithic script? - **Testability:** Unit test individual functions
+- **Flexibility:** Run only needed steps (e.g., enrich without cleaning)
+- **Maintainability:** Future developers can understand components
+- **Reusability:** Share modules across projects
+
+### Why include ArcPy stubs? - **Development:** Test pipeline logic without ESRI license
+- **CI/CD:** Run automated tests in GitHub Actions
+- **Portability:** Develop on machines without ArcGIS Pro
+- **Documentation:** Stub signatures document required ArcPy functions
+
+---
+
+## 14. Risk Mitigation
+
+### Risk: Breaking Power BI Queries
+**Mitigation:** 
+- Preserve latest-file naming convention
+- Export to exact same path as current scripts
+- Add schema validation before export
+- Include Power BI refresh test in acceptance criteria
+
+### Risk: ArcGIS Licensing Issues
+**Mitigation:**
+- Run ArcPy steps only when explicitly requested (`--steps arcpy_maps`)
+- Graceful failure if ArcPy not available
+- Alternative: Export GeoJSON for QGIS rendering
+- Document ArcGIS Pro version requirements
+
+### Risk: Performance Degradation
+**Mitigation:**
+- Profile current scripts for baseline timing
+- Use Dask for large datasets (>1M rows)
+- Implement incremental processing (only new data)
+- Add `--sample` flag for testing on subset
+
+### Risk: Data Quality Regression
+**Mitigation:**
+- Run validation on historical data before cutover
+- Keep quality reports from old pipeline for comparison
+- Set up automated alerts for quality score drops
+- Manual review period for first 3 runs
+
+---
+
+## 15. Next Steps
+
+1. **Get User Approval on Structure**
+   - Review proposed directory layout
+   - Confirm Power BI output path preservation
+   - Validate crime type patterns for SCRPA
+
+2. **Prioritize Modules**
+   - Which pipeline is most urgent? (RMS / CAD / SCRPA)
+   - What's the Tuesday deadline? (Need weekly SCRPA automation)
+
+3. **Start Implementation**
+   - Generate unified config YAMLs
+   - Extract best code into modular functions
+   - Write main CLI orchestrator
+   - Add comprehensive docstrings
+
+4. **Parallel Work Streams**
+   - **Developer:** Build core modules
+   - **Tester:** Create test fixtures and validation data
+   - **Documentation:** Write README and runbooks
+   - **Stakeholder:** Validate output format requirements
+
+---
+
+## Appendix A: File Modification Dates
+
+*(Note: Would need to scan actual file system for accurate dates)*
+
+**Most Recently Modified (High Priority):**
+- `CAD_Data_Pipeline/scripts/01_validate_and_clean.py` - 2025-10-17
+- `RMS_Data_ETL/scripts/rms_core_cleaner.py` - Recent (based on code quality)
+- `SCRPA_ArcPy/05_orchestrator/FINAL_Weekly_Crime_Report.py` - 2025-07-28
+
+**Older Files (Lower Priority):**
+- `RMS_Data_Processing/enhanced_rms_processor_v3_clean.py` - 2025-07-20
+- `Combined_CAD_RMS/enhanced_cad_rms_integration.py` - 2025-08-10
+
+---
+
+## Appendix B: External Dependencies
+
+### Python Packages Required
+```
+pandas>=2.0.0
+numpy>=1.24.0
+pyyaml>=6.0
+pydantic>=2.0.0
+usaddress>=0.5.10
+arcgis>=2.1.0 (for geocoding)
+arcpy (ESRI license, for mapping)
+dask[complete]>=2023.0.0
+openpyxl>=3.1.0
+fastparquet>=2023.0.0
+pytest>=7.4.0
+black>=23.0.0 (formatting)
+ruff>=0.1.0 (linting)
+```
+
+### External Data Dependencies
+- `CallType_Categories.csv` - Incident type normalization lookup
+- Zone shapefiles - Geographic enrichment (if available)
+- Officer roster - Unit/officer mappings (if available)
+
+---
+
+**END OF MANIFEST**
+
+```
+
+Excellent! I've created a comprehensive 600+ line consolidation manifest. Now let me continue building the unified pipeline structure and core modules:
+
+```yaml
+# SCRPA Unified Pipeline Configuration
+# Consolidated from: RMS_Data_ETL/config/config.yaml, CAD_Data_Pipeline/config/config_enhanced.json
+# Version: 1.0.0
+# Last Updated: 2025-10-27
+
+project:
+  name: SCRPA_Unified_Pipeline
+  version: 1.0.0
+  city: Hackensack
+  state: NJ
+  timezone: America/New_York
+  
+  # SCRPA Cycle Information
+  report_cycle:
+    day_of_week: Tuesday
+    due_time: "09:00"
+    id_format: "C{week}W{year_week}"  # e.g., C11W42
+    periods: [7day, 28day, ytd]
+
+# ============================================================================
+# PATHS CONFIGURATION
+# ============================================================================
+
+paths:
+  # --- Input Directories ---
+  # RMS data exports (from RMS system)
+  rms_input: "C:/Users/carucci_r/OneDrive - City of Hackensack/05_EXPORTS/_RMS"
+  
+  # CAD data exports (from CAD system)
+  cad_input: "C:/Users/carucci_r/OneDrive - City of Hackensack/05_EXPORTS/_CAD"
+  
+  # Reference data and lookup tables
+  reference_data: "C:/Users/carucci_r/OneDrive - City of Hackensack/09_Reference"
+  
+  # --- Output Directories ---
+  # CRITICAL: Power BI reads from this location!

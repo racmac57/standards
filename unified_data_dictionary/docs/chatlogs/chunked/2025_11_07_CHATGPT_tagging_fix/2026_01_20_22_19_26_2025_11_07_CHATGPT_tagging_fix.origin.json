@@ -1,0 +1,36 @@
+{
+  "tags": [
+    "ai",
+    "code",
+    "data",
+    "docs",
+    "json",
+    "markdown",
+    "python",
+    "sql"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "tags",
+        "metadata",
+        "chroma",
+        "department",
+        "add",
+        "search_similar"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "Here’s a concise review in Markdown, followed by ready-to-run prompts for your AI agent to apply the fixes. ---\n\n# KB GUI + Tagging Review\n\n## TL;DR\n\n* The GUI shows hardcoded departments.",
+      "first_line": "Here’s a concise review in Markdown, followed by ready-to-run prompts for your AI agent to apply the fixes."
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2026-01-20T22:19:26.585838",
+  "department": "admin"
+}

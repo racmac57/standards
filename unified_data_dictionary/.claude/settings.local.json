@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(if [ -f \"$HOME/.claude/settings.json\" ])",
+      "Bash(then cat \"$HOME/.claude/settings.json\")",
+      "Bash(else echo \"No user settings found\")",
+      "Bash(fi)",
+      "Read(//c/Users/carucci_r/OneDrive - City of Hackensack/09_Reference/Standards/docs/merge/**)"
+    ]
+  }
+}

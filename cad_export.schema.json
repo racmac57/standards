@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CAD Export - SCRPA",
+  "type": "object",
+  "properties": {
+    "ReportNumberNew": {
+      "type": "string",
+      "description": "CAD report identifier (primary key / join key to RMS Case Number).",
+      "pattern": "^\\d{2}-\\d{6}([A-Z])?$",
+      "x_derivation_logic": [
+        "`YY` = last two digits of the **year the report was created**",
+        "`NNNNNN` = sequential number starting at `000001` on January 01 each year",
+        "**Supplementals**: same base number, with a suffix letter starting at `A` (then `B`, `C`, \u2026)",
+        "**Validation rules**:",
+        "Must be non-null.",
+        "Must match the regex.",
+        "Must not be parsed as numeric (keep as text to preserve leading zeros)."
+      ],
+      "x_validation_rules": [
+        "Must be non-null.",
+        "Must match the regex.",
+        "Must not be parsed as numeric (keep as text to preserve leading zeros)."
+      ]
+    },
+    "Incident": {
+      "type": "string",
+      "description": "Incident type descriptor (typically a code + description).",
+      "pattern": "^.+\\s-\\s.+$",
+      "x_validation_rules": [
+        "Must be non-null.",
+        "Must contain `\" - \"` (flag rows missing delimiter)."
+      ]
+    },
+    "HowReported": {
+      "type": "string",
+      "description": "Method by which the call/incident was reported/initiated.",
+      "enum": [
+        "9-1-1",
+        "Phone",
+        "Walk-in",
+        "Self-Initiated",
+        "Radio",
+        "Other"
+      ],
+      "x_raw_allowed_values": [
+        "`9-1-1`",
+        "`Walk-In`",
+        "`Phone`",
+        "`Self-Initiated`",
+        "`Radio`",
+        "`Teletype`",
+        "`Fax`",
+        "`Other - See Notes`",
+        "`eMail`",
+        "`Mail`",
+        "`Virtual Patrol`",
+        "`Canceled Call`",
+        "**Important**:",
+        "`9-1-1` **must be kept as text** and must not be displayed/parsed as a date (e.g., Excel auto-formatting).",
+        "**Observed in sample** (from `cad_data_quality_report.md`): `Phone`, `9-1-1`, `Walk-In`, `Other - See Notes`, `Radio`."
+      ]
+    },
+    "FullAddress2": {
+      "type": "string",
+      "description": "Full incident location address string.",
+      "x_validation_rules": [
+        "Must be non-null.",
+        "Must contain at least one comma."
+      ]
+    },
+    "PDZone": {
+      "type": "string"
+    },
+    "Grid": {
+      "type": "string",
+      "description": "CAD grid / map grid identifier.",
+      "x_validation_rules": [
+        "May be null (missing observed in sample).",
+        "If present, should match a controlled list of known grid codes (to be defined from GIS/grid reference)."
+      ]
+    },
+    "TimeOfCall": {
+      "type": "string"
+    },
+    "cYear": {
+      "type": "integer",
+      "description": "Calendar year of `TimeofCall` (derived).",
+      "x_derivation_logic": [
+        "`cYear = YEAR(TimeofCall)`",
+        "**Type**: integer.",
+        "**Validation rules**:",
+        "Must be non-null.",
+        "Must equal the year portion of `TimeofCall`."
+      ],
+      "x_validation_rules": [
+        "Must be non-null.",
+        "Must equal the year portion of `TimeofCall`."
+      ]
+    },
+    "cMonth": {
+      "type": "string",
+      "description": "Calendar month of `TimeofCall` (derived).",
+      "x_derivation_logic": [
+        "If numeric: `cMonth = FORMAT(TimeofCall, \"MM\")`",
+        "If name: `cMonth = FORMAT(TimeofCall, \"MMMM\")`"
+      ],
+      "x_validation_rules": [
+        "Must be non-null.",
+        "Must represent a valid time-of-day."
+      ]
+    },
+    "Hour": {
+      "type": "string"
+    },
+    "DayofWeek": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Day name for `TimeofCall` (derived).",
+      "x_derivation_logic": [
+        "`DayofWeek = FORMAT(TimeofCall, \"dddd\")`"
+      ],
+      "x_validation_rules": [
+        "Must be non-null.",
+        "Should be \u2265 `TimeofCall` (flag if earlier)."
+      ]
+    },
+    "TimeDispatched": {
+      "type": "string"
+    },
+    "TimeOut": {
+      "type": "string"
+    },
+    "TimeIn": {
+      "type": "string"
+    },
+    "TimeSpent": {
+      "type": "string"
+    },
+    "TimeResponse": {
+      "type": "string"
+    },
+    "Officer": {
+      "type": "string",
+      "description": "Officer identifier for the call (primary/assigned officer).",
+      "x_validation_rules": [
+        "Must be non-null.",
+        "Should match a standardized officer naming/badge convention (recommend aligning to `CAD/SCRPA/Assignment_Master_V2.csv` standardization outputs)."
+      ]
+    },
+    "Disposition": {
+      "type": "string",
+      "description": "Disposition / outcome code or label for the CAD call.",
+      "x_validation_rules": [
+        "Must be non-null.",
+        "Must be limited to a controlled domain (to be defined once the value list is extracted from the export)."
+      ]
+    },
+    "Response_Type": {
+      "type": "string"
+    },
+    "CADNotes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "DayofWeek",
+    "Disposition",
+    "FullAddress2",
+    "Incident",
+    "Officer",
+    "ReportNumberNew",
+    "cMonth",
+    "cYear"
+  ],
+  "additionalProperties": true,
+  "x_notes": [
+    "source_field_name is the raw CAD export header (exact spelling, including spaces/punctuation).",
+    "field_name is the canonical/internal name used by the ESRI deploy flow in this repo (notably TimeOfCall / Response_Type / Hour).",
+    "esri_field_name is the ESRI deploy export name (same as field_name for deploy-schema fields).",
+    "If a field is not present in the ESRI deploy required schema, esri_field_name is null."
+  ],
+  "x_generated_on": "2026-02-10",
+  "x_source_files": [
+    "cad_export_field_definitions.md",
+    "cad_field_map_latest.json"
+  ]
+}

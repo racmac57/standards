@@ -1,0 +1,35 @@
+{
+  "tags": [
+    "code",
+    "docs",
+    "json",
+    "markdown",
+    "police",
+    "powershell",
+    "sql"
+  ],
+  "metadata_enrichment": {
+    "metadata": {
+      "project_name": "02_data",
+      "source_type": "documentation",
+      "language": "en",
+      "department": "admin",
+      "key_terms": [
+        "cad",
+        "field",
+        "datadictionary",
+        "schema",
+        "definitions",
+        "export"
+      ],
+      "enrichment_version": "1.0.0"
+    },
+    "summaries": {
+      "file_summary": "# Directory and schema packaging review\n_Exported on 2/3/2026 at 19:16:23 EST from Cursor (2.4.27)_\n\n---\n\n**User**\n\nreview the director as it was recientily updated review C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\09_Reference\\Sta...",
+      "first_line": "# Directory and schema packaging review"
+    },
+    "enrichment_version": "1.0.0"
+  },
+  "last_processed_at": "2026-02-03T19:16:48.530642",
+  "department": "admin"
+}

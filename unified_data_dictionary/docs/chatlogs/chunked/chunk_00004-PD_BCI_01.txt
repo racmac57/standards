@@ -1,0 +1,930 @@
+Args:
+        hour: Hour (0-23)
+    
+    Returns:
+        Time period ('Morning', 'Afternoon', 'Evening', 'Night')
+    
+    Example:
+        >>> parse_time_of_day(9)
+        'Morning'
+        >>> parse_time_of_day(15)
+        'Afternoon'
+        >>> parse_time_of_day(20)
+        'Evening'
+        >>> parse_time_of_day(23)
+        'Night'
+    """
+    if 6 <= hour < 12:
+        return 'Morning'
+    elif 12 <= hour < 18:
+        return 'Afternoon'
+    elif 18 <= hour < 22:
+        return 'Evening'
+    else:
+        return 'Night'
+
+
+def parse_shift_period(hour: int) -> str:
+    """Categorize hour into police shift period. Args:
+        hour: Hour (0-23)
+    
+    Returns:
+        Shift period ('Day Shift', 'Evening Shift', 'Night Shift')
+    
+    Example:
+        >>> parse_shift_period(10)
+        'Day Shift'
+        >>> parse_shift_period(18)
+        'Evening Shift'
+        >>> parse_shift_period(2)
+        'Night Shift'
+    """
+    if 7 <= hour < 15:
+        return 'Day Shift'
+    elif 15 <= hour < 23:
+        return 'Evening Shift'
+    else:
+        return 'Night Shift'
+
+
+# Example usage
+if __name__ == "__main__":
+    # Test period calculations
+    print("=== Period Calculations (as of 2025-10-27) ===")
+    test_date = date(2025, 10, 27)
+    
+    start_7, end_7 = get_7day_period(test_date)
+    print(f"7-Day Period: {start_7} to {end_7}")
+    
+    start_28, end_28 = get_28day_period(test_date)
+    print(f"28-Day Period: {start_28} to {end_28}")
+    
+    start_ytd, end_ytd = get_ytd_period(test_date)
+    print(f"YTD Period: {start_ytd} to {end_ytd}")
+    
+    # Test SCRPA cycle ID
+    print("\n=== SCRPA Cycle ID ===")
+    cycle_id = "C11W42"
+    parsed = parse_scrpa_cycle_id(cycle_id)
+    print(f"Parsed {cycle_id}: {parsed}")
+    
+    regenerated = generate_scrpa_cycle_id(11, 42)
+    print(f"Regenerated: {regenerated}")
+    
+    # Test date parts
+    print("\n=== Date Parts ===")
+    parts = add_date_parts(test_date)
+    for key, value in parts.items():
+        print(f"  {key}: {value}")
+    
+    # Test time categorization
+    print("\n=== Time Categorization ===")
+    for hour in [8, 14, 19, 23]:
+        tod = parse_time_of_day(hour)
+        shift = parse_shift_period(hour)
+        print(f"  Hour {hour:02d}: {tod} / {shift}")
+
+```
+
+Excellent! I've created the comprehensive utilities. Now let me create the main CLI orchestrator and then build out more core modules:
+
+```python
+#!/usr/bin/env python3
+"""
+SCRPA Unified Pipeline - Main Orchestrator
+
+Consolidated ETL pipeline for RMS, CAD, and SCRPA weekly reporting. Modular architecture with CLI flags for flexible execution. Author: Senior Data Engineer
+Version: 1.0.0
+Date: 2025-10-27
+
+Usage:
+    # Run full RMS pipeline
+    python scrpa_pipeline.py --mode rms_only --steps all
+    
+    # Run specific steps
+    python scrpa_pipeline.py --steps clean,enrich,export
+    
+    # Dry run (preview without writing files)
+    python scrpa_pipeline.py --dry-run
+    
+    # Custom config
+    python scrpa_pipeline.py --config custom_pipeline.yaml
+"""
+
+import argparse
+import sys
+from pathlib import Path
+from typing import List, Optional
+from datetime import datetime
+
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+
+from
+```
+
+```python
+#!/usr/bin/env python3
+"""
+SCRPA Unified Pipeline - Main CLI Orchestrator
+
+Consolidated ETL pipeline for RMS, CAD, and SCRPA weekly reporting. Usage:
+    # Run full pipeline (RMS only)
+    python scrpa_pipeline.py --mode rms_only
+    
+    # Run specific steps
+    python scrpa_pipeline.py --steps clean enrich export
+    
+    # Dry run (preview without writing files)
+    python scrpa_pipeline.py --dry-run
+    
+    # Custom config file
+    python scrpa_pipeline.py --config ./my_config.yaml
+    
+    # SCRPA weekly report
+    python scrpa_pipeline.py --mode scrpa_weekly --period 7day
+    
+    # RMS + CAD join
+    python scrpa_pipeline.py --mode rms_cad_join
+
+Author: R. A. Carucci (AI-Assisted Consolidation)
+Version: 1.0.0
+Date: 2025-10-27
+"""
+
+import argparse
+import sys
+from pathlib import Path
+from typing import List, Optional
+from datetime import datetime
+
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+
+from utils.config_loader import load_config
+from utils.logging_config import setup_logging, get_logger
+from utils.date_helpers import get_period_dates, format_date_for_filename
+
+# Import pipeline modules (will create these next)
+# from src.ingest.data_loader import DataLoader
+# from src.clean.rms_cleaner import RMSCleaner
+# from src.clean.cad_cleaner import CADCleaner
+# from src.flag.quality_rules import QualityValidator
+# from src.enrich.temporal import TemporalEnricher
+# from src.export.powerbi_exporter import PowerBIExporter
+# from src.arcpy_maps.aprx_manager import APRXManager
+
+
+class SCRPAPipeline:
+    """Main pipeline orchestrator.""" def __init__(self, config_path: Optional[Path] = None, dry_run: bool = False):
+        """Initialize pipeline. Args:
+            config_path: Path to pipeline.yaml config
+            dry_run: If True, preview actions without writing files
+        """
+        # Load configuration
+        self.config = load_config(config_path)
+        self.dry_run = dry_run
+        
+        # Set up logging
+        log_dir = self.config.get_path("paths.logs_output")
+        log_level = self.config.get("logging.level", "INFO")
+        self.logger = setup_logging(
+            log_dir=log_dir,
+            log_level=log_level,
+            use_colors=self.config.get("logging.console.colorized", True),
+            use_emoji=True,
+            log_to_file=not dry_run  # Don't write logs in dry-run mode
+        )
+        
+        # Log startup
+        self.logger.info("=" * 60)
+        self.logger.info(f"🚀 SCRPA Unified Pipeline v{self.config.get('project.version')}")
+        self.logger.info(f"   Mode: {'DRY RUN (preview only)' if dry_run else 'PRODUCTION'}")
+        self.logger.info(f"   Config: {config_path or 'default'}")
+        self.logger.info("=" * 60)
+        
+        # Pipeline statistics
+        self.stats = {
+            'start_time': datetime.now(),
+            'steps_completed': [],
+            'records_processed': {},
+            'files_created': [],
+            'errors': []
+        }
+    
+    def run_pipeline(
+        self,
+        mode: str = "rms_only",
+        steps: Optional[List[str]] = None,
+        period: Optional[str] = None
+    ) -> bool:
+        """Run the pipeline with specified mode and steps. Args:
+            mode: Pipeline mode (rms_only, cad_only, rms_cad_join, scrpa_weekly)
+            steps: Specific steps to run (default: all)
+            period: For SCRPA weekly, period to generate (7day, 28day, ytd)
+        
+        Returns:
+            True if successful, False if errors occurred
+        """
+        try:
+            self.logger.info(f"📋 Pipeline mode: {mode}")
+            
+            if steps:
+                self.logger.info(f"   Running steps: {', '.join(steps)}")
+            else:
+                self.logger.info("   Running all steps")
+            
+            # Execute based on mode
+            if mode == "rms_only":
+                return self._run_rms_only(steps)
+            
+            elif mode == "cad_only":
+                return self._run_cad_only(steps)
+            
+            elif mode == "rms_cad_join":
+                return self._run_rms_cad_join(steps)
+            
+            elif mode == "scrpa_weekly":
+                return self._run_scrpa_weekly(period, steps)
+            
+            else:
+                self.logger.error(f"❌ Unknown mode: {mode}")
+                return False
+        
+        except Exception as e:
+            self.logger.error(f"❌ Pipeline failed: {e}", exc_info=True)
+            self.stats['errors'].append(str(e))
+            return False
+        
+        finally:
+            self._print_summary()
+    
+    def _run_rms_only(self, steps: Optional[List[str]]) -> bool:
+        """Run RMS-only pipeline. Args:
+            steps: Specific steps to run
+        
+        Returns:
+            True if successful
+        """
+        self.logger.info("\n🔄 Starting RMS-Only Pipeline")
+        
+        # Default steps for RMS-only
+        if steps is None:
+            steps = ["ingest", "clean", "flag", "enrich", "export"]
+        
+        # Step 1: Ingest
+        if "ingest" in steps:
+            self.logger.info("\n📥 Step 1: Ingest RMS data")
+            # rms_data = DataLoader(self.config).load_latest_rms()
+            # self.stats['records_processed']['rms_loaded'] = len(rms_data)
+            self.logger.info("   TODO: Implement DataLoader")
+            self.stats['steps_completed'].append('ingest')
+        
+        # Step 2: Clean
+        if "clean" in steps:
+            self.logger.info("\n🧹 Step 2: Clean and standardize RMS data")
+            # cleaner = RMSCleaner(self.config)
+            # rms_data = cleaner.clean(rms_data)
+            self.logger.info("   TODO: Implement RMSCleaner")
+            self.stats['steps_completed'].append('clean')
+        
+        # Step 3: Flag quality issues
+        if "flag" in steps:
+            self.logger.info("\n🚩 Step 3: Flag data quality issues")
+            # validator = QualityValidator(self.config)
+            # quality_report = validator.validate(rms_data, dataset_type='rms')
+            self.logger.info("   TODO: Implement QualityValidator")
+            self.stats['steps_completed'].append('flag')
+        
+        # Step 4: Enrich
+        if "enrich" in steps:
+            self.logger.info("\n✨ Step 4: Enrich with temporal/spatial data")
+            # enricher = TemporalEnricher(self.config)
+            # rms_data = enricher.enrich(rms_data)
+            self.logger.info("   TODO: Implement TemporalEnricher")
+            self.stats['steps_completed'].append('enrich')
+        
+        # Step 5: Export
+        if "export" in steps:
+            self.logger.info("\n💾 Step 5: Export to Power BI format")
+            # exporter = PowerBIExporter(self.config)
+            # files = exporter.export(rms_data, format=['csv', 'parquet'])
+            # self.stats['files_created'].extend(files)
+            self.logger.info("   TODO: Implement PowerBIExporter")
+            self.stats['steps_completed'].append('export')
+        
+        self.logger.info("\n✅ RMS-Only pipeline completed")
+        return True
+    
+    def _run_cad_only(self, steps: Optional[List[str]]) -> bool:
+        """Run CAD-only pipeline. Args:
+            steps: Specific steps to run
+        
+        Returns:
+            True if successful
+        """
+        self.logger.info("\n🔄 Starting CAD-Only Pipeline")
+        
+        # Similar structure to RMS-only but with CAD-specific modules
+        self.logger.info("   TODO: Implement CAD-only pipeline")
+        
+        return True
+    
+    def _run_rms_cad_join(self, steps: Optional[List[str]]) -> bool:
+        """Run RMS + CAD join pipeline. Args:
+            steps: Specific steps to run
+        
+        Returns:
+            True if successful
+        """
+        self.logger.info("\n🔄 Starting RMS + CAD Join Pipeline")
+        
+        if not self.config.get("join.enabled", False):
+            self.logger.error("❌ Join is not enabled in configuration!") return False
+        
+        # Step 1: Load both datasets
+        self.logger.info("\n📥 Step 1: Load RMS and CAD data")
+        self.logger.info("   TODO: Implement combined loading")
+        
+        # Step 2: Clean both
+        self.logger.info("\n🧹 Step 2: Clean RMS and CAD data")
+        self.logger.info("   TODO: Implement combined cleaning")
+        
+        # Step 3: Join
+        self.logger.info("\n🔗 Step 3: Join RMS and CAD datasets")
+        # matcher = CADRMSMatcher(self.config)
+        # joined_data = matcher.match_and_join(rms_data, cad_data)
+        self.logger.info("   TODO: Implement CADRMSMatcher")
+        
+        # Step 4: Export
+        self.logger.info("\n💾 Step 4: Export joined dataset")
+        self.logger.info("   TODO: Implement combined export")
+        
+        return True
+    
+    def _run_scrpa_weekly(self, period: Optional[str], steps: Optional[List[str]]) -> bool:
+        """Run SCRPA weekly report generation. Args:
+            period: Reporting period (7day, 28day, ytd)
+            steps: Specific steps to run
+        
+        Returns:
+            True if successful
+        """
+        self.logger.info("\n🔄 Starting SCRPA Weekly Report Generation")
+        
+        if not self.config.get("scrpa_weekly.enabled", False):
+            self.logger.error("❌ SCRPA weekly is not enabled in configuration!") return False
+        
+        # Default to 7-day if not specified
+        if period is None:
+            period = "7day"
+        
+        self.logger.info(f"   Period: {period}")
+        
+        # Get date range
+        start_date, end_date = get_period_dates(period)
+        self.logger.info(f"   Date range: {start_date} to {end_date}")
+        
+        # Get crime types from config
+        crime_types = self.config.get("scrpa_weekly.crime_types", [])
+        self.logger.info(f"   Crime types: {len(crime_types)}")
+        
+        # Step 1: Load and clean RMS data
+        self.logger.info("\n📥 Step 1: Load and prepare RMS data")
+        self.logger.info("   TODO: Implement RMS loading with SCRPA filtering")
+        
+        # Step 2: Generate statistics for each crime type
+        self.logger.info("\n📊 Step 2: Generate crime statistics")
+        for crime_type in crime_types:
+            crime_name = crime_type.get('name')
+            self.logger.info(f"   Analyzing: {crime_name}")
+            # crime_analyzer = CrimeAnalyzer(self.config)
+            # stats = crime_analyzer.analyze(rms_data, crime_type, start_date, end_date)
+            self.logger.info(f"      TODO: Implement CrimeAnalyzer for {crime_name}")
+        
+        # Step 3: Generate maps (if ArcPy available)
+        if "arcpy_maps" in steps or steps is None:
+            self.logger.info("\n🗺️  Step 3: Generate ArcGIS maps")
+            try:
+                import arcpy
+                # aprx_manager = APRXManager(self.config)
+                # maps = aprx_manager.generate_maps(crime_types, period, start_date, end_date)
+                self.logger.info("   TODO: Implement APRXManager")
+            except ImportError:
+                self.logger.warning("⚠️  ArcPy not available, skipping map generation")
+        
+        # Step 4: Generate executive summary
+        self.logger.info("\n📄 Step 4: Generate executive summary")
+        # summary_generator = SummaryGenerator(self.config)
+        # summary = summary_generator.generate(stats, period, start_date, end_date)
+        self.logger.info("   TODO: Implement SummaryGenerator")
+        
+        self.logger.info("\n✅ SCRPA weekly report completed")
+        return True
+    
+    def _print_summary(self) -> None:
+        """Print pipeline execution summary.""" end_time = datetime.now()
+        duration = end_time - self.stats['start_time']
+        
+        self.logger.info("\n" + "=" * 60)
+        self.logger.info("📊 PIPELINE EXECUTION SUMMARY")
+        self.logger.info("=" * 60)
+        self.logger.info(f"   Duration: {duration}")
+        self.logger.info(f"   Steps completed: {len(self.stats['steps_completed'])}")
+        
+        if self.stats['steps_completed']:
+            self.logger.info(f"      {', '.join(self.stats['steps_completed'])}")
+        
+        if self.stats['records_processed']:
+            self.logger.info("\n   Records processed:")
+            for key, count in self.stats['records_processed'].items():
+                self.logger.info(f"      {key}: {count:,}")
+        
+        if self.stats['files_created']:
+            self.logger.info(f"\n   Files created: {len(self.stats['files_created'])}")
+            for file_path in self.stats['files_created'][:5]:  # Show first 5
+                self.logger.info(f"      {file_path}")
+            if len(self.stats['files_created']) > 5:
+                self.logger.info(f"      ... and {len(self.stats['files_created']) - 5} more")
+        
+        if self.stats['errors']:
+            self.logger.error(f"\n   ⚠️  Errors encountered: {len(self.stats['errors'])}")
+            for error in self.stats['errors']:
+                self.logger.error(f"      {error}")
+        
+        self.logger.info("=" * 60)
+        
+        if not self.stats['errors']:
+            self.logger.info("🎉 Pipeline completed successfully!") else:
+            self.logger.error("❌ Pipeline completed with errors")
+
+
+def main():
+    """Main entry point for CLI.""" parser = argparse.ArgumentParser(
+        description="SCRPA Unified Pipeline - RMS/CAD ETL and SCRPA Weekly Reporting",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Run full RMS pipeline
+  python scrpa_pipeline.py --mode rms_only
+  
+  # Run specific steps
+  python scrpa_pipeline.py --mode rms_only --steps clean enrich export
+  
+  # Generate SCRPA weekly report
+  python scrpa_pipeline.py --mode scrpa_weekly --period 7day
+  
+  # Join RMS and CAD data
+  python scrpa_pipeline.py --mode rms_cad_join
+  
+  # Dry run (preview without writing files)
+  python scrpa_pipeline.py --mode rms_only --dry-run
+  
+  # Use custom config
+  python scrpa_pipeline.py --config ./my_config.yaml
+        """
+    )
+    
+    parser.add_argument(
+        '--mode',
+        choices=['rms_only', 'cad_only', 'rms_cad_join', 'scrpa_weekly'],
+        default='rms_only',
+        help='Pipeline execution mode (default: rms_only)'
+    )
+    
+    parser.add_argument(
+        '--steps',
+        nargs='+',
+        choices=['ingest', 'clean', 'flag', 'enrich', 'join', 'export', 'arcpy_maps'],
+        help='Specific steps to run (default: all steps for mode)'
+    )
+    
+    parser.add_argument(
+        '--period',
+        choices=['7day', '28day', 'ytd'],
+        help='Reporting period for SCRPA weekly mode'
+    )
+    
+    parser.add_argument(
+        '--config',
+        type=Path,
+        help='Path to pipeline.yaml config file (default: ./configs/pipeline.yaml)'
+    )
+    
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Preview actions without writing files'
+    )
+    
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Enable verbose debug logging'
+    )
+    
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='SCRPA Unified Pipeline v1.0.0'
+    )
+    
+    args = parser.parse_args()
+    
+    # Create pipeline instance
+    pipeline = SCRPAPipeline(
+        config_path=args.config,
+        dry_run=args.dry_run
+    )
+    
+    # Run pipeline
+    success = pipeline.run_pipeline(
+        mode=args.mode,
+        steps=args.steps,
+        period=args.period
+    )
+    
+    # Exit with appropriate code
+    sys.exit(0 if success else 1)
+
+
+if __name__ == "__main__":
+    main()
+
+```
+
+Excellent progress! Now let me create comprehensive documentation to complete the foundation:
+
+```markdown
+# SCRPA Unified Pipeline
+
+**Version:** 1.0.0  
+**Author:** R. A. Carucci (AI-Assisted Consolidation)  
+**Date:** 2025-10-27
+
+---
+
+## 📋 Executive Summary
+
+The SCRPA Unified Pipeline consolidates multiple ETL scripts for RMS (Records Management System), CAD (Computer-Aided Dispatch), and SCRPA (Statistical Crime Report for Police Administration) weekly reporting into a single, modular, production-ready system. ### Key Features
+
+✅ **Modular Architecture** - Independent components for each pipeline step  
+✅ **Config-Driven** - All paths and settings in YAML configuration  
+✅ **Data Quality Framework** - Three-tier validation (Critical/Important/Optional)  
+✅ **Power BI Compatible** - Exports to exact format expected by existing dashboards  
+✅ **ArcGIS Integration** - Automated map generation for SCRPA weekly reports  
+✅ **CLI Interface** - Run entire pipeline or individual steps  
+✅ **Dry-Run Mode** - Preview changes without writing files  
+
+### What's Been Consolidated
+
+This unified pipeline consolidates best practices from:
+
+- **CAD_Data_Pipeline** → Validation framework with stratified sampling
+- **RMS_Data_ETL** → Schema aliasing, geocoding, type coercion
+- **RMS_Data_Processing** → Quality flagging, multi-stage processing
+- **Combined_CAD_RMS** → CAD/RMS joining logic
+- **SCRPA_ArcPy** → ArcPy map generation, crime pattern matching
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Python 3.9+**
+- **ArcGIS Pro** (for map generation only)
+- **Access to:** RMS exports, CAD exports, Power BI data source folder
+
+### Installation
+
+```bash
+# 1. Clone/navigate to the pipeline directory
+cd SCRPA_Unified_Pipeline
+
+# 2. Install Python dependencies
+pip install -r requirements.txt
+
+# 3. Configure paths in configs/pipeline.yaml
+#    - Update input/output paths to match your environment
+#    - Verify Power BI output path is correct
+
+# 4. Test the pipeline (dry run)
+python scrpa_pipeline.py --mode rms_only --dry-run
+```
+
+### Basic Usage
+
+```bash
+# Run full RMS pipeline
+python scrpa_pipeline.py --mode rms_only
+
+# Run specific steps only
+python scrpa_pipeline.py --mode rms_only --steps clean enrich export
+
+# Generate SCRPA weekly report (7-day)
+python scrpa_pipeline.py --mode scrpa_weekly --period 7day
+
+# Join RMS and CAD data
+python scrpa_pipeline.py --mode rms_cad_join
+
+# Dry run (preview without writing files)
+python scrpa_pipeline.py --mode rms_only --dry-run
+```
+
+---
+
+## 📁 Repository Structure
+
+```
+SCRPA_Unified_Pipeline/
+├── configs/                      # Configuration files (YAML)
+│   ├── pipeline.yaml            # Main pipeline settings ⭐
+│   ├── schema_rms.yaml          # RMS field mappings
+│   ├── schema_cad.yaml          # CAD field mappings
+│   ├── validation_rules.yaml   # Data quality rules ⭐
+│   └── crime_patterns.yaml      # SCRPA crime type definitions ⭐
+│
+├── src/                         # Source code (modular)
+│   ├── utils/                   # Utilities (logging, config, dates) ✅
+│   ├── ingest/                  # Data loading from RMS/CAD exports
+│   ├── clean/                   # Cleaning & standardization
+│   │   ├── rms_cleaner.py      # RMS-specific cleaning
+│   │   ├── cad_cleaner.py      # CAD-specific cleaning
+│   │   ├── schema_mapper.py    # YAML schema aliasing
+│   │   └── geocoder.py         # Address standardization + geocoding
+│   ├── flag/                    # Data quality validation
+│   │   ├── quality_rules.py    # Validation rule engine
+│   │   └── reporter.py         # Quality report generation
+│   ├── enrich/                  # Enrichment modules
+│   │   ├── temporal.py         # Date/time enrichment
+│   │   ├── spatial.py          # Geographic enrichment
+│   │   └── categorical.py      # Crime category classification
+│   ├── join/                    # CAD + RMS joining
+│   │   └── cad_rms_matcher.py  # Fuzzy matching logic
+│   ├── export/                  # Export modules
+│   │   ├── powerbi_exporter.py # CSV/Parquet for Power BI ⭐
+│   │   ├── arcgis_exporter.py  # GeoJSON/Feature Class
+│   │   └── report_generator.py # Markdown/HTML/JSON reports
+│   └── arcpy_maps/              # ArcGIS map generation
+│       ├── aprx_manager.py     # APRX manipulation
+│       ├── map_exporter.py     # PDF/PNG export
+│       └── crime_analyzer.py   # Crime pattern queries
+│
+├── scrpa_pipeline.py            # Main CLI orchestrator ✅
+├── requirements.txt             # Python dependencies
+├── README.md                    # This file ✅
+├── CONSOLIDATION_MANIFEST.md    # Detailed inventory of sources ✅
+├── MIGRATION_GUIDE.md           # Old → New mapping
+├── TUESDAY_RUNBOOK.md           # Weekly SCRPA execution guide
+│
+├── tests/                       # Unit and integration tests
+│   ├── test_rms_cleaner.py
+│   ├── test_validators.py
+│   └── fixtures/               # Sample test data
+│
+├── outputs/                     # Pipeline outputs (gitignored)
+│   ├── cleaned/
+│   ├── enriched/
+│   ├── reports/
+│   └── maps/
+│
+├── logs/                        # Execution logs (gitignored)
+│
+└── legacy/                      # Original scripts (reference only)
+    └── MANIFEST.md             # What came from where
+
+✅ = Completed
+⭐ = Critical for initial setup
+```
+
+---
+
+## ⚙️ Configuration
+
+### Main Configuration File: `configs/pipeline.yaml`
+
+**Critical sections to configure before first run:**
+
+#### 1. Paths (Update for Your Environment)
+
+```yaml
+paths:
+  # CRITICAL: Update these paths! rms_input: "C:/Users/YOUR_USERNAME/OneDrive - City of Hackensack/05_EXPORTS/_RMS"
+  cad_input: "C:/Users/YOUR_USERNAME/OneDrive - City of Hackensack/05_EXPORTS/_CAD"
+  
+  # Power BI reads from here - DO NOT CHANGE without updating Power BI! scrpa_output: "C:/Users/YOUR_USERNAME/OneDrive - City of Hackensack/05_EXPORTS/_RMS/SCRPA"
+  
+  # ArcGIS Pro project template
+  aprx_template: "C:/Users/YOUR_USERNAME/.../7_Day_Templet_SCRPA_Time.aprx"
+```
+
+#### 2. Data Quality Thresholds
+
+```yaml
+data_quality:
+  thresholds:
+    critical: 0.95    # 95% of records must pass
+    important: 0.85   # 85% of records must pass
+    optional: 0.70    # 70% of records must pass
+```
+
+#### 3. SCRPA Weekly Settings
+
+```yaml
+scrpa_weekly:
+  enabled: true
+  crime_types:
+    - name: Robbery
+      pattern: "Robbery - 2C:15-1"
+      layer_name: "Robbery 7-Day"
+    # ... more crime types
+```
+
+See **[configs/pipeline.yaml](configs/pipeline.yaml)** for full configuration options. ---
+
+## 🔄 Pipeline Modes
+
+### 1. RMS-Only Mode (`rms_only`)
+
+**Purpose:** Process RMS exports for Power BI  
+**Steps:** Ingest → Clean → Flag → Enrich → Export
+
+**Use when:**
+- Weekly SCRPA data refresh
+- Ad-hoc RMS analysis
+- Power BI data source update
+
+**Command:**
+```bash
+python scrpa_pipeline.py --mode rms_only
+```
+
+**Outputs:**
+- `SCRPA_Latest_YYYYMMDD.csv` → Power BI data source
+- `SCRPA_Latest_YYYYMMDD.parquet` → Faster Power BI refresh
+- `quality_report_YYYYMMDD.json` → Data quality metrics
+
+---
+
+### 2. CAD-Only Mode (`cad_only`)
+
+**Purpose:** Process CAD exports independently  
+**Steps:** Ingest → Clean → Flag → Enrich → Export
+
+**Use when:**
+- CAD-only analysis needed
+- Testing CAD pipeline before joining
+
+**Command:**
+```bash
+python scrpa_pipeline.py --mode cad_only
+```
+
+---
+
+### 3. RMS + CAD Join Mode (`rms_cad_join`)
+
+**Purpose:** Combine RMS and CAD data for integrated analysis  
+**Steps:** Ingest (both) → Clean (both) → Join → Enrich → Export
+
+**Use when:**
+- Need complete incident lifecycle (call → report)
+- Cross-system analysis
+- Comprehensive data warehouse update
+
+**Command:**
+```bash
+python scrpa_pipeline.py --mode rms_cad_join
+```
+
+**Configuration:**
+```yaml
+# Enable in configs/pipeline.yaml
+join:
+  enabled: true
+  matching:
+    keys: [date, location, incident_type]
+    fuzzy_address_threshold: 0.85
+```
+
+---
+
+### 4. SCRPA Weekly Mode (`scrpa_weekly`)
+
+**Purpose:** Generate SCRPA weekly reports with maps  
+**Steps:** Ingest RMS → Filter by crime types → Generate stats → Create maps → Executive summary
+
+**Use when:**
+- Tuesday morning SCRPA report due
+- Monthly SCRPA briefing
+- Year-end crime statistics
+
+**Command:**
+```bash
+# 7-day report
+python scrpa_pipeline.py --mode scrpa_weekly --period 7day
+
+# 28-day report
+python scrpa_pipeline.py --mode scrpa_weekly --period 28day
+
+# Year-to-date
+python scrpa_pipeline.py --mode scrpa_weekly --period ytd
+```
+
+**Outputs:**
+- Crime statistics (TXT/CSV/JSON)
+- ArcGIS maps (PDF/PNG)
+- Executive summary (Markdown/HTML)
+
+**See:** [TUESDAY_RUNBOOK.md](TUESDAY_RUNBOOK.md) for weekly execution guide
+
+---
+
+## 📊 Data Quality Framework
+
+The pipeline uses a **three-tier validation framework** to ensure data quality:
+
+### Critical Rules (Must Pass 95%)
+- Case number format valid
+- Case numbers unique
+- Dates within reasonable range
+- Incident type not null
+
+**Action if failed:** Pipeline stops, manual review required
+
+### Important Rules (Must Pass 85%)
+- Addresses complete and valid
+- Officer assigned to dispatched calls
+- Disposition from approved list
+- Time sequences logical
+
+**Action if failed:** Flagged in quality report, record included
+
+### Optional Rules (Must Pass 70%)
+- How Reported standardized
+- Zones valid
+- Response types consistent with severity
+
+**Action if failed:** Logged for future cleanup, record included
+
+### Quality Reports
+
+After each run, quality reports are generated:
+
+**JSON Report** (`quality_report_YYYYMMDD.json`):
+- Detailed validation results
+- Failed record examples
+- Pass/fail counts per rule
+- Overall quality score
+
+**CSV Report** (`quality_summary_YYYYMMDD.csv`):
+- One row per validation rule
+- Excel-friendly format
+- Use for trend analysis
+
+**Accessing Reports:**
+```bash
+# Reports are in:
+./outputs/reports/
+
+# Latest quality report:
+ls -t ./outputs/reports/quality_report_*.json | head -1
+```
+
+---
+
+## 🗺️ Power BI Integration
+
+### Overview
+
+The pipeline exports data in formats **exactly matching** your existing Power BI data sources. ### Critical Files for Power BI
+
+Power BI reads from this location:
+```
+C:/Users/YOUR_USERNAME/OneDrive - City of Hackensack/05_EXPORTS/_RMS/SCRPA/
+```
+
+**Files created:**
+- `SCRPA_Latest_YYYYMMDD.csv` → Main data source
+- `SCRPA_Latest_YYYYMMDD.parquet` → Faster refresh alternative
+
+### Power Query Integration
+
+**Current Power Query M Code** (from your PBIX):
+```m
+let
+    Source = Folder.Files("C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_RMS\SCRPA"),
+    FilteredRows = Table.SelectRows(Source, each Text.StartsWith([Name], "SCRPA_Latest_")),
+    SortedRows = Table.Sort(FilteredRows, {{"Date modified", Order.Descending}}),
+    LatestFile = SortedRows{0}[Content]
+in
+    LatestFile
+```
+
+**This query will continue to work** because the pipeline preserves the file naming convention. ### Testing Power BI Refresh
+
+1. Run pipeline: `python scrpa_pipeline.py --mode rms_only`
+2. Open your PBIX file
+3. Click **Refresh** in Power BI Desktop
+4.

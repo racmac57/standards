@@ -1,0 +1,115 @@
+{
+  "source_file": "Clery_Act_Reference_Data_Standards_Setup.md",
+  "source_path": "C:\\_chunker\\02_data\\Clery_Act_Reference_Data_Standards_Setup.md",
+  "manifest_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\KB_Shared\\04_output\\Clery_Act_Reference_Data_Standards_Setup\\2026_03_09_11_32_05_Clery_Act_Reference_Data_Standards_Setup.origin.json",
+  "created_at": "2026_03_09_11_32_05",
+  "tags": [
+    "ai",
+    "code",
+    "conversation",
+    "data",
+    "docs",
+    "it-ops",
+    "json",
+    "legal",
+    "markdown",
+    "police",
+    "powershell",
+    "python",
+    "sql"
+  ],
+  "metadata": {
+    "project_name": "02_data",
+    "source_type": "documentation",
+    "language": "en",
+    "department": "admin",
+    "key_terms": [
+      "clery",
+      "python",
+      "files",
+      "pro",
+      "claude",
+      "hackensack"
+    ],
+    "enrichment_version": "1.0.0"
+  },
+  "summaries": {
+    "file_summary": "# New reference data Clery request\n_Exported on 3/9/2026 at 11:31:42 EDT from Cursor (2.6.14)_\n\n---\n\n**User**\n\nCan we make a new refrence data Clery. For context of what is need to complete a Clery request can be found in C:\\Users\\carucc...",
+    "first_line": "# New reference data Clery request"
+  },
+  "chunks": [
+    {
+      "chunk_id": "2026-03-09T11:32:05+00:00_Clery_Act_Reference_Data_Standards_Setup_chunk1",
+      "chunk_index": 1,
+      "file": "chunk_00000.txt",
+      "tags": [
+        "ai",
+        "ai-chat",
+        "clery",
+        "code",
+        "conversation",
+        "data",
+        "docs",
+        "hackensack",
+        "it-ops",
+        "json",
+        "legal",
+        "markdown",
+        "police",
+        "powershell",
+        "python",
+        "sql",
+        "standards",
+        "users"
+      ],
+      "key_terms": [
+        "clery",
+        "python",
+        "pro",
+        "hackensack",
+        "users",
+        "standards"
+      ],
+      "summary": "# New reference data Clery request\n_Exported on 3/9/2026 at 11:31:42 EDT from Cursor (2.6.14)_\n\n---\n\n**User**\n\nCan we make a new refrence data Clery.",
+      "char_length": 27953,
+      "byte_length": 28874
+    },
+    {
+      "chunk_id": "2026-03-09T11:32:05+00:00_Clery_Act_Reference_Data_Standards_Setup_chunk2",
+      "chunk_index": 2,
+      "file": "chunk_00001.txt",
+      "tags": [
+        "added",
+        "ai",
+        "changelog",
+        "claude",
+        "code",
+        "conversation",
+        "data",
+        "docs",
+        "it-ops",
+        "json",
+        "legal",
+        "markdown",
+        "police",
+        "powershell",
+        "python",
+        "readme",
+        "sql",
+        "summary"
+      ],
+      "key_terms": [
+        "added",
+        "summary",
+        "claude",
+        "add",
+        "readme",
+        "changelog"
+      ],
+      "summary": "**Suggested edits:**\n\n1.",
+      "char_length": 12312,
+      "byte_length": 12690
+    }
+  ],
+  "enrichment_version": "1.0.0"
+}

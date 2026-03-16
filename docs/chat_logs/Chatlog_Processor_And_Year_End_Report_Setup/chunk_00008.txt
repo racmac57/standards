@@ -1,0 +1,729 @@
+For example, processing `directory_opus_chatlog_processin.md` will create:
+
+```
+chunked\
+  directory_opus_chatlog_processin\
+    2025_XX_XX_XX_XX_XX_directory_opus_chatlog_processin\
+      (all chunks and sidecar files)
+```
+
+The script is updated and will organize new files correctly. ```plaintext
+chunked\
+  directory_opus_chatlog_processin\
+    2025_12_30_23_02_00_directory_opus_chatlog_processin\
+      chunk_00000.txt
+      chunk_00001.txt
+      ...sidecar files...
+```
+
+```plaintext
+chunked\
+  directory_opus_chatlog_processin\
+    2025_XX_XX_XX_XX_XX_directory_opus_chatlog_processin\
+      (all chunks and sidecar files)
+```
+
+---
+
+**User**
+
+Great work. it worked. one last request can you check the chunked files and place the files in folders according to the source file name? ---
+
+**Cursor**
+
+Creating a script to reorganize the existing chunked files by source filename:
+
+
+Creating a PowerShell script to reorganize the existing files by source filename:
+
+
+```powershell
+# ============================================================================
+# Reorganize Chunked Files by Source Filename
+# ============================================================================
+# This script reorganizes existing chunked files into folders by source filename
+# ============================================================================
+
+$ChunkedDir = "C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\unified_data_dictionary\docs\chatlogs\chunked"
+
+Write-Host "============================================================================" -ForegroundColor Cyan
+Write-Host "  REORGANIZING CHUNKED FILES BY SOURCE FILENAME" -ForegroundColor Cyan
+Write-Host "============================================================================" -ForegroundColor Cyan
+Write-Host ""
+
+if (-not (Test-Path $ChunkedDir)) {
+    Write-Host "[ERROR] Chunked directory does not exist: $ChunkedDir" -ForegroundColor Red
+    exit 1
+}
+
+# Get all files (excluding directories)
+$allFiles = Get-ChildItem -Path $ChunkedDir -File
+
+Write-Host "[INFO] Found $($allFiles.Count) files to organize" -ForegroundColor Yellow
+Write-Host ""
+
+# Dictionary to group files by source name and timestamp
+$fileGroups = @{}
+
+foreach ($file in $allFiles) {
+    $fileName = $file.Name
+    
+    # Skip if it's a chunk file (we'll handle those separately)
+    if ($fileName -match '^chunk_\d+\.txt$') {
+        continue
+    }
+    
+    # Pattern: TIMESTAMP_SOURCENAME_suffix.ext
+    # Extract source name and timestamp
+    if ($fileName -match '^(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})_(.+?)(_sidecar\.json|_transcript\. (json|md)|\.origin\.json)$') {
+        $timestamp = $matches[1]
+        $sourceName = $matches[2]
+        $suffix = $matches[3]
+        
+        # Create key: sourceName_timestamp
+        $key = "$sourceName|$timestamp"
+        
+        if (-not $fileGroups.ContainsKey($key)) {
+            $fileGroups[$key] = @{
+                SourceName = $sourceName
+                Timestamp = $timestamp
+                Files = @()
+            }
+        }
+        
+        $fileGroups[$key].Files += $file
+    }
+}
+
+Write-Host "[INFO] Found $($fileGroups.Count) unique source/timestamp combinations" -ForegroundColor Yellow
+Write-Host ""
+
+# Process each group
+$movedCount = 0
+foreach ($key in $fileGroups.Keys) {
+    $group = $fileGroups[$key]
+    $sourceName = $group.SourceName
+    $timestamp = $group.Timestamp
+    $files = $group.Files
+    
+    # Create folder structure: chunked\SOURCENAME\TIMESTAMP_SOURCENAME\
+    $sourceFolder = Join-Path $ChunkedDir $sourceName
+    $timestampFolder = Join-Path $sourceFolder "${timestamp}_${sourceName}"
+    
+    Write-Host "[PROCESSING] $sourceName ($timestamp)" -ForegroundColor Green
+    
+    # Create folders
+    if (-not (Test-Path $sourceFolder)) {
+        New-Item -ItemType Directory -Path $sourceFolder -Force | Out-Null
+        Write-Host "  [CREATED] Source folder: $sourceName" -ForegroundColor Gray
+    }
+    
+    if (-not (Test-Path $timestampFolder)) {
+        New-Item -ItemType Directory -Path $timestampFolder -Force | Out-Null
+        Write-Host "  [CREATED] Timestamp folder: ${timestamp}_${sourceName}" -ForegroundColor Gray
+    }
+    
+    # Move files
+    foreach ($file in $files) {
+        $destPath = Join-Path $timestampFolder $file.Name
+        try {
+            Move-Item -Path $file.FullName -Destination $destPath -Force
+            Write-Host "  [MOVED] $($file.Name)" -ForegroundColor Gray
+            $movedCount++
+        } catch {
+            Write-Host "  [ERROR] Failed to move $($file.Name): $_" -ForegroundColor Red
+        }
+    }
+}
+
+# Handle chunk files - try to match them to source files by checking sidecar JSON files
+Write-Host ""
+Write-Host "[PROCESSING] Chunk files..." -ForegroundColor Green
+
+$chunkFiles = Get-ChildItem -Path $ChunkedDir -Filter "chunk_*.txt" -File
+
+if ($chunkFiles.Count -gt 0) {
+    Write-Host "  [INFO] Found $($chunkFiles.Count) chunk files" -ForegroundColor Yellow
+    
+    # Try to find matching sidecar files to determine source
+    foreach ($chunkFile in $chunkFiles) {
+        $chunkTimestamp = $chunkFile.LastWriteTime.ToString("yyyy_MM_dd_HH_mm_ss")
+        
+        # Look for sidecar files that might match this chunk's timestamp
+        $matchingSidecar = $null
+        foreach ($key in $fileGroups.Keys) {
+            $group = $fileGroups[$key]
+            if ($group.Timestamp -eq $chunkTimestamp) {
+                # Find the sidecar file for this group
+                $sidecarFile = $group.Files | Where-Object { $_.Name -match '_sidecar\.json$' }
+                if ($sidecarFile) {
+                    $matchingSidecar = $sidecarFile
+                    $sourceName = $group.SourceName
+                    $timestamp = $group.Timestamp
+                    break
+                }
+            }
+        }
+        
+        if ($matchingSidecar) {
+            # Move chunk to the same folder as the sidecar
+            $sourceFolder = Join-Path $ChunkedDir $sourceName
+            $timestampFolder = Join-Path $sourceFolder "${timestamp}_${sourceName}"
+            $destPath = Join-Path $timestampFolder $chunkFile.Name
+            
+            try {
+                Move-Item -Path $chunkFile.FullName -Destination $destPath -Force
+                Write-Host "  [MOVED] $($chunkFile.Name) -> $sourceName\$timestamp" -ForegroundColor Gray
+                $movedCount++
+            } catch {
+                Write-Host "  [ERROR] Failed to move $($chunkFile.Name): $_" -ForegroundColor Red
+            }
+        } else {
+            # If we can't match, try to extract from existing organized folders or leave in root
+            Write-Host "  [WARNING] Could not match $($chunkFile.Name) to a source file" -ForegroundColor Yellow
+        }
+    }
+}
+
+# Check for any existing folders that might need to be reorganized
+Write-Host ""
+Write-Host "[PROCESSING] Checking existing folders..." -ForegroundColor Green
+
+$existingFolders = Get-ChildItem -Path $ChunkedDir -Directory
+foreach ($folder in $existingFolders) {
+    # If folder name matches a source name pattern, check if it needs reorganization
+    $folderFiles = Get-ChildItem -Path $folder.FullName -Recurse -File
+    
+    if ($folderFiles.Count -gt 0) {
+        Write-Host "  [INFO] Found existing folder: $($folder.Name) with $($folderFiles.Count) files" -ForegroundColor Gray
+        # Files in existing folders are already organized, skip
+    }
+}
+
+Write-Host ""
+Write-Host "============================================================================" -ForegroundColor Cyan
+Write-Host "  REORGANIZATION COMPLETE" -ForegroundColor Cyan
+Write-Host "============================================================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "[SUMMARY] Moved $movedCount files" -ForegroundColor Green
+Write-Host ""
+Write-Host "New structure:" -ForegroundColor Yellow
+Get-ChildItem -Path $ChunkedDir -Directory | ForEach-Object {
+    Write-Host "  $($_.Name)/" -ForegroundColor Cyan
+    Get-ChildItem -Path $_.FullName -Directory | ForEach-Object {
+        $fileCount = (Get-ChildItem -Path $_.FullName -File).Count
+        Write-Host "    $($_.Name)/ ($fileCount files)" -ForegroundColor Gray
+    }
+}
+Write-Host ""
+
+```
+
+Improving chunk file matching by checking sidecar JSON files for chunk references:
+
+
+```powershell
+# ============================================================================
+# Reorganize Chunked Files by Source Filename
+# ============================================================================
+# This script reorganizes existing chunked files into folders by source filename
+# ============================================================================
+
+$ChunkedDir = "C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\unified_data_dictionary\docs\chatlogs\chunked"
+
+Write-Host "============================================================================" -ForegroundColor Cyan
+Write-Host "  REORGANIZING CHUNKED FILES BY SOURCE FILENAME" -ForegroundColor Cyan
+Write-Host "============================================================================" -ForegroundColor Cyan
+Write-Host ""
+
+if (-not (Test-Path $ChunkedDir)) {
+    Write-Host "[ERROR] Chunked directory does not exist: $ChunkedDir" -ForegroundColor Red
+    exit 1
+}
+
+# Get all files (excluding directories)
+$allFiles = Get-ChildItem -Path $ChunkedDir -File
+
+Write-Host "[INFO] Found $($allFiles.Count) files to organize" -ForegroundColor Yellow
+Write-Host ""
+
+# Dictionary to group files by source name and timestamp
+$fileGroups = @{}
+
+foreach ($file in $allFiles) {
+    $fileName = $file.Name
+    
+    # Skip if it's a chunk file (we'll handle those separately)
+    if ($fileName -match '^chunk_\d+\.txt$') {
+        continue
+    }
+    
+    # Pattern: TIMESTAMP_SOURCENAME_suffix.ext
+    # Extract source name and timestamp
+    if ($fileName -match '^(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})_(.+?)(_sidecar\.json|_transcript\. (json|md)|\.origin\.json)$') {
+        $timestamp = $matches[1]
+        $sourceName = $matches[2]
+        $suffix = $matches[3]
+        
+        # Create key: sourceName_timestamp
+        $key = "$sourceName|$timestamp"
+        
+        if (-not $fileGroups.ContainsKey($key)) {
+            $fileGroups[$key] = @{
+                SourceName = $sourceName
+                Timestamp = $timestamp
+                Files = @()
+            }
+        }
+        
+        $fileGroups[$key].Files += $file
+    }
+}
+
+Write-Host "[INFO] Found $($fileGroups.Count) unique source/timestamp combinations" -ForegroundColor Yellow
+Write-Host ""
+
+# Process each group
+$movedCount = 0
+foreach ($key in $fileGroups.Keys) {
+    $group = $fileGroups[$key]
+    $sourceName = $group.SourceName
+    $timestamp = $group.Timestamp
+    $files = $group.Files
+    
+    # Create folder structure: chunked\SOURCENAME\TIMESTAMP_SOURCENAME\
+    $sourceFolder = Join-Path $ChunkedDir $sourceName
+    $timestampFolder = Join-Path $sourceFolder "${timestamp}_${sourceName}"
+    
+    Write-Host "[PROCESSING] $sourceName ($timestamp)" -ForegroundColor Green
+    
+    # Create folders
+    if (-not (Test-Path $sourceFolder)) {
+        New-Item -ItemType Directory -Path $sourceFolder -Force | Out-Null
+        Write-Host "  [CREATED] Source folder: $sourceName" -ForegroundColor Gray
+    }
+    
+    if (-not (Test-Path $timestampFolder)) {
+        New-Item -ItemType Directory -Path $timestampFolder -Force | Out-Null
+        Write-Host "  [CREATED] Timestamp folder: ${timestamp}_${sourceName}" -ForegroundColor Gray
+    }
+    
+    # Move files
+    foreach ($file in $files) {
+        $destPath = Join-Path $timestampFolder $file.Name
+        try {
+            Move-Item -Path $file.FullName -Destination $destPath -Force
+            Write-Host "  [MOVED] $($file.Name)" -ForegroundColor Gray
+            $movedCount++
+        } catch {
+            Write-Host "  [ERROR] Failed to move $($file.Name): $_" -ForegroundColor Red
+        }
+    }
+}
+
+# Handle chunk files - match them by checking sidecar JSON files for chunk references
+Write-Host ""
+Write-Host "[PROCESSING] Chunk files..." -ForegroundColor Green
+
+$chunkFiles = Get-ChildItem -Path $ChunkedDir -Filter "chunk_*.txt" -File
+
+if ($chunkFiles.Count -gt 0) {
+    Write-Host "  [INFO] Found $($chunkFiles.Count) chunk files" -ForegroundColor Yellow
+    
+    # First, read all sidecar files to build a mapping of chunks to sources
+    $chunkToSourceMap = @{}
+    
+    foreach ($key in $fileGroups.Keys) {
+        $group = $fileGroups[$key]
+        $sidecarFile = $group.Files | Where-Object { $_.Name -match '_sidecar\.json$' }
+        
+        if ($sidecarFile) {
+            try {
+                $sidecarContent = Get-Content -Path $sidecarFile.FullName -Raw | ConvertFrom-Json
+                
+                # Check if sidecar has chunk records
+                if ($sidecarContent.chunks) {
+                    foreach ($chunkRecord in $sidecarContent.chunks) {
+                        if ($chunkRecord.file) {
+                            $chunkFileName = $chunkRecord.file
+                            $chunkToSourceMap[$chunkFileName] = @{
+                                SourceName = $group.SourceName
+                                Timestamp = $group.Timestamp
+                                SidecarFile = $sidecarFile
+                            }
+                        }
+                    }
+                }
+            } catch {
+                # Skip if JSON parsing fails
+            }
+        }
+    }
+    
+    # Now move chunk files based on the mapping
+    foreach ($chunkFile in $chunkFiles) {
+        if ($chunkToSourceMap.ContainsKey($chunkFile.Name)) {
+            $mapping = $chunkToSourceMap[$chunkFile.Name]
+            $sourceName = $mapping.SourceName
+            $timestamp = $mapping.Timestamp
+            
+            $sourceFolder = Join-Path $ChunkedDir $sourceName
+            $timestampFolder = Join-Path $sourceFolder "${timestamp}_${sourceName}"
+            $destPath = Join-Path $timestampFolder $chunkFile.Name
+            
+            try {
+                Move-Item -Path $chunkFile.FullName -Destination $destPath -Force
+                Write-Host "  [MOVED] $($chunkFile.Name) -> $sourceName\$timestamp" -ForegroundColor Gray
+                $movedCount++
+            } catch {
+                Write-Host "  [ERROR] Failed to move $($chunkFile.Name): $_" -ForegroundColor Red
+            }
+        } else {
+            # Try to match by timestamp pattern in filename
+            $matched = $false
+            foreach ($key in $fileGroups.Keys) {
+                $group = $fileGroups[$key]
+                # Check if chunk file timestamp matches (approximate match)
+                $chunkTime = $chunkFile.LastWriteTime
+                $groupTime = [DateTime]::ParseExact($group.Timestamp, "yyyy_MM_dd_HH_mm_ss", $null)
+                
+                if ([Math]::Abs(($chunkTime - $groupTime).TotalSeconds) -lt 60) {
+                    # Within 60 seconds, likely a match
+                    $sourceName = $group.SourceName
+                    $timestamp = $group.Timestamp
+                    
+                    $sourceFolder = Join-Path $ChunkedDir $sourceName
+                    $timestampFolder = Join-Path $sourceFolder "${timestamp}_${sourceName}"
+                    $destPath = Join-Path $timestampFolder $chunkFile.Name
+                    
+                    try {
+                        Move-Item -Path $chunkFile.FullName -Destination $destPath -Force
+                        Write-Host "  [MOVED] $($chunkFile.Name) -> $sourceName\$timestamp (timestamp match)" -ForegroundColor Gray
+                        $movedCount++
+                        $matched = $true
+                        break
+                    } catch {
+                        Write-Host "  [ERROR] Failed to move $($chunkFile.Name): $_" -ForegroundColor Red
+                    }
+                }
+            }
+            
+            if (-not $matched) {
+                Write-Host "  [WARNING] Could not match $($chunkFile.Name) to a source file" -ForegroundColor Yellow
+            }
+        }
+    }
+}
+
+# Check for any existing folders that might need to be reorganized
+Write-Host ""
+Write-Host "[PROCESSING] Checking existing folders..." -ForegroundColor Green
+
+$existingFolders = Get-ChildItem -Path $ChunkedDir -Directory
+foreach ($folder in $existingFolders) {
+    # If folder name matches a source name pattern, check if it needs reorganization
+    $folderFiles = Get-ChildItem -Path $folder.FullName -Recurse -File
+    
+    if ($folderFiles.Count -gt 0) {
+        Write-Host "  [INFO] Found existing folder: $($folder.Name) with $($folderFiles.Count) files" -ForegroundColor Gray
+        # Files in existing folders are already organized, skip
+    }
+}
+
+Write-Host ""
+Write-Host "============================================================================" -ForegroundColor Cyan
+Write-Host "  REORGANIZATION COMPLETE" -ForegroundColor Cyan
+Write-Host "============================================================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "[SUMMARY] Moved $movedCount files" -ForegroundColor Green
+Write-Host ""
+Write-Host "New structure:" -ForegroundColor Yellow
+Get-ChildItem -Path $ChunkedDir -Directory | ForEach-Object {
+    Write-Host "  $($_.Name)/" -ForegroundColor Cyan
+    Get-ChildItem -Path $_.FullName -Directory | ForEach-Object {
+        $fileCount = (Get-ChildItem -Path $_.FullName -File).Count
+        Write-Host "    $($_.Name)/ ($fileCount files)" -ForegroundColor Gray
+    }
+}
+Write-Host ""
+
+```
+
+Running the reorganization script:
+
+
+Reorganization complete. Verifying the final structure:
+
+
+Reorganization complete. ## Summary
+
+- Moved 54 files into organized folders
+- Created 7 source folders (one per source file)
+- All chunk files matched and moved to their corresponding source folders
+
+## New Structure
+
+Your `chunked\` folder is now organized like this:
+
+```
+chunked\
+  ├── directory_opus_chatlog_processin\
+  │   └── 2025_12_30_23_02_00_directory_opus_chatlog_processin\
+  │       (4 files: sidecar, transcript, origin JSON)
+  ├── cursor_directory_opus_chatlog_processin\
+  │   └── 2025_12_30_23_05_35_cursor_directory_opus_chatlog_processin\
+  │       (4 files)
+  ├── cursor_directory_opus_chatlog_processin_2025_12_30\
+  │   └── 2025_12_30_23_10_01_cursor_directory_opus_chatlog_processin_2025_12_30\
+  │       (12 files including 8 chunk files)
+  ├── 2025_12_30_claude_code_cad_rms_schema_packaging\
+  │   └── 2025_12_30_22_43_40_2025_12_30_claude_code_cad_rms_schema_packaging\
+  │       (24 files including 20 chunk files)
+  └── ... (other source files)
+```
+
+Each source file has its own folder, and each processing run is in a timestamped subfolder. This keeps everything organized and makes it easy to find files by source name. Going forward, new files processed with the Directory Opus button will automatically be organized this way. ```plaintext
+chunked\
+  ├── directory_opus_chatlog_processin\
+  │   └── 2025_12_30_23_02_00_directory_opus_chatlog_processin\
+  │       (4 files: sidecar, transcript, origin JSON)
+  ├── cursor_directory_opus_chatlog_processin\
+  │   └── 2025_12_30_23_05_35_cursor_directory_opus_chatlog_processin\
+  │       (4 files)
+  ├── cursor_directory_opus_chatlog_processin_2025_12_30\
+  │   └── 2025_12_30_23_10_01_cursor_directory_opus_chatlog_processin_2025_12_30\
+  │       (12 files including 8 chunk files)
+  ├── 2025_12_30_claude_code_cad_rms_schema_packaging\
+  │   └── 2025_12_30_22_43_40_2025_12_30_claude_code_cad_rms_schema_packaging\
+  │       (24 files including 20 chunk files)
+  └── ... (other source files)
+```
+
+---
+
+**User**
+
+thanbk you
+
+I am having notion help make a Claude.md file for me and it is asking: the following about the mapping and schema of the cad and rms
+If you tell me which of these you prefer (paste here vs. files in the repo), I can:
+
+- Draft concrete `config.yml` and mapping file templates. - Or, given a small pasted sample from your unified dictionary, write the exact YAML / JSON you can drop into your project. ---
+
+**Cursor**
+
+Checking available CAD and RMS mapping and schema files in the repo:
+
+
+Checking the field definition files to provide a complete recommendation:
+
+
+Recommend referencing the files in the repo rather than pasting. Here's what to tell Notion:
+
+## Recommendation: Reference Files in Repo
+
+Your repo already has structured mapping and schema files. Reference them rather than pasting. ### File locations to reference
+
+**Mapping schemas:**
+- `CAD_RMS/DataDictionary/current/schema/cad_to_rms_field_map.json` — CAD→RMS field mapping (v2.0 with multi-column matching)
+- `CAD_RMS/DataDictionary/current/schema/rms_to_cad_field_map.json` — RMS→CAD field mapping (v2.0 with multi-column matching)
+- `CAD_RMS/DataDictionary/current/schema/multi_column_matching_strategy.md` — Matching strategy documentation
+
+**Field definitions:**
+- `CAD/DataDictionary/current/schema/cad_export_field_definitions.md` — CAD field definitions (231 lines)
+- `rms_export_field_definitions.md` — RMS field definitions (769 lines, 29 fields across 8 groups)
+
+### What to tell Notion
+
+> "Reference the files in the repo. The mapping schemas are JSON files with v2.0 structure including:
+> - Primary join keys (ReportNumberNew ↔ Case Number)
+> - Multi-column matching strategies (temporal+address, officer+temporal, address+zone+date)
+> - Confidence thresholds and matching rules
+> 
+> The field definition files are comprehensive Markdown documents with:
+> - Export header → standard name mappings
+> - Field-by-field definitions with validation rules
+> - Format specifications and usage notes
+> 
+> File paths:
+> - `CAD_RMS/DataDictionary/current/schema/cad_to_rms_field_map.json`
+> - `CAD_RMS/DataDictionary/current/schema/rms_to_cad_field_map.json`
+> - `CAD/DataDictionary/current/schema/cad_export_field_definitions.md`
+> - `rms_export_field_definitions.md` (root level)
+> 
+> If you need a sample, here's the structure of the mapping JSON:
+> ```json
+> {
+>   "schema_version": "2.0",
+>   "direction": "cad_to_rms",
+>   "join_keys": {
+>     "primary": { ... },
+>     "alternative_matching_strategies": [ ... ]
+>   }
+> }
+> ```"
+
+This keeps the documentation aligned with the source files and avoids duplication. ---
+
+**User**
+
+its asking
+If you’d like, I can now:
+
+- Fold this as section `6` into the [`claude.md`](http://claude.md) draft I wrote earlier (so you have a single, ready-to-commit file), or
+- Add a very small “loader” example (Python) that reads `cad_to_rms_field_map.json` and applies the strategies to a CAD/RMS merge, aligned with your `multi_column_matching_[strategy.md](http://strategy.md)`. ---
+
+**Cursor**
+
+Recommend both, with priority on the Python loader example. ## Recommendation: Both, but prioritize the Python example
+
+### Option 1: Python loader example (recommended first)
+
+This is more actionable. Tell Notion:
+
+> "Please add a Python loader example that:
+> - Reads `cad_to_rms_field_map.json` 
+> - Implements the multi-column matching strategies from `multi_column_matching_strategy.md`
+> - Shows how to apply primary key matching first, then fall back to alternative strategies
+> - Includes confidence scoring
+> - Handles the field normalization rules (trim, collapse whitespace, etc.) > 
+> The example should demonstrate a practical CAD/RMS merge workflow that:
+> 1. Tries primary key match (ReportNumberNew ↔ Case Number)
+> 2. If no match or low confidence, tries temporal+address match
+> 3. Then tries officer+temporal match
+> 4. Finally tries address+zone+approximate date match
+> 5. Returns matches with confidence scores"
+
+### Option 2: Add to claude.md (also useful)
+
+> "Also fold this as section 6 into the claude.md draft so everything is in one place for reference." ## Why this approach
+
+- The Python example provides working code that implements the strategies. - Adding it to claude.md keeps documentation in one place. - Together, they provide both documentation and implementation guidance. If you must choose one, prioritize the Python example; it shows how to use the mappings in practice. ---
+
+**User**
+
+Here’s a concrete Python loader example first, then a short Section 6 you can drop into [`claude.md`](http://claude.md). ---
+
+### Python loader example: CAD↔RMS merge with strategies and confidence
+
+Assumptions:
+
+- Mapping JSON at: `CAD_RMS/DataDictionary/current/schema/cad_to_rms_field_map.json`
+- Strategy doc already matches what you put in `multi_column_matching_[strategy.md](http://strategy.md)`. - You are fine using `pandas` and `rapidfuzz`. ```python
+import json
+from datetime import datetime, date
+from pathlib import Path
+
+import pandas as pd
+from rapidfuzz import fuzz
+
+# -------------------------------------------------------------------
+# Config
+# -------------------------------------------------------------------
+
+BASE_PATH = Path("C:/Users/carucci_r/OneDrive - City of Hackensack")
+CAD_PATH = BASE_PATH / "05_EXPORTS/_CAD/full_year/2025/2025_Yearly_CAD.xlsx"
+RMS_PATH = BASE_PATH / "05_EXPORTS/_RMS/full_year/2025/2025_Yearly_RMS.xlsx"
+
+MAPPING_JSON = Path(
+    "CAD_RMS/DataDictionary/current/schema/cad_to_rms_field_map.json"
+)
+MATCHING_DOC = Path(
+    "CAD_RMS/DataDictionary/current/schema/multi_column_matching_[strategy.md](http://strategy.md)"
+)  # for human reference only
+
+# -------------------------------------------------------------------
+# Helpers: normalization
+# -------------------------------------------------------------------
+
+def normalize_case_number(value: object) -> str:
+    """Normalize case / report numbers (ReportNumberNew, Case Number).""" if pd.isna(value):
+        return ""
+    s = str(value).strip()
+    s = " ".join(s.split())  # collapse internal whitespace
+    s = "".join(ch for ch in s if ch.isprintable())
+    return s.upper()  # case-insensitive comparison
+
+def normalize_address(addr: object) -> str:
+    """Very simple address normalization; you can plug in your own.""" if pd.isna(addr):
+        return ""
+    s = str(addr).upper().strip()
+    # basic punctuation removal
+    for ch in [",", ". ", "#"]:
+        s = s.replace(ch, " ")
+    s = " ".join(s.split())
+    # TODO: optional: normalize street suffixes using a lookup table
+    return s
+
+def parse_time(value, fmt=None):
+    if pd.isna(value):
+        return None
+    if isinstance(value, datetime):
+        return value
+    if fmt:
+        return datetime.strptime(str(value), fmt)
+    # fallback: let pandas parse
+    return [pd.to](http://pd.to)_datetime(value)
+
+# -------------------------------------------------------------------
+# Load mapping JSON (structure-aware but tolerant)
+# -------------------------------------------------------------------
+
+def load_mapping(path: Path) -> dict:
+    with [path.open](http://path.open)("r", encoding="utf-8") as f:
+        return json.load(f)
+
+# You can extend this if you want to drive behavior dynamically from JSON
+mapping_spec = load_mapping(MAPPING_JSON)
+
+# -------------------------------------------------------------------
+# Strategy implementations
+# -------------------------------------------------------------------
+
+def score_temporal_address(cad_row, rms_row) -> float:
+    """
+    Strategy 2: Temporal + Address. Fields:
+      CAD: TimeofCall, FullAddress2
+      RMS: IncidentDate, IncidentTime, FullAddress
+    """
+    scores = []
+
+    # Date match (weight 0.4)
+    cad_dt = parse_time(cad_row["TimeofCall"])
+    rms_date = parse_time(rms_row["IncidentDate"]).date() if not pd.isna(rms_row["IncidentDate"]) else None
+
+    if cad_dt is None or rms_date is None:
+        return 0.0
+
+    cad_date = cad_[dt.date](http://dt.date)()
+    date_score = 1.0 if cad_date == rms_date else 0.0
+    scores.append(date_score * 0.4)
+
+    # Time match (weight 0.3, within 60 min)
+    rms_time = parse_time(rms_row["IncidentTime"], fmt="%H:%M").time() \
+        if not pd.isna(rms_row["IncidentTime"]) else None
+    if rms_time is None:
+        return 0.0
+
+    cad_time = cad_dt.time()
+    cad_dt_comb = datetime.combine([date.today](http://date.today)(), cad_time)
+    rms_dt_comb = datetime.combine([date.today](http://date.today)(), rms_time)
+    diff_min = abs((cad_dt_comb - rms_dt_comb).total_seconds() / 60.0)
+    time_score = max(0.0, 1.0 - diff_min / 60.0)
+    scores.append(time_score * 0.3)
+
+    # Address similarity (weight 0.3, threshold 0.85)
+    cad_addr = normalize_address(cad_row["FullAddress2"])
+    rms_addr = normalize_address(rms_row["FullAddress"])
+
+    addr_sim = fuzz.ratio(cad_addr, rms_addr) / 100.0
+    if addr_sim < 0.85:
+        return 0.0
+
+    scores.append(addr_sim * 0.3)
+
+    return sum(scores)
+
+def score_officer_temporal(cad_row, rms_row) -> float:
+    """
+    Strategy 3: Officer + Temporal.

@@ -25,7 +25,15 @@
       "Bash(git checkout:*)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nCreate archive structure and backup nested .git from unified_data_dictionary\n\n- Create archive/ folder structure \\(packages/, legacy_copies/, removed_duplicates/\\)\n- Add archive/README.md with retention policy\n- Backup unified_data_dictionary/.git to archive/legacy_copies/udd_git_backup/\n- Remove nested .git from unified_data_dictionary \\(now single repo\\)\n\nThis is commit 1/7 of the standards-restructure cleanup.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(grep:*)",
+      "Bash(sort -k1 -nr)",
+      "Bash(echo:*)",
+      "Bash(for file:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/carucci_r/OneDrive - City of Hackensack/09_Reference/Standards/**)",
+      "Bash(done)",
+      "Bash(2)"
     ]
   }
 }

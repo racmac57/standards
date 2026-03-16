@@ -1,0 +1,324 @@
+{
+  "version": "1.0",
+  "system": "CAD",
+  "source_file_default_name": "assignment.csv",
+  "export_type": "Assignment",
+  "timezone": "America/New_York",
+  "generated_on": "2026-01-05",
+  "description": "Data dictionary for CAD system assignment export containing personnel assignments, squad information, shift status, and vehicle assignments.",
+  "fields": [
+    {
+      "source_field_name": "Officer",
+      "internal_field_name": "Officer",
+      "description": "Full name of the assigned officer including title/prefix (e.g., Capt., Lt., Sgt., P.O., Det., C.O., SPO., HCOP, PEO, CLK), first name, last name, and badge number. Format: '[Prefix] [First Name] [Last Name] [Badge Number]'. Examples: 'Capt. James Smith 158', 'P.O. Robert Carucci 261', 'HCOP Steven Yoon 715'. May contain extra spaces that need normalization.",
+      "required": false,
+      "nullable": true,
+      "source_type": "string",
+      "output_type": "string",
+      "accepted_formats": [
+        "Title FirstName LastName BadgeNumber",
+        "Title FirstName LastName BadgeNumber (with potential extra spaces)"
+      ],
+      "trim": true,
+      "normalize_whitespace": true,
+      "case_rule": "preserve",
+      "domain_file": null,
+      "derive_rule": "Can be parsed into: Prefix (Title), First_Name, Last_Name, Badge_Number, Padded_Badge (4-digit zero-padded), Norm_Name (format: '[First Initial]. [Last Name] #[Padded Badge]')",
+      "coercions": null,
+      "default_rule": "Optional. Blank values indicate no officer assigned. Extra spaces should be normalized. Missing badge numbers result in empty Padded_Badge and Norm_Name fields.",
+      "validation": {
+        "pattern": "May contain titles: Capt., Lt., Sgt., P.O., Det., C.O., SPO., HCOP, PEO, CLK, Chief, Const., CIV",
+        "notes": "Last token may be numeric badge number if present"
+      }
+    },
+    {
+      "source_field_name": "Secondary Officer",
+      "internal_field_name": "SecondaryOfficer",
+      "description": "Secondary or backup officer assigned to the same assignment. Format matches Officer field. Typically empty in most records.",
+      "required": false,
+      "nullable": true,
+      "source_type": "string",
+      "output_type": "string",
+      "accepted_formats": [
+        "Title FirstName LastName BadgeNumber",
+        "Empty/blank"
+      ],
+      "trim": true,
+      "normalize_whitespace": true,
+      "case_rule": "preserve",
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": null,
+      "default_rule": "Optional. Typically blank. If present, follows same format as Officer field.",
+      "validation": {}
+    },
+    {
+      "source_field_name": "Squad",
+      "internal_field_name": "Squad",
+      "description": "Squad or unit assignment code. Maps to organizational hierarchy (WG1-WG4). Common values: A1-A4, B1-B4 (Patrol Division squads), TRF (Traffic), DET (Detective Bureau), CSB (Crime Suppression Bureau), STA (Station Assignment), SSOCC (Safe Street Operations Control Center), ESU (Emergency Services Unit), REMU (Records and Evidence Management Unit), ADMIN (Administrative - context-dependent), TRN (Training), COMM ENG (Communications), and others.",
+      "required": false,
+      "nullable": true,
+      "source_type": "string",
+      "output_type": "string",
+      "accepted_formats": [
+        "A1", "A2", "A3", "A4",
+        "B1", "B2", "B3", "B4",
+        "TRF", "DET", "CSB", "STA", "SSOCC", "ESU", "REMU", "ADMIN", "TRN", "COMM ENG",
+        "Other unit codes"
+      ],
+      "trim": true,
+      "normalize_whitespace": true,
+      "case_rule": "uppercase",
+      "domain_file": null,
+      "derive_rule": "Maps to organizational hierarchy: WG1 (Division), WG2 (Bureau/Unit), WG3 (Platoon/Office), WG4 (Squad). Special ADMIN assignments require officer-specific override logic.",
+      "coercions": null,
+      "default_rule": "Optional. Blank indicates no squad assignment. ADMIN requires special handling based on officer (e.g., Capt. DeWitt -> Investigations Division, Capt. Weber -> Operations Division, Capt. Zisa -> Administrative Division, Chief Antista -> Chief of Police, Lt. Swetits -> OPS).",
+      "validation": {
+        "valid_values": [
+          "A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4",
+          "TRF", "DET", "CSB", "STA", "SSOCC", "ESU", "REMU",
+          "ADMIN", "TRN", "COMM ENG", "Housing", "Radio",
+          "TRAFF", "LT-C", "SGT-S", "SGT-N", "SGT-C", "QLD",
+          "CITY", "H1", "MAIN", "COUN", "DWI", "TAPS", "MCOU",
+          "XHCOP", "XDMV", "X-HC", "South", "1", "7", "9"
+        ],
+        "notes": "Some values may have leading/trailing spaces that need trimming"
+      }
+    },
+    {
+      "source_field_name": "Zone",
+      "internal_field_name": "Zone",
+      "description": "Geographic zone or operational area assignment. May include zone codes, unit designations, or special assignments. Examples: TRAFF (Traffic), Housing, Radio, LT-C (Lieutenant Command), SGT-S (Sergeant South), SGT-N (Sergeant North), SGT-C (Sergeant Central), QLD (Quality of Life Detail), CITY, H1, A3/4 (combined zones), A7/8, A1/2, etc.",
+      "required": false,
+      "nullable": true,
+      "source_type": "string",
+      "output_type": "string",
+      "accepted_formats": [
+        "Zone codes (numeric or alphanumeric)",
+        "Unit designations",
+        "Combined zones (e.g., A3/4)"
+      ],
+      "trim": true,
+      "normalize_whitespace": true,
+      "case_rule": "uppercase",
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": null,
+      "default_rule": "Optional. Blank indicates no zone assignment. May contain leading/trailing spaces.",
+      "validation": {
+        "notes": "Values vary widely and may include special designations, combined zones, or unit codes"
+      }
+    },
+    {
+      "source_field_name": "Unit",
+      "internal_field_name": "Unit",
+      "description": "Unit number assigned to the officer, typically matching their badge number. Numeric value representing the officer's unit identifier. May be used for vehicle/radio assignment correlation.",
+      "required": false,
+      "nullable": true,
+      "source_type": "numeric",
+      "output_type": "integer",
+      "accepted_formats": [
+        "Integer badge/unit number"
+      ],
+      "trim": false,
+      "normalize_whitespace": false,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": "Typically matches badge number extracted from Officer field. May be used to link to vehicle assignments.",
+      "coercions": [
+        "pd.to_numeric(errors='coerce') -> NaN if invalid"
+      ],
+      "default_rule": "Optional. Blank/NaN indicates no unit assignment. Should be integer if present.",
+      "validation": {
+        "type": "integer",
+        "range": "Typically 3-4 digits (e.g., 83-2013)"
+      }
+    },
+    {
+      "source_field_name": "Car",
+      "internal_field_name": "Car",
+      "description": "Vehicle/patrol car number assigned to the officer. Numeric identifier for the specific vehicle assigned. May match Unit number in some cases, but can differ for special assignments or shared vehicles.",
+      "required": false,
+      "nullable": true,
+      "source_type": "numeric",
+      "output_type": "integer",
+      "accepted_formats": [
+        "Integer vehicle number"
+      ],
+      "trim": false,
+      "normalize_whitespace": false,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "pd.to_numeric(errors='coerce') -> NaN if invalid"
+      ],
+      "default_rule": "Optional. Blank/NaN indicates no vehicle assignment. Should be integer if present.",
+      "validation": {
+        "type": "integer",
+        "range": "Typically 3 digits (e.g., 102-186)"
+      }
+    },
+    {
+      "source_field_name": "ShiftStatus",
+      "internal_field_name": "ShiftStatus",
+      "description": "Current shift status of the officer. Indicates whether the officer is currently on duty or off duty at the time of the export.",
+      "required": false,
+      "nullable": true,
+      "source_type": "string",
+      "output_type": "string",
+      "accepted_formats": [
+        "On Duty",
+        "Off Duty"
+      ],
+      "trim": true,
+      "normalize_whitespace": true,
+      "case_rule": "title",
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": null,
+      "default_rule": "Optional. Should be normalized to 'On Duty' or 'Off Duty' if present.",
+      "validation": {
+        "valid_values": [
+          "On Duty",
+          "Off Duty"
+        ],
+        "case_sensitive": false
+      }
+    },
+    {
+      "source_field_name": "Date1DayNew",
+      "internal_field_name": "Date1DayNew",
+      "description": "Date field representing a one-day offset or calculation date. Appears to be consistently set to the export date minus one day (e.g., if export is 1/5/2026, this field is 1/4/2026). Format: M/D/YYYY.",
+      "required": false,
+      "nullable": true,
+      "source_type": "string",
+      "output_type": "date",
+      "accepted_formats": [
+        "M/D/YYYY",
+        "MM/DD/YYYY"
+      ],
+      "trim": true,
+      "normalize_whitespace": false,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": "May be calculated as export date minus 1 day. Used for date range filtering or reporting.",
+      "coercions": [
+        "pd.to_datetime(format='%m/%d/%Y', errors='coerce') -> NaT if invalid"
+      ],
+      "default_rule": "Optional. Typically set to export date minus one day. Invalid dates become NaT when parsed.",
+      "validation": {
+        "format": "M/D/YYYY or MM/DD/YYYY",
+        "timezone": "America/New_York"
+      }
+    },
+    {
+      "source_field_name": "Date",
+      "internal_field_name": "Date",
+      "description": "Assignment date or effective date for the officer's current assignment. May represent the date the assignment was established, last updated, or the export date. Format: M/D/YYYY. Values vary widely and may include historical dates.",
+      "required": false,
+      "nullable": true,
+      "source_type": "string",
+      "output_type": "date",
+      "accepted_formats": [
+        "M/D/YYYY",
+        "MM/DD/YYYY"
+      ],
+      "trim": true,
+      "normalize_whitespace": false,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": [
+        "pd.to_datetime(format='%m/%d/%Y', errors='coerce') -> NaT if invalid"
+      ],
+      "default_rule": "Optional. May be blank. Invalid dates become NaT when parsed. Historical dates are valid (e.g., assignment start dates from 2019-2025).",
+      "validation": {
+        "format": "M/D/YYYY or MM/DD/YYYY",
+        "timezone": "America/New_York",
+        "notes": "May contain historical dates representing assignment start dates"
+      }
+    },
+    {
+      "source_field_name": "Weapon",
+      "internal_field_name": "Weapon",
+      "description": "Weapon assignment or weapon identifier for the officer. Currently appears to be empty/unused in the export, but field exists for potential future use.",
+      "required": false,
+      "nullable": true,
+      "source_type": "string",
+      "output_type": "string",
+      "accepted_formats": [],
+      "trim": true,
+      "normalize_whitespace": true,
+      "case_rule": null,
+      "domain_file": null,
+      "derive_rule": null,
+      "coercions": null,
+      "default_rule": "Optional. Currently appears to be blank/unused in exports. Reserved for future weapon tracking.",
+      "validation": {}
+    }
+  ],
+  "organizational_mapping": {
+    "description": "Squad codes map to organizational hierarchy (WG1-WG4) as follows:",
+    "mappings": {
+      "A1-A4, B1-B4": {
+        "WG1": "Operations Division",
+        "WG2": "Patrol Division",
+        "WG3": "Platoon A (A1-A4) or Platoon B (B1-B4)",
+        "WG4": "Squad code (A1, A2, A3, A4, B1, B2, B3, B4)"
+      },
+      "COMM ENG": {
+        "WG1": "Administrative Division",
+        "WG2": "Communications"
+      },
+      "CSB, DET": {
+        "WG1": "Investigations Division",
+        "WG2": "Crime Suppression Bureau (CSB) or Detective Bureau (DET)"
+      },
+      "ESU, REMU, SSOCC, TRF": {
+        "WG1": "Operations Division",
+        "WG2": "Emergency Services Unit (ESU), Records and Evidence Management Unit (REMU), Safe Street Operations Control Center (SSOCC), or Traffic Unit (TRF)"
+      },
+      "STA": {
+        "WG1": "Investigations Division",
+        "WG2": "Station Assignment"
+      },
+      "TRN": {
+        "WG1": "Administrative Division",
+        "WG2": "Training Unit"
+      },
+      "ADMIN": {
+        "WG1": "Context-dependent - requires officer-specific override",
+        "special_cases": {
+          "Capt. Darrin DeWitt 260": "Investigations Division",
+          "Chief Michael Antista 265": "Chief of Police",
+          "Capt. Ryan Weber 268": "Operations Division",
+          "Capt. Gregory Zisa 140": "Administrative Division",
+          "Lt. Matthew Swetits 160": "Administrative Division / Office of Professional Standards (OPS)"
+        }
+      }
+    }
+  },
+  "data_quality_notes": {
+    "officer_field": [
+      "May contain extra spaces (e.g., 'HCOP John Squillace  711' has double space before badge)",
+      "Some names have compound last names (e.g., 'Mark Del Carpio', 'Felix Carrera')",
+      "Some entries may not have badge numbers",
+      "Extra spaces should be normalized before parsing"
+    ],
+    "squad_field": [
+      "May contain leading/trailing spaces",
+      "ADMIN assignments require special handling based on officer",
+      "Some values may be blank or contain only spaces"
+    ],
+    "zone_field": [
+      "May contain leading/trailing spaces",
+      "Values are inconsistent (some have spaces, some don't)",
+      "Combined zones use slash notation (e.g., A3/4, A7/8)"
+    ],
+    "blank_rows": [
+      "Export may contain blank rows that should be filtered out",
+      "Some rows have only partial data (e.g., only Zone/Squad but no Officer)"
+    ]
+  }
+}

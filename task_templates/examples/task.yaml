@@ -1,0 +1,28 @@
+# Single Task Definition Example
+# This file shows the structure of a single task in YAML format
+
+id: TASK-001
+title: "Re-export 2024 CAD data with corrected Hour field"
+status: "To Do"
+priority: "High"
+assigned_to: "R. Carucci"
+due: 2026-02-01
+created: 2026-01-30
+updated: 2026-01-30
+category: "ETL"
+tags:
+  - cad
+  - export
+  - esri
+  - data-quality
+related_files:
+  - "_CAD/yearly/2024/2024_CAD_ALL.xlsx"
+  - "_CAD/csv/yearly/2024_CAD_ALL_ESRI.csv"
+  - "scripts/export_esri_cad.py"
+blocked_by: []
+blocks:
+  - TASK-002
+comments: |
+  The 2024 CAD export needs Hour field validation.
+  Ensure HourMinuetsCalc is properly mapped to Hour column.
+  Verify HH:mm format in output CSV.

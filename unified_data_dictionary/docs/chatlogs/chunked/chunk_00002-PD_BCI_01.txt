@@ -1,0 +1,651 @@
+# Do not change without updating Power BI data sources
+  scrpa_output: "C:/Users/carucci_r/OneDrive - City of Hackensack/05_EXPORTS/_RMS/SCRPA"
+  
+  # Quality reports and statistics
+  reports_output: "./outputs/reports"
+  
+  # ArcGIS map exports (PDF/PNG)
+  maps_output: "./outputs/maps"
+  
+  # Pipeline execution logs
+  logs_output: "./logs"
+  
+  # Temporary/staging files
+  staging: "./outputs/staging"
+  
+  # --- ArcGIS Pro ---
+  # APRX project template for map generation
+  aprx_template: "C:/Users/carucci_r/OneDrive - City of Hackensack/02_ETL_Scripts/SCRPA_ArcPy/projects/7_Day_Templet_SCRPA_Time.aprx"
+  
+  # GeoDatabase for spatial operations
+  geodatabase: "C:/Users/carucci_r/OneDrive - City of Hackensack/02_ETL_Scripts/SCRPA_ArcPy/projects/TimeSCRPATemplet.gdb"
+
+# ============================================================================
+# DATA QUALITY FRAMEWORK
+# ============================================================================
+
+data_quality:
+  enabled: true
+  
+  # Quality score thresholds by severity level
+  thresholds:
+    critical: 0.95    # 95% of records must pass critical rules
+    important: 0.85   # 85% of records must pass important rules
+    optional: 0.70    # 70% of records must pass optional rules
+  
+  # Sampling configuration for large datasets
+  sampling:
+    method: stratified         # Options: stratified, systematic, random
+    sample_size: 1000          # Number of records to sample for validation
+    min_stratum_size: 50       # Minimum records per stratum
+    systematic_interval: 100   # For systematic sampling
+  
+  # Validation reporting
+  reporting:
+    generate_json: true        # Detailed JSON report with failed record examples
+    generate_csv: true         # CSV summary for Excel review
+    generate_html: true        # Human-readable HTML dashboard
+    include_examples: true     # Include failed record samples in reports
+    max_examples: 10           # Maximum failed examples per rule
+
+# ============================================================================
+# CLEANING CONFIGURATION
+# ============================================================================
+
+cleaning:
+  # --- RMS Cleaning ---
+  rms:
+    enabled: true
+    schema_path: ./configs/schema_rms.yaml
+    
+    # Address standardization
+    address_standardization: true
+    use_usaddress_parser: true
+    
+    # Geocoding configuration
+    geocoding:
+      enabled: true
+      batch_size: 100                # Geocode in batches to avoid API limits
+      threshold_score: 90.0          # Minimum geocoding confidence score
+      reverse_validation: true       # Validate geocoded address matches input
+      fuzzy_match_threshold: 85.0    # Fuzzy string match threshold (%)
+      usps_validation: true          # Validate against USPS address patterns
+      flag_bad_addresses: true       # Add bad_address_flag column
+    
+    # Time/date extraction from narrative text
+    narrative_scanning:
+      enabled: true
+      window_chars: 150              # Characters around time/date mention to extract
+      patterns: [time, date]         # Extract times and dates
+    
+    # Type coercion
+    type_fixing:
+      dates: true                    # Parse and standardize date fields
+      times: true                    # Parse and standardize time fields
+      currency: true                 # Convert currency strings to floats
+      handle_between_fields: true    # Extract first value from "between" ranges
+    
+    # Value normalization
+    normalization:
+      case_number_prefix: "HPD"      # Ensure case numbers start with HPD
+      uppercase_fields: [registration_1, registration_2, make_1, make_2, model_1, model_2]
+      titlecase_fields: [reviewed_by]
+      strip_nulls: [NAN, nan, None, ""]
+  
+  # --- CAD Cleaning ---
+  cad:
+    enabled: true
+    schema_path: ./configs/schema_cad.yaml
+    
+    # Incident type normalization
+    incident_mapping:
+      enabled: true
+      mapping_csv: "{reference_data}/Classifications/CallTypes/CallType_Categories.csv"
+      fallback_to_original: true     # Keep original if no mapping found
+    
+    # Address abbreviation expansion
+    address_abbreviations:
+      " ST ": " STREET "
+      " AVE ": " AVENUE "
+      " BLVD ": " BOULEVARD "
+      " RD ": " ROAD "
+      " DR ": " DRIVE "
+      " CT ": " COURT "
+      " PL ": " PLACE "
+      " LN ": " LANE "
+      " WAY ": " WAY "
+      " CIR ": " CIRCLE "
+    
+    # Text field standardization
+    text_standardization:
+      uppercase_fields: [Incident, How Reported, Response Type, Disposition, Officer]
+      strip_whitespace: true
+    
+    # Parallel processing (for large datasets)
+    parallel:
+      enabled: true
+      use_dask: true
+      n_partitions: auto           # 'auto' or integer (# of CPU cores * 2 recommended)
+
+# ============================================================================
+# ENRICHMENT CONFIGURATION
+# ============================================================================
+
+enrichment:
+  # --- Temporal Enrichment ---
+  temporal:
+    add_date_parts: true             # Year, Quarter, Month, Week, Day, DayOfWeek, DayOfYear
+    add_time_of_day: true            # Morning (6-12), Afternoon (12-18), Evening (18-22), Night (22-6)
+    add_shift_periods: true          # Day Shift, Evening Shift, Night Shift
+    add_period_buckets: true         # 7day, 28day, ytd boolean flags
+    add_weekend_flag: true           # is_weekend column
+    
+    # Time-of-day bins (24-hour format)
+    time_bins:
+      morning: [6, 12]
+      afternoon: [12, 18]
+      evening: [18, 22]
+      night: [22, 6]
+    
+    # Shift periods (for officer schedules)
+    shift_periods:
+      day: [7, 15]
+      evening: [15, 23]
+      night: [23, 7]
+  
+  # --- Spatial Enrichment ---
+  spatial:
+    add_zones: true                  # PD Zone assignment from address
+    add_grids: true                  # Geographic grid codes (e.g., G1-A, G2-B)
+    add_beat: true                   # Patrol beat assignment
+    add_coordinates: true            # Latitude/Longitude from geocoding
+    
+    # Zone definitions (if not using shapefile)
+    zones:
+      zone_5: "North End"
+      zone_6: "Central Business District"
+      zone_7: "South End"
+      zone_8: "East Side"
+      zone_9: "West Side"
+  
+  # --- Categorical Enrichment ---
+  categorical:
+    add_crime_categories: true       # UCR Part I / Part II classifications
+    add_incident_severity: true      # Emergency / Priority / Routine / Administrative
+    add_call_priority: true          # Priority 1, 2, 3 based on incident type
+    add_resolution_status: true      # Closed / Open / Pending
+    
+    # Emergency incident patterns (for priority classification)
+    emergency_incidents: 
+      - ROBBERY
+      - ASSAULT
+      - BURGLARY
+      - SHOOTING
+      - STABBING
+      - DOMESTIC VIOLENCE
+      - WEAPON
+    
+    # Non-emergency incident patterns
+    non_emergency_incidents:
+      - NOISE COMPLAINT
+      - PARKING VIOLATION
+      - CIVIL DISPUTE
+      - PROPERTY DAMAGE
+      - ANIMAL COMPLAINT
+  
+  # --- Lookups from External Sources ---
+  lookups:
+    enabled: true
+    
+    # Officer roster integration
+    officer_mapping:
+      enabled: false                 # Set to true if roster CSV available
+      csv_path: "{reference_data}/Personnel/Officer_Roster.csv"
+      join_keys: [badge_number, name]
+      add_fields: [rank, unit, division, shift]
+    
+    # Unit assignments
+    unit_mapping:
+      enabled: false
+      csv_path: "{reference_data}/Units/Unit_Assignments.csv"
+
+# ============================================================================
+# JOINING CONFIGURATION (CAD + RMS Integration)
+# ============================================================================
+
+join:
+  enabled: false                     # Set to true to combine CAD and RMS data
+  
+  matching:
+    # Matching keys for CAD-RMS linkage
+    keys: 
+      - date                         # Incident date must match
+      - location                     # Address fuzzy match
+      - incident_type                # Incident type similarity
+    
+    # Fuzzy matching thresholds
+    fuzzy_address_threshold: 0.85    # 85% similarity for address match
+    fuzzy_incident_threshold: 0.80   # 80% similarity for incident type match
+    time_window_hours: 24            # Match within 24 hours
+    
+    # Supplement handling
+    supplement_handling: true        # Special logic for RMS supplements (case_number + letter)
+    supplement_pattern: "^\d{2}-\d{6}[A-Z]$"
+  
+  # Join strategy
+  strategy: left                     # Options: left (keep all RMS), inner (only matches), outer (keep all)
+  
+  # Conflict resolution (when both CAD and RMS have same field)
+  conflict_resolution:
+    prefer_source: RMS               # RMS, CAD, or newest
+    merge_narratives: true           # Combine CAD and RMS narratives
+    flag_conflicts: true             # Add conflict_flag column
+
+# ============================================================================
+# EXPORT CONFIGURATION
+# ============================================================================
+
+export:
+  # --- Power BI Export ---
+  powerbi:
+    enabled: true
+    formats: [csv, parquet]          # CSV for compatibility, Parquet for performance
+    
+    # File naming convention (CRITICAL: Power BI queries depend on this!) latest_file_pattern: "SCRPA_Latest_{date}. {ext}"
+    
+    # Archive old files to prevent clutter
+    archive_old_files: true
+    archive_path: "{scrpa_output}/archive"
+    keep_days: 90                    # Keep files for 90 days
+    
+    # CSV export options
+    csv_options:
+      encoding: utf-8-sig            # BOM for Excel compatibility
+      index: false
+      date_format: "%Y-%m-%d"
+      na_rep: ""                     # Blank for null values
+    
+    # Parquet export options
+    parquet_options:
+      compression: snappy            # Good balance of speed vs. size
+      index: false
+  
+  # --- ArcGIS Export ---
+  arcgis:
+    enabled: true
+    formats: [geojson, featureclass]
+    
+    # Spatial reference
+    spatial_reference: 2263          # NJSP NAD83 US Feet (standard for NJ)
+    
+    # GeoJSON export options
+    geojson_options:
+      pretty_print: false            # Minified for smaller file size
+      include_crs: true
+    
+    # Feature class export options
+    featureclass_options:
+      overwrite_existing: true
+      output_gdb: "{geodatabase}"
+      fc_name_pattern: "SCRPA_{period}_{date}"
+  
+  # --- Report Export ---
+  reports:
+    enabled: true
+    formats: [json, md, html]        # JSON for ingestion, MD for Git, HTML for viewing
+    
+    # Include in reports
+    include_statistics: true
+    include_quality_metrics: true
+    include_processing_time: true
+    include_data_samples: false      # Set to true for debugging
+    
+    # Email notifications (optional)
+    email:
+      enabled: false                 # Set to true to enable email reports
+      recipients: [[EMAIL-REDACTED]]
+      smtp_server: smtp.gmail.com
+      smtp_port: 587
+      subject_pattern: "SCRPA Pipeline Report - {date}"
+
+# ============================================================================
+# SCRPA WEEKLY REPORT CONFIGURATION
+# ============================================================================
+
+scrpa_weekly:
+  enabled: true
+  
+  # Crime types to analyze (matches APRX layer names)
+  crime_types:
+    - name: Robbery
+      pattern: "Robbery - 2C:15-1"
+      layer_name: "Robbery 7-Day"
+      ucr_category: "Part I"
+      
+    - name: MV Theft
+      pattern: "Motor Vehicle Theft - 2C:20-3"
+      layer_name: "MV Theft 7-Day"
+      ucr_category: "Part I"
+      
+    - name: Burglary - Auto
+      pattern: "Burglary Auto"
+      layer_name: "Burglary - Auto 7-Day"
+      ucr_category: "Part I"
+      
+    - name: Burglary - Comm & Res
+      patterns: ["Burglary Commercial", "Burglary Residential"]
+      layer_name: "Burglary - Comm & Res 7-Day"
+      ucr_category: "Part I"
+      
+    - name: Sexual Offenses
+      patterns: ["Sexual", "Criminal Sexual Contact"]
+      layer_name: "Sexual Offenses 7-Day"
+      ucr_category: "Part I"
+  
+  # Reporting periods
+  periods:
+    - id: 7day
+      label: "7-Day"
+      days_back: 7
+      
+    - id: 28day
+      label: "28-Day"
+      days_back: 28
+      
+    - id: ytd
+      label: "Year-to-Date"
+      days_back: ytd              # Special value: calculate from Jan 1
+  
+  # Query configuration
+  query:
+    # Field names in APRX layers
+    date_field: calldate
+    incident_type_field: calltype
+    disposition_field: disposition
+    
+    # Disposition filter (only count reports filed)
+    disposition_filter: "See Report"
+    require_disposition: true        # Set to false to count all incidents
+  
+  # Output folder structure
+  output_structure: "{period}/{date}/{crime_type}"
+  
+  # Map export settings
+  maps:
+    enabled: true
+    export_formats: [pdf, png]
+    pdf_dpi: 300
+    png_dpi: 150
+    include_legend: true
+    include_scale_bar: true
+    include_north_arrow: true
+
+# ============================================================================
+# PIPELINE EXECUTION SETTINGS
+# ============================================================================
+
+execution:
+  # Dry run mode (preview changes without writing files)
+  dry_run: false
+  
+  # Verbose logging
+  verbose: true
+  
+  # Stop on first error or continue processing
+  fail_fast: false
+  
+  # Performance settings
+  performance:
+    chunk_size: 10000              # Process data in chunks for memory efficiency
+    max_memory_gb: 8               # Maximum memory usage (GB)
+    parallel_jobs: -1              # -1 for all CPU cores, or specific integer
+  
+  # Validation before export
+  pre_export_validation:
+    enabled: true
+    check_required_fields: true
+    check_data_types: true
+    check_null_thresholds: true
+    null_threshold_pct: 20         # Warn if >20% nulls in critical fields
+
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+
+logging:
+  level: INFO                        # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # Log files
+  files:
+    main_log: "{logs_output}/scrpa_pipeline_{date}.log"
+    error_log: "{logs_output}/errors_{date}.log"
+    quality_log: "{logs_output}/quality_{date}.log"
+  
+  # Log rotation
+  rotation:
+    enabled: true
+    max_bytes: 10485760            # 10 MB
+    backup_count: 5                # Keep 5 old logs
+  
+  # Console output
+  console:
+    enabled: true
+    colorized: true                # Use colored output (emoji indicators)
+  
+  # Log retention
+  retention_days: 90               # Delete logs older than 90 days
+
+# ============================================================================
+# DEVELOPMENT & TESTING
+# ============================================================================
+
+development:
+  # Use sample data for testing
+  use_sample_data: false
+  sample_data_path: ./tests/fixtures
+  
+  # Limit records for faster testing
+  limit_records: null              # null for no limit, or integer (e.g., 1000)
+  
+  # Skip slow operations during testing
+  skip_geocoding: false
+  skip_arcpy: false
+  
+  # Test data validation
+  validate_test_fixtures: true
+
+# ============================================================================
+# NOTIFICATIONS & MONITORING
+# ============================================================================
+
+notifications:
+  # Slack integration (optional)
+  slack:
+    enabled: false
+    webhook_url: ""
+    channel: "#scrpa-pipeline"
+    notify_on: [error, completion]
+  
+  # Email notifications
+  email:
+    enabled: false
+    smtp_server: ""
+    smtp_port: 587
+    username: ""
+    use_tls: true
+    from_address: "[EMAIL-REDACTED]"
+    to_addresses: []
+    notify_on: [error, completion]
+
+# ============================================================================
+# FEATURE FLAGS
+# ============================================================================
+
+features:
+  # Experimental features (disabled by default)
+  enable_ml_address_matching: false
+  enable_predictive_analytics: false
+  enable_auto_categorization: false
+  
+  # Legacy compatibility
+  support_legacy_case_numbers: true
+  support_legacy_time_formats: true
+
+# ============================================================================
+# METADATA
+# ============================================================================
+
+metadata:
+  generated_by: SCRPA_Unified_Pipeline
+  config_version: "1.0.0"
+  last_modified: "2025-10-27"
+  schema_version: "1.0"
+
+```
+
+Excellent progress! I've created a comprehensive 660-line unified configuration. Now let me continue by creating additional config files and the core directory structure:
+
+```yaml
+# Data Quality Validation Rules
+# Extracted from: CAD_Data_Pipeline/scripts/01_validate_and_clean.py
+# Version: 1.0.0
+
+# Three-tier validation framework:
+# - critical: Must pass 95% (data integrity issues)
+# - important: Must pass 85% (quality issues that affect analysis)
+# - optional: Must pass 70% (nice-to-have standardization)
+
+critical_rules:
+  case_number_format:
+    rule_id: CRIT_001
+    description: "Case number must follow format: YY-XXXXXX or YY-XXXXXX[A-Z] for supplements"
+    field: case_number
+    pattern: '^\d{2,4}-\d{6}[A-Z]?$'
+    severity: critical
+    fix_suggestion: "Standardize case number format, pad with zeros if needed"
+    applies_to: [rms, cad]
+  
+  case_number_uniqueness:
+    rule_id: CRIT_002
+    description: "Case numbers must be unique within dataset (excluding supplements)"
+    field: case_number
+    severity: critical
+    fix_suggestion: "Remove duplicates, investigate duplicate sources"
+    applies_to: [rms]
+  
+  datetime_validity:
+    rule_id: CRIT_003
+    description: "Date/time fields must be valid and within reasonable range (2020-2030)"
+    fields: [incident_date, report_date, call_time]
+    severity: critical
+    date_range:
+      min: "2020-01-01"
+      max: "2030-12-31"
+    fix_suggestion: "Validate datetime parsing, check for timezone issues"
+    applies_to: [rms, cad]
+  
+  incident_type_presence:
+    rule_id: CRIT_004
+    description: "Incident type must not be null or empty"
+    field: incident_type
+    severity: critical
+    fix_suggestion: "Map null values to 'Unknown' or investigate missing data"
+    applies_to: [rms, cad]
+
+important_rules:
+  address_completeness:
+    rule_id: IMP_001
+    description: "Address should be present and not generic placeholder"
+    field: full_address
+    severity: important
+    generic_values: 
+      - UNKNOWN
+      - NOT PROVIDED
+      - N/A
+      - NONE
+      - TBD
+      - TO BE DETERMINED
+      - ""
+    # Enhanced: Require street number, street name, city, state, zip
+    address_pattern: '^\d+\s+.+\s+(Street|Avenue|Road|Place|Drive|Court|Boulevard|St|Ave|Rd|Pl|Dr|Ct|Blvd). *,\s*\w+,\s*[A-Z]{2}\s*\d{5}(-\d{4})?$'
+    fix_suggestion: "Validate address completeness, flag generic addresses, use geocoding validation"
+    applies_to: [rms, cad]
+  
+  officer_assignment:
+    rule_id: IMP_002
+    description: "Officer field should not be null for dispatched calls"
+    fields: [officer, time_dispatched]
+    severity: important
+    logic: "IF time_dispatched IS NOT NULL THEN officer MUST NOT BE NULL"
+    fix_suggestion: "Check officer assignment logic, validate against roster"
+    applies_to: [cad]
+  
+  disposition_consistency:
+    rule_id: IMP_003
+    description: "Disposition should be from approved list"
+    field: disposition
+    severity: important
+    valid_values:
+      - COMPLETE
+      - ADVISED
+      - ARREST
+      - UNFOUNDED
+      - CANCELLED
+      - GOA
+      - UTL
+      - SEE REPORT
+      - REFERRED
+      - REPORT TAKEN
+    fix_suggestion: "Standardize disposition values, create lookup table"
+    applies_to: [cad, rms]
+  
+  time_sequence_validity:
+    rule_id: IMP_004
+    description: "Time sequence should be logical (Call → Dispatch → Out → In)"
+    fields: [time_of_call, time_dispatched, time_out, time_in]
+    severity: important
+    logic: "time_of_call <= time_dispatched <= time_out <= time_in"
+    fix_suggestion: "Validate time sequence logic, flag outliers for manual review"
+    applies_to: [cad]
+  
+  datetime_duration_validity:
+    rule_id: IMP_005
+    description: "Durations between datetime fields must be non-negative"
+    fields: [time_of_call, time_dispatched, time_out, time_in]
+    severity: important
+    logic: "All duration calculations must be >= 0"
+    max_duration_hours: 24  # Flag if response took > 24 hours
+    fix_suggestion: "Correct negative durations or investigate data entry errors"
+    applies_to: [cad]
+  
+  time_spent_validity:
+    rule_id: IMP_006
+    description: "Time Spent must be a positive duration"
+    field: time_spent
+    severity: important
+    min_duration: "00:00:00"
+    max_duration: "24:00:00"
+    fix_suggestion: "Validate duration format and ensure positive values"
+    applies_to: [cad]
+
+optional_rules:
+  how_reported_standardization:
+    rule_id: OPT_001
+    description: "How Reported should be from standardized list"
+    field: how_reported
+    severity: optional
+    valid_values:
+      - 9-1-1
+      - WALK-IN
+      - PHONE
+      - SELF-INITIATED
+      - RADIO
+      - TELETYPE
+      - FAX
+      - OTHER - SEE NOTES
+      - EMAIL
+      - MAIL
+      - VIRTUAL PATROL
+      - CANCELED CALL
+    fix_suggestion: "Map variations to standard values (9-1-1, Phone, Walk-in, etc.)"

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TimeReport Export",
+  "type": "object",
+  "properties": {
+    "ReportNumberNew": {
+      "type": "string",
+      "description": "CAD report identifier (primary key / join key to RMS Case Number).",
+      "pattern": "^\\d{2}-\\d{6}([A-Z])?$"
+    },
+    "Incident": {
+      "type": "string",
+      "description": "Incident type descriptor (typically a code + description).",
+      "pattern": "^.+\\s-\\s.+$"
+    },
+    "HowReported": {
+      "type": "string",
+      "description": "Method by which the call/incident was reported/initiated."
+    },
+    "FullAddress2": {
+      "type": "string",
+      "description": "Full incident location address string."
+    },
+    "PDZone": {
+      "type": "string"
+    },
+    "Grid": {
+      "type": "string",
+      "description": "CAD grid / map grid identifier."
+    },
+    "TimeOfCall": {
+      "type": "string"
+    },
+    "cYear": {
+      "type": "integer",
+      "description": "Calendar year of `TimeofCall` (derived)."
+    },
+    "cMonth": {
+      "type": "string",
+      "description": "Calendar month of `TimeofCall` (derived)."
+    },
+    "Hour": {
+      "type": "string"
+    },
+    "DayofWeek": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Day name for `TimeofCall` (derived)."
+    },
+    "TimeDispatched": {
+      "type": "string"
+    },
+    "TimeOut": {
+      "type": "string"
+    },
+    "TimeIn": {
+      "type": "string"
+    },
+    "TimeSpent": {
+      "type": "string"
+    },
+    "TimeResponse": {
+      "type": "string"
+    },
+    "Officer": {
+      "type": "string",
+      "description": "Officer identifier for the call (primary/assigned officer)."
+    },
+    "Disposition": {
+      "type": "string",
+      "description": "Disposition / outcome code or label for the CAD call."
+    },
+    "Response_Type": {
+      "type": "string"
+    },
+    "CADNotes": {
+      "type": "string"
+    }
+  },
+  "required": [],
+  "additionalProperties": true,
+  "x_generated_on": "2026-02-10",
+  "x_source_file": "2026_01_timereport.xlsx"
+}

@@ -1,0 +1,766 @@
+Check watch folder for queued files: %CHUNKER_INPUT%
+echo   3. Check if file was copied: dir "%CHUNKER_INPUT%\%FILENAME%"
+echo   4. Check output folder: %EXPANDED_OUTPUT%
+echo   5. Run diagnostic: powershell -File "%CHUNKER_ROOT%\scripts\Check-Watcher-Status.ps1" -FileName "%BASENAME%"
+echo   6. For large files, increase MAX_SCANS in this script (currently %MAX_SCANS%)
+echo. pause
+exit /b 1
+
+:FILES_FOUND
+echo   [OK] Found output: %FOUND_PATH%
+
+REM ============================================================================
+REM STEP 4: Verify Chunks
+REM ============================================================================
+echo. echo [STEP 4/5] Verifying chunks...
+set "CHUNK_COUNT=0"
+for /f %%C in ('dir /b "%FOUND_PATH%\chunk_*.txt" 2^>nul ^| find /c /v ""') do set "CHUNK_COUNT=%%C"
+if %CHUNK_COUNT% gtr 0 (
+    echo   [OK] Found %CHUNK_COUNT% chunk files
+) else (
+    echo   [WARNING] No chunk files found, but directory exists
+)
+echo. REM ============================================================================
+REM STEP 5: Copy Output to Project
+REM ============================================================================
+echo [STEP 5/5] Retrieving chunked files...
+
+if not exist "%CHUNKED_DIR%" mkdir "%CHUNKED_DIR%"
+timeout /t 1 /nobreak >nul
+
+REM Copy the results back to the project
+xcopy "%FOUND_PATH%" "%CHUNKED_DIR%\" /E /I /Y >nul
+
+if errorlevel 0 (
+    echo   [OK] Copied data to: docs\chatlogs\chunked\
+) else (
+    echo [WARNING] Copy might have failed.
+) echo. echo ============================================================================
+echo  PROCESSING COMPLETE
+echo ============================================================================
+echo. echo Raw Source:  docs\chatlogs\raw\%FILENAME%
+echo Processed:   docs\chatlogs\chunked\%BASENAME%...
+echo Chunks:      %CHUNK_COUNT% files
+echo Processing time: ~%ELAPSED% seconds
+echo. echo ============================================================================
+
+timeout /t 4 /nobreak >nul
+exit /b 0
+```
+
+```bat
+@echo off
+REM ============================================================================
+REM Process Chatlog for unified_data_dictionary
+REM ============================================================================
+REM Version: 1.0.8 (Fixed: Increased timeout, improved watcher detection)
+REM ============================================================================
+
+setlocal enabledelayedexpansion
+
+REM Project paths
+set "PROJECT_ROOT=C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\unified_data_dictionary"
+set "RAW_DIR=%PROJECT_ROOT%\docs\chatlogs\raw"
+set "CHUNKED_DIR=%PROJECT_ROOT%\docs\chatlogs\chunked"
+set "CHUNKER_ROOT=C:\_chunker"
+
+REM External paths
+set "CHUNKER_INPUT=C:\_chunker\02_data"
+set "CHUNKER_OUTPUT=%OneDriveCommercial%\KB_Shared\04_output"
+
+REM ============================================================================
+REM CHECK: File Selection
+REM ============================================================================
+if "%~1"=="" (
+    echo [ERROR] No file selected. pause
+    exit /b 1
+)
+
+set "INPUT_FILE=%~1"
+set "FILENAME=%~nx1"
+set "BASENAME=%~n1"
+
+echo. echo ============================================================================
+echo  UNIFIED DATA DICTIONARY - CHATLOG PROCESSOR v1.0.8
+echo ============================================================================
+echo. echo Processing: %FILENAME%
+echo. REM Check if watcher is running
+echo [STEP 0/5] Checking watcher status...
+powershell -NoProfile -Command "$watcher = Get-Process python -ErrorAction SilentlyContinue | Where-Object { try { $cmdLine = (Get-WmiObject Win32_Process -Filter \"ProcessId = $($_.Id)\" -ErrorAction SilentlyContinue).CommandLine; $cmdLine -like '*watcher_splitter.py*' } catch { $false } }; if ($watcher) { exit 0 } else { exit 1 }" >nul 2>&1
+if errorlevel 1 (
+    echo   [WARNING] Watcher may not be running! echo   Please ensure watcher is running: python watcher_splitter.py
+    echo   Continuing anyway...
+    echo.
+) else (
+    echo   [OK] Watcher is running
+    echo.
+) REM ============================================================================
+REM STEP 1: Move to Project Raw Folder
+REM ============================================================================
+echo [STEP 1/5] Saving to project raw folder...
+
+REM Create full directory path if it doesn't exist (creates parent docs\chatlogs if needed)
+if not exist "%RAW_DIR%" (
+    echo   [INFO] Creating directory structure: docs\chatlogs\raw
+    powershell -NoProfile -Command "New-Item -ItemType Directory -Path '%RAW_DIR%' -Force | Out-Null"
+    if errorlevel 1 (
+        echo   [ERROR] Failed to create directory: %RAW_DIR%
+        pause
+        exit /b 1
+    )
+)
+
+if /i "%~dp1"=="%RAW_DIR%\" (
+    echo   [INFO] File is already in raw folder.
+) else (
+    move /Y "%INPUT_FILE%" "%RAW_DIR%\" >nul
+    if errorlevel 1 (
+        echo ERROR: Failed to move to raw folder. pause
+        exit /b 1
+    )
+    echo   [OK] Saved to: docs\chatlogs\raw\%FILENAME%
+)
+
+REM ============================================================================
+REM STEP 2: Send Atomic Copy to Chunker
+REM ============================================================================
+echo. echo [STEP 2/5] Sending atomic copy to chunker...
+
+if not exist "%CHUNKER_INPUT%" (
+    echo   [ERROR] Watch folder does not exist: %CHUNKER_INPUT%
+    pause
+    exit /b 1
+)
+
+REM 1. Copy as .part (Watcher ignores this)
+copy /Y "%RAW_DIR%\%FILENAME%" "%CHUNKER_INPUT%\%FILENAME%.part" >nul 2>&1
+if errorlevel 1 (
+    echo   [ERROR] Failed to copy file to watch folder
+    pause
+    exit /b 1
+)
+
+REM 2. Rename to final (Watcher sees ONE event)
+ren "%CHUNKER_INPUT%\%FILENAME%.part" "%FILENAME%" >nul 2>&1
+if errorlevel 1 (
+    echo   [ERROR] Failed to rename file in watch folder
+    pause
+    exit /b 1
+)
+
+echo   [OK] File queued for processing
+
+REM ============================================================================
+REM STEP 3: Monitor for Output
+REM ============================================================================
+echo. echo [STEP 3/5] Waiting for processed files...
+echo   Target: %BASENAME%...
+echo   Timeout: 180 seconds (scanning every 5 seconds)
+echo. REM Expand environment variables in output path
+for /f "delims=" %%A in ('powershell -Command "[System.Environment]::ExpandEnvironmentVariables('%CHUNKER_OUTPUT%')"') do set "EXPANDED_OUTPUT=%%A"
+
+set "TIMEOUT_COUNT=0"
+set "FOUND_PATH="
+set "SCAN_INTERVAL=5"
+set "MAX_SCANS=36"
+
+:WAIT_FOR_CHUNK
+timeout /t %SCAN_INTERVAL% /nobreak >nul
+set /a TIMEOUT_COUNT+=1
+set /a ELAPSED=TIMEOUT_COUNT * %SCAN_INTERVAL%
+
+REM Show progress every 10 seconds
+set /a MOD_CHECK=%TIMEOUT_COUNT% %% 2
+if %MOD_CHECK%==0 echo   ...scanning (%ELAPSED%s)
+
+REM Look for a DIRECTORY containing the basename
+for /d %%D in ("%EXPANDED_OUTPUT%\*%BASENAME%*") do (
+    REM Check if chunks exist in the directory
+    dir /b "%%D\chunk_*.txt" >nul 2>&1
+    if not errorlevel 1 (
+        set "FOUND_PATH=%%D"
+        goto FILES_FOUND
+    )
+)
+
+REM Wait max 180 seconds (36 scans * 5 seconds)
+if %TIMEOUT_COUNT% lss %MAX_SCANS% goto WAIT_FOR_CHUNK
+
+echo. echo [ERROR] Chunking Timed Out
+echo The watcher may be busy or the file is very large. echo. echo Diagnostics:
+echo   - Timeout: 180 seconds
+echo   - Watch folder: %CHUNKER_INPUT%
+echo   - Output folder: %EXPANDED_OUTPUT%
+echo   - Target file: %BASENAME%
+echo. echo Troubleshooting:
+echo   1. Check if watcher is running: python watcher_splitter.py
+echo   2. Check watch folder for queued files: %CHUNKER_INPUT%
+echo   3. Check if file was copied: dir "%CHUNKER_INPUT%\%FILENAME%"
+echo   4. Check output folder: %EXPANDED_OUTPUT%
+echo   5. Run diagnostic: powershell -File "%CHUNKER_ROOT%\scripts\Check-Watcher-Status.ps1" -FileName "%BASENAME%"
+echo   6. For large files, increase MAX_SCANS in this script (currently %MAX_SCANS%)
+echo. pause
+exit /b 1
+
+:FILES_FOUND
+echo   [OK] Found output: %FOUND_PATH%
+
+REM ============================================================================
+REM STEP 4: Verify Chunks
+REM ============================================================================
+echo. echo [STEP 4/5] Verifying chunks...
+set "CHUNK_COUNT=0"
+for /f %%C in ('dir /b "%FOUND_PATH%\chunk_*.txt" 2^>nul ^| find /c /v ""') do set "CHUNK_COUNT=%%C"
+if %CHUNK_COUNT% gtr 0 (
+    echo   [OK] Found %CHUNK_COUNT% chunk files
+) else (
+    echo   [WARNING] No chunk files found, but directory exists
+)
+echo. REM ============================================================================
+REM STEP 5: Copy Output to Project
+REM ============================================================================
+echo [STEP 5/5] Retrieving chunked files...
+
+REM Create full directory path if it doesn't exist (creates parent docs\chatlogs if needed)
+if not exist "%CHUNKED_DIR%" (
+    echo   [INFO] Creating directory structure: docs\chatlogs\chunked
+    powershell -NoProfile -Command "New-Item -ItemType Directory -Path '%CHUNKED_DIR%' -Force | Out-Null"
+    if errorlevel 1 (
+        echo   [ERROR] Failed to create directory: %CHUNKED_DIR%
+        pause
+        exit /b 1
+    )
+)
+timeout /t 1 /nobreak >nul
+
+REM Copy the results back to the project
+xcopy "%FOUND_PATH%" "%CHUNKED_DIR%\" /E /I /Y >nul
+
+if errorlevel 0 (
+    echo   [OK] Copied data to: docs\chatlogs\chunked\
+) else (
+    echo [WARNING] Copy might have failed.
+) echo. echo ============================================================================
+echo  PROCESSING COMPLETE
+echo ============================================================================
+echo. echo Raw Source:  docs\chatlogs\raw\%FILENAME%
+echo Processed:   docs\chatlogs\chunked\%BASENAME%...
+echo Chunks:      %CHUNK_COUNT% files
+echo Processing time: ~%ELAPSED% seconds
+echo. echo ============================================================================
+
+timeout /t 4 /nobreak >nul
+exit /b 0
+```
+
+Fixed the issue. The old `Process_UDD_Chatlog.bat` script (which your Directory Opus button likely calls) was using `mkdir`, which only creates one directory level. If `docs\chatlogs` didn't exist, it failed silently. ## What I Fixed
+
+I updated both directory creation points in `Process_UDD_Chatlog.bat` to use PowerShell's `New-Item -Force`, which creates the full path structure automatically. ## Try Again
+
+1. Click your Directory Opus button again on the file
+2. The script should now create:
+   - `docs\chatlogs\raw\` (if it doesn't exist)
+   - `docs\chatlogs\chunked\` (if it doesn't exist)
+
+## If It Still Doesn't Work
+
+Run the diagnostic script I created to see what's happening:
+
+```batch
+Test_Chatlog_Processing.bat "C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\unified_data_dictionary\directory_opus_chatlog_processin.md"
+```
+
+This will show:
+- If project root is detected correctly
+- If directories are created successfully
+- Any error messages
+
+The script should work now. The directories will be created automatically when you click the button. ```bat
+Test_Chatlog_Processing.bat "C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\unified_data_dictionary\directory_opus_chatlog_processin.md"
+```
+
+---
+
+**User**
+
+review C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\unified_data_dictionary\docs\chatlogs\chunked. I do not think it worked
+
+---
+
+**Cursor**
+
+Checking the chunked directory contents:
+
+
+The chunked folder is flat—files are directly in `chunked\` instead of organized by source filename. This suggests the Directory Opus button is still using the old `Process_UDD_Chatlog.bat`, which doesn't include the new organization logic. Updating `Process_UDD_Chatlog.bat` to match the new organization:
+
+
+Updating `Process_UDD_Chatlog.bat` to use the same organization logic:
+
+
+```bat
+@echo off
+REM ============================================================================
+REM Process Chatlog for unified_data_dictionary
+REM ============================================================================
+REM Version: 1.0.8 (Fixed: Increased timeout, improved watcher detection)
+REM ============================================================================
+
+setlocal enabledelayedexpansion
+
+REM Project paths
+set "PROJECT_ROOT=C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\unified_data_dictionary"
+set "RAW_DIR=%PROJECT_ROOT%\docs\chatlogs\raw"
+set "CHUNKED_DIR=%PROJECT_ROOT%\docs\chatlogs\chunked"
+set "CHUNKER_ROOT=C:\_chunker"
+
+REM External paths
+set "CHUNKER_INPUT=C:\_chunker\02_data"
+set "CHUNKER_OUTPUT=%OneDriveCommercial%\KB_Shared\04_output"
+
+REM ============================================================================
+REM CHECK: File Selection
+REM ============================================================================
+if "%~1"=="" (
+    echo [ERROR] No file selected. pause
+    exit /b 1
+)
+
+set "INPUT_FILE=%~1"
+set "FILENAME=%~nx1"
+set "BASENAME=%~n1"
+
+echo. echo ============================================================================
+echo  UNIFIED DATA DICTIONARY - CHATLOG PROCESSOR v1.0.8
+echo ============================================================================
+echo. echo Processing: %FILENAME%
+echo. REM Check if watcher is running
+echo [STEP 0/5] Checking watcher status...
+powershell -NoProfile -Command "$watcher = Get-Process python -ErrorAction SilentlyContinue | Where-Object { try { $cmdLine = (Get-WmiObject Win32_Process -Filter \"ProcessId = $($_.Id)\" -ErrorAction SilentlyContinue).CommandLine; $cmdLine -like '*watcher_splitter.py*' } catch { $false } }; if ($watcher) { exit 0 } else { exit 1 }" >nul 2>&1
+if errorlevel 1 (
+    echo   [WARNING] Watcher may not be running! echo   Please ensure watcher is running: python watcher_splitter.py
+    echo   Continuing anyway...
+    echo.
+) else (
+    echo   [OK] Watcher is running
+    echo.
+) REM ============================================================================
+REM STEP 1: Move to Project Raw Folder
+REM ============================================================================
+echo [STEP 1/5] Saving to project raw folder...
+
+REM Create full directory path if it doesn't exist (creates parent docs\chatlogs if needed)
+if not exist "%RAW_DIR%" (
+    echo   [INFO] Creating directory structure: docs\chatlogs\raw
+    powershell -NoProfile -Command "New-Item -ItemType Directory -Path '%RAW_DIR%' -Force | Out-Null"
+    if errorlevel 1 (
+        echo   [ERROR] Failed to create directory: %RAW_DIR%
+        pause
+        exit /b 1
+    )
+)
+
+if /i "%~dp1"=="%RAW_DIR%\" (
+    echo   [INFO] File is already in raw folder.
+) else (
+    move /Y "%INPUT_FILE%" "%RAW_DIR%\" >nul
+    if errorlevel 1 (
+        echo ERROR: Failed to move to raw folder. pause
+        exit /b 1
+    )
+    echo   [OK] Saved to: docs\chatlogs\raw\%FILENAME%
+)
+
+REM ============================================================================
+REM STEP 2: Send Atomic Copy to Chunker
+REM ============================================================================
+echo. echo [STEP 2/5] Sending atomic copy to chunker...
+
+if not exist "%CHUNKER_INPUT%" (
+    echo   [ERROR] Watch folder does not exist: %CHUNKER_INPUT%
+    pause
+    exit /b 1
+)
+
+REM 1. Copy as .part (Watcher ignores this)
+copy /Y "%RAW_DIR%\%FILENAME%" "%CHUNKER_INPUT%\%FILENAME%.part" >nul 2>&1
+if errorlevel 1 (
+    echo   [ERROR] Failed to copy file to watch folder
+    pause
+    exit /b 1
+)
+
+REM 2. Rename to final (Watcher sees ONE event)
+ren "%CHUNKER_INPUT%\%FILENAME%.part" "%FILENAME%" >nul 2>&1
+if errorlevel 1 (
+    echo   [ERROR] Failed to rename file in watch folder
+    pause
+    exit /b 1
+)
+
+echo   [OK] File queued for processing
+
+REM ============================================================================
+REM STEP 3: Monitor for Output
+REM ============================================================================
+echo. echo [STEP 3/5] Waiting for processed files...
+echo   Target: %BASENAME%...
+echo   Timeout: 180 seconds (scanning every 5 seconds)
+echo. REM Expand environment variables in output path
+for /f "delims=" %%A in ('powershell -Command "[System.Environment]::ExpandEnvironmentVariables('%CHUNKER_OUTPUT%')"') do set "EXPANDED_OUTPUT=%%A"
+
+set "TIMEOUT_COUNT=0"
+set "FOUND_PATH="
+set "SCAN_INTERVAL=5"
+set "MAX_SCANS=36"
+
+:WAIT_FOR_CHUNK
+timeout /t %SCAN_INTERVAL% /nobreak >nul
+set /a TIMEOUT_COUNT+=1
+set /a ELAPSED=TIMEOUT_COUNT * %SCAN_INTERVAL%
+
+REM Show progress every 10 seconds
+set /a MOD_CHECK=%TIMEOUT_COUNT% %% 2
+if %MOD_CHECK%==0 echo   ...scanning (%ELAPSED%s)
+
+REM Look for a DIRECTORY containing the basename
+for /d %%D in ("%EXPANDED_OUTPUT%\*%BASENAME%*") do (
+    REM Check if chunks exist in the directory
+    dir /b "%%D\chunk_*.txt" >nul 2>&1
+    if not errorlevel 1 (
+        set "FOUND_PATH=%%D"
+        goto FILES_FOUND
+    )
+)
+
+REM Wait max 180 seconds (36 scans * 5 seconds)
+if %TIMEOUT_COUNT% lss %MAX_SCANS% goto WAIT_FOR_CHUNK
+
+echo. echo [ERROR] Chunking Timed Out
+echo The watcher may be busy or the file is very large. echo. echo Diagnostics:
+echo   - Timeout: 180 seconds
+echo   - Watch folder: %CHUNKER_INPUT%
+echo   - Output folder: %EXPANDED_OUTPUT%
+echo   - Target file: %BASENAME%
+echo. echo Troubleshooting:
+echo   1. Check if watcher is running: python watcher_splitter.py
+echo   2. Check watch folder for queued files: %CHUNKER_INPUT%
+echo   3. Check if file was copied: dir "%CHUNKER_INPUT%\%FILENAME%"
+echo   4. Check output folder: %EXPANDED_OUTPUT%
+echo   5. Run diagnostic: powershell -File "%CHUNKER_ROOT%\scripts\Check-Watcher-Status.ps1" -FileName "%BASENAME%"
+echo   6. For large files, increase MAX_SCANS in this script (currently %MAX_SCANS%)
+echo. pause
+exit /b 1
+
+:FILES_FOUND
+echo   [OK] Found output: %FOUND_PATH%
+
+REM ============================================================================
+REM STEP 4: Verify Chunks
+REM ============================================================================
+echo. echo [STEP 4/5] Verifying chunks...
+set "CHUNK_COUNT=0"
+for /f %%C in ('dir /b "%FOUND_PATH%\chunk_*.txt" 2^>nul ^| find /c /v ""') do set "CHUNK_COUNT=%%C"
+if %CHUNK_COUNT% gtr 0 (
+    echo   [OK] Found %CHUNK_COUNT% chunk files
+) else (
+    echo   [WARNING] No chunk files found, but directory exists
+)
+echo. REM ============================================================================
+REM STEP 5: Copy Output to Project
+REM ============================================================================
+echo [STEP 5/5] Retrieving chunked files...
+
+REM Create full directory path if it doesn't exist (creates parent docs\chatlogs if needed)
+if not exist "%CHUNKED_DIR%" (
+    echo   [INFO] Creating directory structure: docs\chatlogs\chunked
+    powershell -NoProfile -Command "New-Item -ItemType Directory -Path '%CHUNKED_DIR%' -Force | Out-Null"
+    if errorlevel 1 (
+        echo   [ERROR] Failed to create directory: %CHUNKED_DIR%
+        pause
+        exit /b 1
+    )
+)
+timeout /t 1 /nobreak >nul
+
+REM Organize by source filename: chunked\BASENAME\TIMESTAMPED_FOLDER\
+REM This keeps each source file's chunks organized and preserves processing history
+set "SOURCE_FOLDER=%CHUNKED_DIR%\%BASENAME%"
+
+REM Extract just the folder name from FOUND_PATH (e.g., "2025_12_30_22_43_40_filename")
+for %%F in ("%FOUND_PATH%") do set "TIMESTAMPED_FOLDER=%%~nxF"
+set "DEST_PATH=%SOURCE_FOLDER%\%TIMESTAMPED_FOLDER%"
+
+REM Create source file folder if it doesn't exist
+if not exist "%SOURCE_FOLDER%" (
+    echo   [INFO] Creating folder for source file: %BASENAME%
+    powershell -NoProfile -Command "New-Item -ItemType Directory -Path '%SOURCE_FOLDER%' -Force | Out-Null" >nul 2>&1
+)
+
+REM Copy the timestamped folder into the source file's folder
+xcopy "%FOUND_PATH%" "%DEST_PATH%\" /E /I /Y >nul
+
+if errorlevel 0 (
+    echo   [OK] Copied data to: docs\chatlogs\chunked\%BASENAME%\%TIMESTAMPED_FOLDER%
+) else (
+    echo [WARNING] Copy might have failed.
+) echo. echo ============================================================================
+echo  PROCESSING COMPLETE
+echo ============================================================================
+echo. echo Raw Source:  docs\chatlogs\raw\%FILENAME%
+echo Processed:   docs\chatlogs\chunked\%BASENAME%...
+echo Chunks:      %CHUNK_COUNT% files
+echo Processing time: ~%ELAPSED% seconds
+echo. echo ============================================================================
+
+timeout /t 4 /nobreak >nul
+exit /b 0
+```
+
+Updating the final summary message to reflect the new structure:
+
+
+```bat
+@echo off
+REM ============================================================================
+REM Process Chatlog for unified_data_dictionary
+REM ============================================================================
+REM Version: 1.0.8 (Fixed: Increased timeout, improved watcher detection)
+REM ============================================================================
+
+setlocal enabledelayedexpansion
+
+REM Project paths
+set "PROJECT_ROOT=C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\unified_data_dictionary"
+set "RAW_DIR=%PROJECT_ROOT%\docs\chatlogs\raw"
+set "CHUNKED_DIR=%PROJECT_ROOT%\docs\chatlogs\chunked"
+set "CHUNKER_ROOT=C:\_chunker"
+
+REM External paths
+set "CHUNKER_INPUT=C:\_chunker\02_data"
+set "CHUNKER_OUTPUT=%OneDriveCommercial%\KB_Shared\04_output"
+
+REM ============================================================================
+REM CHECK: File Selection
+REM ============================================================================
+if "%~1"=="" (
+    echo [ERROR] No file selected. pause
+    exit /b 1
+)
+
+set "INPUT_FILE=%~1"
+set "FILENAME=%~nx1"
+set "BASENAME=%~n1"
+
+echo. echo ============================================================================
+echo  UNIFIED DATA DICTIONARY - CHATLOG PROCESSOR v1.0.8
+echo ============================================================================
+echo. echo Processing: %FILENAME%
+echo. REM Check if watcher is running
+echo [STEP 0/5] Checking watcher status...
+powershell -NoProfile -Command "$watcher = Get-Process python -ErrorAction SilentlyContinue | Where-Object { try { $cmdLine = (Get-WmiObject Win32_Process -Filter \"ProcessId = $($_.Id)\" -ErrorAction SilentlyContinue).CommandLine; $cmdLine -like '*watcher_splitter.py*' } catch { $false } }; if ($watcher) { exit 0 } else { exit 1 }" >nul 2>&1
+if errorlevel 1 (
+    echo   [WARNING] Watcher may not be running! echo   Please ensure watcher is running: python watcher_splitter.py
+    echo   Continuing anyway...
+    echo.
+) else (
+    echo   [OK] Watcher is running
+    echo.
+) REM ============================================================================
+REM STEP 1: Move to Project Raw Folder
+REM ============================================================================
+echo [STEP 1/5] Saving to project raw folder...
+
+REM Create full directory path if it doesn't exist (creates parent docs\chatlogs if needed)
+if not exist "%RAW_DIR%" (
+    echo   [INFO] Creating directory structure: docs\chatlogs\raw
+    powershell -NoProfile -Command "New-Item -ItemType Directory -Path '%RAW_DIR%' -Force | Out-Null"
+    if errorlevel 1 (
+        echo   [ERROR] Failed to create directory: %RAW_DIR%
+        pause
+        exit /b 1
+    )
+)
+
+if /i "%~dp1"=="%RAW_DIR%\" (
+    echo   [INFO] File is already in raw folder.
+) else (
+    move /Y "%INPUT_FILE%" "%RAW_DIR%\" >nul
+    if errorlevel 1 (
+        echo ERROR: Failed to move to raw folder. pause
+        exit /b 1
+    )
+    echo   [OK] Saved to: docs\chatlogs\raw\%FILENAME%
+)
+
+REM ============================================================================
+REM STEP 2: Send Atomic Copy to Chunker
+REM ============================================================================
+echo. echo [STEP 2/5] Sending atomic copy to chunker...
+
+if not exist "%CHUNKER_INPUT%" (
+    echo   [ERROR] Watch folder does not exist: %CHUNKER_INPUT%
+    pause
+    exit /b 1
+)
+
+REM 1. Copy as .part (Watcher ignores this)
+copy /Y "%RAW_DIR%\%FILENAME%" "%CHUNKER_INPUT%\%FILENAME%.part" >nul 2>&1
+if errorlevel 1 (
+    echo   [ERROR] Failed to copy file to watch folder
+    pause
+    exit /b 1
+)
+
+REM 2. Rename to final (Watcher sees ONE event)
+ren "%CHUNKER_INPUT%\%FILENAME%.part" "%FILENAME%" >nul 2>&1
+if errorlevel 1 (
+    echo   [ERROR] Failed to rename file in watch folder
+    pause
+    exit /b 1
+)
+
+echo   [OK] File queued for processing
+
+REM ============================================================================
+REM STEP 3: Monitor for Output
+REM ============================================================================
+echo. echo [STEP 3/5] Waiting for processed files...
+echo   Target: %BASENAME%...
+echo   Timeout: 180 seconds (scanning every 5 seconds)
+echo. REM Expand environment variables in output path
+for /f "delims=" %%A in ('powershell -Command "[System.Environment]::ExpandEnvironmentVariables('%CHUNKER_OUTPUT%')"') do set "EXPANDED_OUTPUT=%%A"
+
+set "TIMEOUT_COUNT=0"
+set "FOUND_PATH="
+set "SCAN_INTERVAL=5"
+set "MAX_SCANS=36"
+
+:WAIT_FOR_CHUNK
+timeout /t %SCAN_INTERVAL% /nobreak >nul
+set /a TIMEOUT_COUNT+=1
+set /a ELAPSED=TIMEOUT_COUNT * %SCAN_INTERVAL%
+
+REM Show progress every 10 seconds
+set /a MOD_CHECK=%TIMEOUT_COUNT% %% 2
+if %MOD_CHECK%==0 echo   ...scanning (%ELAPSED%s)
+
+REM Look for a DIRECTORY containing the basename
+for /d %%D in ("%EXPANDED_OUTPUT%\*%BASENAME%*") do (
+    REM Check if chunks exist in the directory
+    dir /b "%%D\chunk_*.txt" >nul 2>&1
+    if not errorlevel 1 (
+        set "FOUND_PATH=%%D"
+        goto FILES_FOUND
+    )
+)
+
+REM Wait max 180 seconds (36 scans * 5 seconds)
+if %TIMEOUT_COUNT% lss %MAX_SCANS% goto WAIT_FOR_CHUNK
+
+echo. echo [ERROR] Chunking Timed Out
+echo The watcher may be busy or the file is very large. echo. echo Diagnostics:
+echo   - Timeout: 180 seconds
+echo   - Watch folder: %CHUNKER_INPUT%
+echo   - Output folder: %EXPANDED_OUTPUT%
+echo   - Target file: %BASENAME%
+echo. echo Troubleshooting:
+echo   1. Check if watcher is running: python watcher_splitter.py
+echo   2. Check watch folder for queued files: %CHUNKER_INPUT%
+echo   3. Check if file was copied: dir "%CHUNKER_INPUT%\%FILENAME%"
+echo   4. Check output folder: %EXPANDED_OUTPUT%
+echo   5. Run diagnostic: powershell -File "%CHUNKER_ROOT%\scripts\Check-Watcher-Status.ps1" -FileName "%BASENAME%"
+echo   6. For large files, increase MAX_SCANS in this script (currently %MAX_SCANS%)
+echo. pause
+exit /b 1
+
+:FILES_FOUND
+echo   [OK] Found output: %FOUND_PATH%
+
+REM ============================================================================
+REM STEP 4: Verify Chunks
+REM ============================================================================
+echo. echo [STEP 4/5] Verifying chunks...
+set "CHUNK_COUNT=0"
+for /f %%C in ('dir /b "%FOUND_PATH%\chunk_*.txt" 2^>nul ^| find /c /v ""') do set "CHUNK_COUNT=%%C"
+if %CHUNK_COUNT% gtr 0 (
+    echo   [OK] Found %CHUNK_COUNT% chunk files
+) else (
+    echo   [WARNING] No chunk files found, but directory exists
+)
+echo. REM ============================================================================
+REM STEP 5: Copy Output to Project
+REM ============================================================================
+echo [STEP 5/5] Retrieving chunked files...
+
+REM Create full directory path if it doesn't exist (creates parent docs\chatlogs if needed)
+if not exist "%CHUNKED_DIR%" (
+    echo   [INFO] Creating directory structure: docs\chatlogs\chunked
+    powershell -NoProfile -Command "New-Item -ItemType Directory -Path '%CHUNKED_DIR%' -Force | Out-Null"
+    if errorlevel 1 (
+        echo   [ERROR] Failed to create directory: %CHUNKED_DIR%
+        pause
+        exit /b 1
+    )
+)
+timeout /t 1 /nobreak >nul
+
+REM Organize by source filename: chunked\BASENAME\TIMESTAMPED_FOLDER\
+REM This keeps each source file's chunks organized and preserves processing history
+set "SOURCE_FOLDER=%CHUNKED_DIR%\%BASENAME%"
+
+REM Extract just the folder name from FOUND_PATH (e.g., "2025_12_30_22_43_40_filename")
+for %%F in ("%FOUND_PATH%") do set "TIMESTAMPED_FOLDER=%%~nxF"
+set "DEST_PATH=%SOURCE_FOLDER%\%TIMESTAMPED_FOLDER%"
+
+REM Create source file folder if it doesn't exist
+if not exist "%SOURCE_FOLDER%" (
+    echo   [INFO] Creating folder for source file: %BASENAME%
+    powershell -NoProfile -Command "New-Item -ItemType Directory -Path '%SOURCE_FOLDER%' -Force | Out-Null" >nul 2>&1
+)
+
+REM Copy the timestamped folder into the source file's folder
+xcopy "%FOUND_PATH%" "%DEST_PATH%\" /E /I /Y >nul
+
+if errorlevel 0 (
+    echo   [OK] Copied data to: docs\chatlogs\chunked\%BASENAME%\%TIMESTAMPED_FOLDER%
+) else (
+    echo [WARNING] Copy might have failed.
+) echo. echo ============================================================================
+echo  PROCESSING COMPLETE
+echo ============================================================================
+echo. echo Raw Source:  docs\chatlogs\raw\%FILENAME%
+echo Processed:   docs\chatlogs\chunked\%BASENAME%\%TIMESTAMPED_FOLDER%
+echo Chunks:      %CHUNK_COUNT% files
+echo Processing time: ~%ELAPSED% seconds
+echo. echo ============================================================================
+
+timeout /t 4 /nobreak >nul
+exit /b 0
+```
+
+Updated `Process_UDD_Chatlog.bat` to use the same organization. The current `chunked\` folder has files mixed together because it was created with the old script. ## What I Fixed
+
+The old script copied files directly into `chunked\`, creating a flat structure. The updated script now organizes by source filename:
+
+**New structure (going forward):**
+```
+chunked\
+  directory_opus_chatlog_processin\
+    2025_12_30_23_02_00_directory_opus_chatlog_processin\
+      chunk_00000.txt
+      chunk_00001.txt
+      ...sidecar files...
+```
+
+## Current Situation
+
+The existing files in `chunked\` are from the old script. You can:
+
+1. Leave them as-is (they still work)
+2. Manually organize them into folders by source filename
+3. Delete them and reprocess if needed
+
+## Going Forward
+
+When you process new files with the Directory Opus button, they will be organized by source filename.

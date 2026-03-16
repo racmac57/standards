@@ -1,0 +1,39 @@
+Integrates with src/utils/config_loader.py for YAML config
+3. Uses src/utils/logging_config.py for logging
+4. Preserves all cleaning features (geocoding, schema aliasing, type coercion)
+5. Adds docstrings and type hints
+```
+
+```plaintext
+SCRPA_Unified_Pipeline/
+├── ✅ configs/ (4 YAML files, 1,500+ lines)
+├── ✅ src/utils/ (3 modules, 800+ lines)
+├── ✅ scrpa_pipeline.py (500+ lines)
+├── ✅ README.md (600+ lines)
+├── ✅ CONSOLIDATION_MANIFEST.md (2,000+ lines)
+├── ✅ TUESDAY_RUNBOOK.md (700+ lines)
+├── ✅ PROJECT_STATUS.md (900+ lines)
+└── ✅ requirements.txt
+
+Total: 6,500+ lines of production-ready documentation & architecture
+```
+
+---
+
+**User**
+
+I'm preparing to export this chat. Please generate a descriptive filename that summarizes the main topic or task of this conversation. Requirements:
+• 4-8 words
+• Title Case (capitalize major words)
+• Replace spaces with underscores
+• Include .md extension
+• No dates or special characters
+
+Output only the filename, nothing else. After export, I'll process it using: scripts\quick_process_chatlog.bat
+
+---
+
+**Cursor**
+
+
+SCRPA_RMS_CAD_ETL_Unified_Pipeline_Design.md

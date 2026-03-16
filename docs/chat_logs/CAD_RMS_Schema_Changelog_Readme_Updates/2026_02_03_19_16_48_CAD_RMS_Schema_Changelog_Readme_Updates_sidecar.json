@@ -1,0 +1,67 @@
+{
+  "source_file": "CAD_RMS_Schema_Changelog_Readme_Updates.md",
+  "source_path": "C:\\_chunker\\02_data\\CAD_RMS_Schema_Changelog_Readme_Updates.md",
+  "manifest_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\KB_Shared\\04_output\\CAD_RMS_Schema_Changelog_Readme_Updates\\2026_02_03_19_16_48_CAD_RMS_Schema_Changelog_Readme_Updates.origin.json",
+  "created_at": "2026_02_03_19_16_48",
+  "tags": [
+    "code",
+    "docs",
+    "json",
+    "markdown",
+    "police",
+    "powershell",
+    "sql"
+  ],
+  "metadata": {
+    "project_name": "02_data",
+    "source_type": "documentation",
+    "language": "en",
+    "department": "admin",
+    "key_terms": [
+      "cad",
+      "field",
+      "datadictionary",
+      "schema",
+      "definitions",
+      "export"
+    ],
+    "enrichment_version": "1.0.0"
+  },
+  "summaries": {
+    "file_summary": "# Directory and schema packaging review\n_Exported on 2/3/2026 at 19:16:23 EST from Cursor (2.4.27)_\n\n---\n\n**User**\n\nreview the director as it was recientily updated review C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\09_Reference\\Sta...",
+    "first_line": "# Directory and schema packaging review"
+  },
+  "chunks": [
+    {
+      "chunk_id": "2026-02-03T19:16:48+00:00_CAD_RMS_Schema_Changelog_Readme_Updates_chunk1",
+      "chunk_index": 1,
+      "file": "chunk_00000.txt",
+      "tags": [
+        "code",
+        "datadictionary",
+        "definitions",
+        "docs",
+        "export",
+        "field",
+        "json",
+        "markdown",
+        "police",
+        "powershell",
+        "schema",
+        "sql"
+      ],
+      "key_terms": [
+        "cad",
+        "field",
+        "datadictionary",
+        "schema",
+        "definitions",
+        "export"
+      ],
+      "summary": "# Directory and schema packaging review\n_Exported on 2/3/2026 at 19:16:23 EST from Cursor (2.4.27)_\n\n---\n\n**User**\n\nreview the director as it was recientily updated review C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\09_Reference\\Sta...",
+      "char_length": 16539,
+      "byte_length": 16922
+    }
+  ],
+  "enrichment_version": "1.0.0"
+}

@@ -1,0 +1,698 @@
+### 4.9 Show of Force
+
+- Source: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_Benchmark\\show_force\\complete_report\\full_year\\2025\\show-of-force-reports-01_01_2025-12_31_2025.csv`
+- Required metrics:
+    - Total number of show-of-force reports in 2025. - Optional breakdowns by type if fields support it. ### 4.10 Vehicle Pursuits
+
+- Source: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_Benchmark\\vehicle_pursuit\\complete_report\\full_year\\2025\\vehicle-pursuit-reports-01_01_2025-12_31_2025.csv`
+- Required metrics:
+    - Total number of vehicle pursuits in 2025. - Optional breakdowns (for example, pursuits terminated, crashes, injuries) if fields are available. ### 4.11 Calls for Service
+
+- Data source: primarily CAD export, possibly supplemented by RMS. - Required metrics:
+    - Total calls for service in 2025. - If possible, breakdowns by call type or priority using the unified data dictionary. ---
+
+### 5. Suggested Structure for [`claude.md`](http://claude.md)
+
+When using Claude Code or Cursor, the [`claude.md`](http://claude.md) file in the project root can be generated from this page. It should include at least:
+
+1. **Project overview**
+    - Goal: produce cleaned, standardized 2025 datasets and summary metrics to support the year-end report. 2. **Data sources section**
+    - List all paths from Section 1 with short descriptions. 3. **ETL and normalization plan**
+    - Apply unified data dictionary across CAD, RMS, DV Supplemental, Arrests, Summons, NIBRS. - Adapt existing ETL scripts from `dv_doj`, `Arrests`, and `Summons` projects. - Enforce raw vs processed folder structure (Section 3). 4. **Tasks / checklists**
+    - One checklist per subsection in Section 4, with explicit acceptance criteria (for example, “Total arrests in cleaned dataset = 582”). [CHANGELOG.md](attachment:b6210a03-517f-4068-abd9-427720dd7a24:CHANGELOG.md)
+        
+        [config.yaml](attachment:33caa24f-69a1-4cbb-b22a-8427fea80e57:config.yaml)
+        
+        [pyproject.toml](attachment:616f1deb-1e0f-473b-a97d-7e8019e26cd6:pyproject.toml)
+        
+        [README.md](attachment:90ebc4d5-cd98-490d-81f3-dcb466f969a4:README.md)
+        
+        [release_notes.md](attachment:7d3d2e9c-003a-4189-b951-a4c2d6d75fa5:release_notes.md)
+        
+        [requirements.txt](attachment:ab2b6831-c7bd-400c-b939-0e961f099632:requirements.txt)
+        
+        [SUMMARY.md](attachment:609f63fb-5f60-486b-8658-f22500288315:SUMMARY.md)
+        
+5. **Outputs and validation**
+    - Description of final CSV / Excel outputs and summary tables. - List of validation checks (for example, record counts, category totals, date ranges, null checks). This structure is intended to maximize the ability of an AI coding assistant to plan execution, generate scripts, and iteratively refine the ETL and analysis for the 2025 year-end report. ## 6. Config & Mappings (Source of Truth in Repo)
+
+Do not duplicate mapping logic or field definitions in this doc. Treat the repo's schema and dictionary files as the single source of truth. ### 6.1 Mapping Schemas
+
+Use the v2.0 JSON mapping schemas for CAD↔RMS integration:
+
+- `CAD_RMS/DataDictionary/current/schema/cad_to_rms_field_map.json`
+- `CAD_RMS/DataDictionary/current/schema/rms_to_cad_field_map.json`
+- `CAD_RMS/DataDictionary/current/schema/multi_column_matching_strategy.md`
+
+These define:
+
+- **Primary join keys**: `ReportNumberNew` ↔ `Case Number`
+- **Multi-column matching strategies**:
+    - Temporal + address (confidence threshold: 0.85)
+    - Officer + temporal (confidence threshold: 0.80)
+    - Address + zone + approximate date (confidence threshold: 0.75)
+- **Confidence thresholds and matching rules**
+
+Implementation code should:
+
+- Load these JSON files at runtime (or via a config loader). - Use them to drive join logic instead of hard-coding mappings. - Reference `multi_column_matching_strategy.md` for detailed strategy documentation. ### 6.2 Field Definitions
+
+Field definitions are Markdown and should be referenced from the repo:
+
+- `CAD/DataDictionary/current/schema/cad_export_field_definitions.md`
+- `rms_export_field_definitions.md` (root level)
+
+They contain:
+
+- Export header → canonical name mappings. - Field definitions, validation rules, formats, and usage notes. - Data quality validation rules organized by field group. ETL and analysis code should consult these docs when:
+
+- Interpreting source fields. - Validating values. - Adding new metrics or joins. - Implementing data quality checks. ### 6.3 Implementation Example
+
+See `CAD_RMS/DataDictionary/scripts/cad_rms_merge_loader.py` for a working example that:
+
+- Loads the mapping JSON schema
+- Implements primary key matching with normalization
+- Applies alternative matching strategies in order
+- Returns matches with confidence scores and strategy tracking
+
+---
+
+**Cursor**
+
+This looks like a solid structure for the 2025 year-end report workspace. Section 6 (Config & Mappings) is integrated. ## What I see
+
+- Clear data source paths
+- Specific processing requirements with validation criteria
+- Reference to existing ETL scripts
+- File organization requirements (raw vs processed)
+- Section 6 properly references the mapping schemas
+
+## Next steps
+
+1. Generate a `claude.md` file from this structure — create a complete project file that an AI assistant can use to generate the ETL scripts. 2. Review and refine — check for any gaps or improvements. 3. Create task checklists — break down Section 4 into actionable checklists with acceptance criteria. Which would you like me to do? I can generate a complete `claude.md` file that:
+- Incorporates all your data sources
+- References the mapping schemas correctly
+- Creates checklists for each processing task
+- Includes validation criteria
+- Follows the structure you've outlined
+
+Should I proceed with creating the `claude.md` file? ---
+
+**User**
+
+after you make the file where should we save it? maybe make a folder in C:\Users\carucci_r\OneDrive - City of Hackensack\10_Projects for this data request from tyhe city manager for the end of year report 
+
+---
+
+**Cursor**
+
+Creating a project folder and generating the `claude.md` file:
+
+
+Creating the `claude.md` file:
+
+
+```markdown
+# 2025 Year-End Report - Data Processing Project
+
+**Project Goal**: Produce cleaned, standardized 2025 datasets and summary metrics to support the City Manager's year-end report. **Project Location**: `C:\Users\carucci_r\OneDrive - City of Hackensack\10_Projects\2025_Year_End_Report`
+
+---
+
+## 1. Project Overview
+
+This project processes multiple data sources to generate comprehensive year-end statistics for 2025. All processing follows the unified data dictionary standards and maintains separation between raw and processed data. ### Project Structure
+
+```
+2025_Year_End_Report/
+├── raw/              # Raw data exports (copies or links)
+├── processed/        # Cleaned and standardized datasets
+├── scripts/          # ETL and analysis scripts
+├── outputs/          # Final reports and summary tables
+└── claude.md         # This file
+```
+
+---
+
+## 2. Raw Data Sources
+
+### 2.1 CAD (Computer Aided Dispatch)
+- **Path**: `C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_CAD\full_year\2025\2025_Yearly_CAD.xlsx`
+- **Purpose**: Calls for service, motor vehicle stops, accidents
+- **Key Fields**: Incident, TimeofCall, FullAddress2, ReportNumberNew, Officer
+
+### 2.2 RMS (Records Management System)
+- **Path**: `C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_RMS\full_year\2025\2025_Yearly_RMS.xlsx`
+- **Purpose**: Reports written, case management, incident details
+- **Key Fields**: Case Number, IncidentDate, IncidentTime, IncidentType, FullAddress
+
+### 2.3 Domestic Violence Supplemental
+- **Path**: `C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_DV_Supplement\2025\raw\2025_supplementary_domestic_violence_offense_report.xlsx`
+- **Purpose**: Supplemental DV offense data
+
+### 2.4 Arrest Data
+- **Path**: `C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_Arrest\full_year\2025\2025_Lawsoft_Yearly_Arrest.xlsx`
+- **Purpose**: All arrests for 2025
+- **Validation**: Total arrests must equal **582**
+
+### 2.5 Summons Data (E-Ticket)
+- **Base Folder**: `C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_Summons\E_Ticket\2025`
+- **Contents**: Yearly export + individual monthly exports for 2025
+- **Categories**: Moving (M), Non-moving/Parking (P), Special Complaints (C)
+
+### 2.6 Use of Force
+- **Path**: `C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_Benchmark\use_force\complete_report\full_year\2025\use-of-force-reports-01_01_2025-12_31_2025.csv`
+
+### 2.7 Show of Force
+- **Path**: `C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_Benchmark\show_force\complete_report\full_year\2025\show-of-force-reports-01_01_2025-12_31_2025.csv`
+
+### 2.8 Vehicle Pursuits
+- **Path**: `C:\Users\carucci_r\OneDrive - City of Hackensack\05_EXPORTS\_Benchmark\vehicle_pursuit\complete_report\full_year\2025\vehicle-pursuit-reports-01_01_2025-12_31_2025.csv`
+
+### 2.9 NIBRS
+- **Workbook**: `C:\Users\carucci_r\OneDrive - City of Hackensack\01_DataSources\NIBRS\NIBRS_Monthly_Report.xlsx`
+- **Worksheet**: `NIBRS_Monthly_Report`
+- **Table**: `NIBRS_Monthly_Report`
+- **Purpose**: Closure rates and crime category breakdowns
+
+---
+
+## 3. Reference Materials and ETL Logic
+
+### 3.1 Unified Data Dictionary
+- **Path**: `C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\unified_data_dictionary`
+- **Purpose**: 
+  - Defines how CAD and RMS data interact
+  - Defines canonical field names, data types, and value mappings
+  - Use for all field normalization and validation
+
+### 3.2 Existing ETL Projects (Reference)
+
+#### Domestic Violence / DOJ ETL
+- **Path**: `C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\dv_doj`
+- **Usage**: Reference for CAD/RMS cleaning, normalization, and standardization patterns
+
+#### Arrests ETL
+- **Path**: `C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\Arrests`
+- **Usage**: Adapt to produce single full-year arrest dataset (no monthly breakdown)
+
+#### Summons ETL
+- **Path**: `C:\Users\carucci_r\OneDrive - City of Hackensack\02_ETL_Scripts\Summons`
+- **Usage**: Clean and process all 2025 Summons data (yearly + monthly exports)
+
+---
+
+## 4. File Organization Requirements
+
+For each export type, maintain this structure:
+
+```
+<data_type>/
+├── raw/
+│   └── <original_export_files>
+└── processed/
+    └── <cleaned_standardized_files>
+```
+
+**Naming Convention for Processed Files**:
+- Append `_clean` or `_processed` to base filename
+- Include coverage dates where helpful
+- Example: `2025_Yearly_CAD_processed.xlsx`
+
+---
+
+## 5. Processing Tasks and Metrics
+
+### 5.1 Arrests
+
+**Task**: Process 2025 arrest data and validate total count
+
+- [ ] Copy raw file to `raw/` folder
+- [ ] Adapt ETL scripts from `02_ETL_Scripts\Arrests`
+- [ ] Create single full-year cleaned dataset (no monthly breakdown)
+- [ ] Include fields consistent with unified data dictionary
+- [ ] Validate: Total arrests = **582**
+- [ ] Save processed file to `processed/2025_Arrests_clean.xlsx`
+- [ ] Generate summary output confirming total = 582
+
+**Acceptance Criteria**:
+- ✅ Processed dataset exists in `processed/` folder
+- ✅ Total arrest count = 582
+- ✅ All fields follow unified data dictionary standards
+- ✅ Summary report generated
+
+---
+
+### 5.2 Motor Vehicle Stops (from CAD)
+
+**Task**: Count motor vehicle stops from CAD data
+
+- [ ] Load CAD export: `2025_Yearly_CAD.xlsx`
+- [ ] Filter records where `Incident` field = **"Motor Vehicle Stop"** (exact match)
+- [ ] Count total motor vehicle stops
+- [ ] Optional: Create cleaned dataset of all motor vehicle stop incidents
+- [ ] Save count to summary table
+
+**Acceptance Criteria**:
+- ✅ Total count calculated and documented
+- ✅ Optional: Cleaned dataset created if requested
+- ✅ Count included in final summary report
+
+---
+
+### 5.3 Summons (Moving, Non-moving, Special Complaints)
+
+**Task**: Process all 2025 summons data and compute category totals
+
+- [ ] Copy all files from `05_EXPORTS\_Summons\E_Ticket\2025` to `raw/summons/`
+- [ ] Process full-year export
+- [ ] Process all individual monthly exports for 2025
+- [ ] Standardize fields using unified data dictionary
+- [ ] Categorize by:
+  - Moving (M)
+  - Non-moving/Parking (P)
+  - Special Complaints (C)
+- [ ] Compute year-end totals for each category
+- [ ] Create combined 2025 cleaned summons dataset with category field
+- [ ] Save to `processed/2025_Summons_clean.xlsx`
+
+**Acceptance Criteria**:
+- ✅ All yearly and monthly files processed
+- ✅ Year-end totals calculated for M, P, and C categories
+- ✅ Combined cleaned dataset created with category field
+- ✅ Totals match sum of monthly exports
+
+---
+
+### 5.4 Motor Vehicle Accidents
+
+**Task**: Calculate total accidents and accidents with injuries
+
+- [ ] Identify accident-related incidents in CAD and/or RMS using unified data dictionary
+- [ ] Merge CAD and RMS data if needed (use mapping schemas from Section 6)
+- [ ] Flag total motor vehicle accidents
+- [ ] Flag accidents with injuries
+- [ ] Create cleaned accident dataset with flags/fields
+- [ ] Calculate totals:
+  - Total motor vehicle accidents (2025)
+  - Motor vehicle accidents with injuries (2025)
+
+**Acceptance Criteria**:
+- ✅ Cleaned accident dataset created
+- ✅ Total accidents count calculated
+- ✅ Accidents with injuries count calculated
+- ✅ Dataset includes clear flags distinguishing total vs injuries
+
+---
+
+### 5.5 Reports Written
+
+**Task**: Count total reports written from RMS data
+
+- [ ] Load RMS export: `2025_Yearly_RMS.xlsx`
+- [ ] Use unified data dictionary to identify report fields
+- [ ] Count total number of reports written in 2025
+- [ ] Optional: Create cleaned dataset of all reports
+- [ ] Save summary count
+
+**Acceptance Criteria**:
+- ✅ Total reports count calculated
+- ✅ Count included in final summary
+- ✅ Optional: Cleaned dataset created if requested
+
+---
+
+### 5.6 NIBRS Closure Rates
+
+**Task**: Calculate closure rates by category
+
+- [ ] Load NIBRS workbook: `NIBRS_Monthly_Report.xlsx`
+- [ ] Read worksheet `NIBRS_Monthly_Report`, table `NIBRS_Monthly_Report`
+- [ ] Calculate overall NIBRS closure rate for 2025
+- [ ] Calculate closure rates by category:
+  - Murder
+  - Crimes Against Person
+  - Crimes Against Property
+  - Crimes Against Society
+- [ ] Create summary table with closure rates
+
+**Acceptance Criteria**:
+- ✅ Overall closure rate calculated
+- ✅ Closure rates by category calculated
+- ✅ Summary table created in `outputs/`
+
+---
+
+### 5.7 Crime Categories (NIBRS / RMS)
+
+**Task**: Compute counts by crime category
+
+- [ ] Use NIBRS and RMS data with unified data dictionary
+- [ ] Crosswalk RMS offense codes to NIBRS categories
+- [ ] Calculate counts for 2025 by category:
+  - Murder
+  - Crimes Against Person
+  - Crimes Against Property
+  - Crimes Against Society
+- [ ] Calculate rates per category
+- [ ] Create summary table
+
+**Acceptance Criteria**:
+- ✅ Counts by category calculated
+- ✅ Rates per category calculated
+- ✅ Crosswalk between RMS and NIBRS documented
+- ✅ Summary table created
+
+---
+
+### 5.8 Use of Force
+
+**Task**: Process use of force reports
+
+- [ ] Load CSV: `use-of-force-reports-01_01_2025-12_31_2025.csv`
+- [ ] Count total use-of-force reports in 2025
+- [ ] Analyze available fields for additional breakdowns:
+  - By type
+  - By reason
+  - By outcome
+- [ ] Create summary with totals and breakdowns (if fields support)
+
+**Acceptance Criteria**:
+- ✅ Total count calculated
+- ✅ Additional breakdowns created if fields support
+- ✅ Summary included in final report
+
+---
+
+### 5.9 Show of Force
+
+**Task**: Process show of force reports
+
+- [ ] Load CSV: `show-of-force-reports-01_01_2025-12_31_2025.csv`
+- [ ] Count total show-of-force reports in 2025
+- [ ] Analyze available fields for breakdowns by type (if supported)
+- [ ] Create summary
+
+**Acceptance Criteria**:
+- ✅ Total count calculated
+- ✅ Optional breakdowns if fields support
+- ✅ Summary included in final report
+
+---
+
+### 5.10 Vehicle Pursuits
+
+**Task**: Process vehicle pursuit reports
+
+- [ ] Load CSV: `vehicle-pursuit-reports-01_01_2025-12_31_2025.csv`
+- [ ] Count total vehicle pursuits in 2025
+- [ ] Analyze available fields for breakdowns:
+  - Pursuits terminated
+  - Crashes
+  - Injuries
+- [ ] Create summary with totals and breakdowns (if fields support)
+
+**Acceptance Criteria**:
+- ✅ Total count calculated
+- ✅ Optional breakdowns if fields support
+- ✅ Summary included in final report
+
+---
+
+### 5.11 Calls for Service
+
+**Task**: Calculate total calls for service
+
+- [ ] Primary source: CAD export
+- [ ] Optional supplement: RMS data
+- [ ] Count total calls for service in 2025
+- [ ] Use unified data dictionary to identify call type or priority fields
+- [ ] Create breakdowns by call type or priority (if possible)
+- [ ] Create summary
+
+**Acceptance Criteria**:
+- ✅ Total calls for service calculated
+- ✅ Breakdowns by type/priority if fields support
+- ✅ Summary included in final report
+
+---
+
+## 6. Config & Mappings (Source of Truth in Repo)
+
+**IMPORTANT**: Do not duplicate mapping logic or field definitions in this doc. Treat the repo's schema and dictionary files as the single source of truth. ### 6.1 Mapping Schemas
+
+Use the v2.0 JSON mapping schemas for CAD↔RMS integration:
+
+- `C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\CAD_RMS\DataDictionary\current\schema\cad_to_rms_field_map.json`
+- `C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\CAD_RMS\DataDictionary\current\schema\rms_to_cad_field_map.json`
+- `C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\CAD_RMS\DataDictionary\current\schema\multi_column_matching_strategy.md`
+
+These define:
+
+- **Primary join keys**: `ReportNumberNew` ↔ `Case Number`
+- **Multi-column matching strategies**:
+  - Temporal + address (confidence threshold: 0.85)
+  - Officer + temporal (confidence threshold: 0.80)
+  - Address + zone + approximate date (confidence threshold: 0.75)
+- **Confidence thresholds and matching rules**
+
+**Implementation Requirements**:
+
+- Load these JSON files at runtime (or via a config loader)
+- Use them to drive join logic instead of hard-coding mappings
+- Reference `multi_column_matching_strategy.md` for detailed strategy documentation
+
+### 6.2 Field Definitions
+
+Field definitions are Markdown and should be referenced from the repo:
+
+- `C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\CAD\DataDictionary\current\schema\cad_export_field_definitions.md`
+- `C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\rms_export_field_definitions.md`
+
+They contain:
+
+- Export header → canonical name mappings
+- Field definitions, validation rules, formats, and usage notes
+- Data quality validation rules organized by field group
+
+**ETL and analysis code should consult these docs when**:
+
+- Interpreting source fields
+- Validating values
+- Adding new metrics or joins
+- Implementing data quality checks
+
+### 6.3 Implementation Example
+
+See `C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\CAD_RMS\DataDictionary\scripts\cad_rms_merge_loader.py` for a working example that:
+
+- Loads the mapping JSON schema
+- Implements primary key matching with normalization
+- Applies alternative matching strategies in order
+- Returns matches with confidence scores and strategy tracking
+
+---
+
+## 7. Outputs and Validation
+
+### 7.1 Final Outputs
+
+All outputs should be saved to the `outputs/` folder:
+
+1. **Summary Report** (`outputs/2025_Year_End_Summary.xlsx` or `.csv`)
+   - All metrics in one consolidated table
+   - Includes validation checks
+
+2. **Cleaned Datasets** (in `processed/` folder)
+   - `2025_Arrests_clean.xlsx`
+   - `2025_Summons_clean.xlsx`
+   - `2025_Accidents_clean.xlsx`
+   - `2025_CAD_processed.xlsx` (if needed)
+   - `2025_RMS_processed.xlsx` (if needed)
+
+3. **Validation Report** (`outputs/validation_report.txt` or `.md`)
+   - Record counts
+   - Date range checks
+   - Null checks
+   - Category totals
+   - Cross-validation between sources
+
+### 7.2 Validation Checks
+
+**Required Validations**:
+
+- [ ] Total arrests = 582
+- [ ] Summons category totals (M + P + C) match sum of monthly exports
+- [ ] Date ranges: All records fall within 2025-01-01 to 2025-12-31
+- [ ] No null values in critical fields (as defined by unified data dictionary)
+- [ ] Cross-validation: CAD/RMS merged records have consistent dates/times
+- [ ] NIBRS closure rates are between 0 and 100%
+- [ ] All category counts are non-negative integers
+
+**Validation Report Should Include**:
+
+- Record counts per data source
+- Date range validation results
+- Null value checks by field
+- Category total validations
+- Any discrepancies or warnings
+
+---
+
+## 8. Execution Plan
+
+### Phase 1: Setup and Data Preparation
+1. Create project folder structure
+2. Copy/link raw data files to `raw/` folder
+3. Review unified data dictionary and mapping schemas
+4. Set up Python environment with required packages
+
+### Phase 2: ETL Development
+1. Adapt existing ETL scripts (Arrests, Summons, DV/DOJ)
+2. Create new ETL scripts for other data sources
+3. Implement field normalization using unified data dictionary
+4. Apply CAD-RMS merging where needed (using mapping schemas)
+
+### Phase 3: Processing and Validation
+1. Execute ETL scripts for each data source
+2. Run validation checks
+3. Fix any data quality issues
+4. Generate cleaned datasets
+
+### Phase 4: Analysis and Reporting
+1. Calculate all required metrics
+2. Generate summary tables
+3. Create validation report
+4. Compile final year-end report
+
+### Phase 5: Review and Delivery
+1. Review all outputs
+2. Verify all acceptance criteria met
+3. Prepare final deliverables
+4. Document any issues or limitations
+
+---
+
+## 9. Dependencies
+
+### Python Packages Required
+- pandas
+- openpyxl (for Excel files)
+- rapidfuzz (for fuzzy matching in CAD-RMS merge)
+- pathlib (for file path handling)
+
+### Reference Files Required
+- Unified data dictionary
+- CAD-RMS mapping schemas (JSON)
+- Field definition documents (Markdown)
+- Existing ETL scripts (for reference/adaptation)
+
+---
+
+## 10. Notes and Considerations
+
+- **Data Quality**: Some records may have missing or inconsistent data. Document all data quality issues in validation report. - **Performance**: For large datasets (CAD, RMS), consider chunking or sampling for initial development. - **Matching**: When merging CAD and RMS, use the multi-column matching strategies with confidence thresholds. Document which strategy was used for each match. - **Updates**: If source data is updated, re-run affected ETL scripts and update validation checks. ---
+
+**Project Status**: Ready for execution  
+**Last Updated**: 2026-01-08  
+**Next Steps**: Begin Phase 1 - Setup and Data Preparation
+
+```
+
+Created the project structure and `claude.md` file. Verifying everything is in place:
+
+
+Project structure created. Adding a README for quick reference:
+
+
+```markdown
+# 2025 Year-End Report Project
+
+**Project for**: City Manager's Year-End Report  
+**Created**: 2026-01-08  
+**Status**: Ready for execution
+
+## Quick Start
+
+1. **Read the project plan**: Open `claude.md` for complete project documentation
+2. **Review data sources**: See Section 2 in `claude.md` for all raw data paths
+3. **Check tasks**: See Section 5 in `claude.md` for all processing tasks with checklists
+4. **Start with Phase 1**: Follow the execution plan in Section 8
+
+## Folder Structure
+
+- **`raw/`** - Raw data exports (copy source files here)
+- **`processed/`** - Cleaned and standardized datasets
+- **`scripts/`** - ETL and analysis Python scripts
+- **`outputs/`** - Final reports, summary tables, and validation reports
+- **`claude.md`** - Complete project documentation and task list
+
+## Key Validation Requirements
+
+- ✅ Total arrests must equal **582**
+- ✅ All dates must be within 2025
+- ✅ Summons categories must sum correctly
+- ✅ All outputs must follow unified data dictionary standards
+
+## Reference Materials
+
+All mapping schemas and field definitions are in:
+`C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\`
+
+See Section 6 in `claude.md` for specific file paths. ## Next Steps
+
+1. Copy raw data files to `raw/` folder
+2. Review `claude.md` Section 5 for task checklists
+3. Begin Phase 1: Setup and Data Preparation
+
+```
+
+## Project created
+
+**Location**: `C:\Users\carucci_r\OneDrive - City of Hackensack\10_Projects\2025_Year_End_Report`
+
+### What was created
+
+1. **Folder structure**:
+   - `raw/` - For raw data exports
+   - `processed/` - For cleaned datasets
+   - `scripts/` - For ETL scripts
+   - `outputs/` - For final reports
+
+2. **`claude.md`** - Project documentation including:
+   - All 11 data sources with paths
+   - 11 processing tasks with checklists and acceptance criteria
+   - Validation requirements (including the 582 arrests check)
+   - Reference to mapping schemas (Section 6)
+   - Execution plan with 5 phases
+   - Output requirements
+
+3. **`README.md`** - Quick reference guide
+
+### Highlights
+
+- Task checklists for each metric
+- Validation criteria (e.g., arrests = 582)
+- References to your mapping schemas and unified data dictionary
+- Execution plan broken into phases
+- File organization requirements
+
+The `claude.md` file is ready for an AI assistant to generate the ETL scripts. Each task has clear acceptance criteria and references to your existing standards. You can now open `claude.md` in Cursor/Claude and start generating the scripts. ---
+
+**User**
+
+I'm preparing to export this chat. Please generate a descriptive filename that summarizes the main topic or task of this conversation. Requirements:
+• 4-8 words
+• Title Case (capitalize major words)
+• Replace spaces with underscores
+• Include .md extension
+• No dates or special characters
+
+Output only the filename, nothing else. After export, I'll process it using: scripts\quick_process_chatlog.bat
+
+---
+
+**Cursor**
+
+
+Chatlog_Processor_And_Year_End_Report_Setup.md

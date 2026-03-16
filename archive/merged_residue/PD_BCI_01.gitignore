@@ -1,0 +1,22 @@
+# OS / editor noise
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Office temp files
+~$*
+
+# Logs / temp artifacts
+*.log
+*.tmp
+*.bak
+*.swp
+
+# Python / Node / IDE (if ever used)
+__pycache__/
+node_modules/
+.idea/
+.vscode/
+
+
+tools/unified_data_dictionary/

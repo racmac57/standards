@@ -1,0 +1,101 @@
+{
+  "source_file": "Standards_DataDictionary_Scaffolding_And_Documentation.md",
+  "source_path": "C:\\_chunker\\02_data\\Standards_DataDictionary_Scaffolding_And_Documentation.md",
+  "manifest_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\KB_Shared\\04_output\\Standards_DataDictionary_Scaffolding_And_Documentation\\2026_02_03_19_15_44_Standards_DataDictionary_Scaffolding_And_Documentation.origin.json",
+  "created_at": "2026_02_03_19_15_44",
+  "tags": [
+    "ai",
+    "code",
+    "data",
+    "docs",
+    "json",
+    "markdown",
+    "police",
+    "powershell",
+    "sql"
+  ],
+  "metadata": {
+    "project_name": "02_data",
+    "source_type": "documentation",
+    "language": "en",
+    "department": "admin",
+    "key_terms": [
+      "datadictionary",
+      "current",
+      "json",
+      "schema",
+      "cad",
+      "cad_rms"
+    ],
+    "enrichment_version": "1.0.0"
+  },
+  "summaries": {
+    "file_summary": "# CAD/RMS data dictionary scaffolding\n_Exported on 2/3/2026 at 19:15:28 EST from Cursor (2.4.27)_\n\n---\n\n**User**\n\nPlease read the below prompt to ChatGPT and it's response. Please also add README.md, SUMMARY.md andCHANGELOG.md \n\nmy promp...",
+    "first_line": "# CAD/RMS data dictionary scaffolding"
+  },
+  "chunks": [
+    {
+      "chunk_id": "2026-02-03T19:15:44+00:00_Standards_DataDictionary_Scaffolding_And_Documentation_chunk1",
+      "chunk_index": 1,
+      "file": "chunk_00000.txt",
+      "tags": [
+        "ai",
+        "cad_rms",
+        "code",
+        "current",
+        "data",
+        "datadictionary",
+        "docs",
+        "json",
+        "markdown",
+        "police",
+        "powershell",
+        "schema",
+        "sql"
+      ],
+      "key_terms": [
+        "current",
+        "datadictionary",
+        "json",
+        "schema",
+        "cad",
+        "cad_rms"
+      ],
+      "summary": "# CAD/RMS data dictionary scaffolding\n_Exported on 2/3/2026 at 19:15:28 EST from Cursor (2.4.27)_\n\n---\n\n**User**\n\nPlease read the below prompt to ChatGPT and it's response.",
+      "char_length": 30064,
+      "byte_length": 31050
+    },
+    {
+      "chunk_id": "2026-02-03T19:15:44+00:00_Standards_DataDictionary_Scaffolding_And_Documentation_chunk2",
+      "chunk_index": 2,
+      "file": "chunk_00001.txt",
+      "tags": [
+        "ai",
+        "code",
+        "current",
+        "data",
+        "datadictionary",
+        "docs",
+        "export",
+        "json",
+        "markdown",
+        "police",
+        "powershell",
+        "schema",
+        "sql"
+      ],
+      "key_terms": [
+        "datadictionary",
+        "cad",
+        "current",
+        "schema",
+        "json",
+        "export"
+      ],
+      "summary": "- **Logic**: `Hour_Calc = FORMAT(TimeofCall, \"HH:mm\")`\n- **Validation rules**:\n  - Must be non-null.",
+      "char_length": 16560,
+      "byte_length": 16999
+    }
+  ],
+  "enrichment_version": "1.0.0"
+}

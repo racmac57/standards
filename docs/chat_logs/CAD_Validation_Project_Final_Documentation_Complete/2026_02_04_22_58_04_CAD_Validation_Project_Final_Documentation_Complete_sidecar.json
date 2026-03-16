@@ -1,0 +1,98 @@
+{
+  "source_file": "CAD_Validation_Project_Final_Documentation_Complete.md",
+  "source_path": "C:\\_chunker\\02_data\\CAD_Validation_Project_Final_Documentation_Complete.md",
+  "manifest_path": "C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\KB_Shared\\04_output\\CAD_Validation_Project_Final_Documentation_Complete\\2026_02_04_22_58_04_CAD_Validation_Project_Final_Documentation_Complete.origin.json",
+  "created_at": "2026_02_04_22_58_04",
+  "tags": [
+    "code",
+    "data",
+    "docs",
+    "excel",
+    "markdown",
+    "police",
+    "python",
+    "sql"
+  ],
+  "metadata": {
+    "project_name": "02_data",
+    "source_type": "documentation",
+    "language": "en",
+    "department": "admin",
+    "key_terms": [
+      "let",
+      "complete",
+      "validation",
+      "task",
+      "update",
+      "all"
+    ],
+    "enrichment_version": "1.0.0"
+  },
+  "summaries": {
+    "file_summary": "# Opus session 2 tasks\n_Exported on 2/4/2026 at 22:57:03 EST from Cursor (2.4.28)_\n\n---\n\n**User**\n\nWelcome back Opus! You did amazing work this morning.",
+    "first_line": "# Opus session 2 tasks"
+  },
+  "chunks": [
+    {
+      "chunk_id": "2026-02-04T22:58:04+00:00_CAD_Validation_Project_Final_Documentation_Complete_chunk1",
+      "chunk_index": 1,
+      "file": "chunk_00000.txt",
+      "tags": [
+        "call",
+        "code",
+        "complete",
+        "data",
+        "docs",
+        "excel",
+        "markdown",
+        "police",
+        "python",
+        "sql",
+        "types"
+      ],
+      "key_terms": [
+        "let",
+        "types",
+        "see",
+        "call",
+        "all",
+        "complete"
+      ],
+      "summary": "# Opus session 2 tasks\n_Exported on 2/4/2026 at 22:57:03 EST from Cursor (2.4.28)_\n\n---\n\n**User**\n\nWelcome back Opus!",
+      "char_length": 9542,
+      "byte_length": 9744
+    },
+    {
+      "chunk_id": "2026-02-04T22:58:04+00:00_CAD_Validation_Project_Final_Documentation_Complete_chunk2",
+      "chunk_index": 2,
+      "file": "chunk_00001.txt",
+      "tags": [
+        "code",
+        "complete",
+        "data",
+        "docs",
+        "documentation",
+        "excel",
+        "markdown",
+        "police",
+        "python",
+        "sql",
+        "task",
+        "update",
+        "validation"
+      ],
+      "key_terms": [
+        "complete",
+        "let",
+        "task",
+        "validation",
+        "update",
+        "documentation"
+      ],
+      "summary": "💾 Final git checkpoint\n\n**Time:** ~1.5 hours\n\nRead the verification file - it has templates, exact commands, and success criteria for each task.",
+      "char_length": 4664,
+      "byte_length": 4777
+    }
+  ],
+  "enrichment_version": "1.0.0"
+}

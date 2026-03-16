@@ -1,0 +1,715 @@
+Fields:
+      CAD: Officer, TimeofCall
+      RMS: OfficerOfRecord, IncidentDate, IncidentTime
+    """
+    scores = []
+
+    # Officer normalization (very simple; plug in Assignment_Master lookup if desired)
+    cad_off = str(cad_row["Officer"]).upper().strip() if not pd.isna(cad_row["Officer"]) else ""
+    rms_off = str(rms_row["OfficerOfRecord"]).upper().strip() if not pd.isna(rms_row["OfficerOfRecord"]) else ""
+
+    officer_match = 1.0 if cad_off and cad_off == rms_off else 0.0
+    scores.append(officer_match * 0.5)
+
+    cad_dt = parse_time(cad_row["TimeofCall"])
+    rms_date = parse_time(rms_row["IncidentDate"])
+    if rms_date:
+        rms_date = rms_date.date()
+    rms_time = parse_time(rms_row["IncidentTime"], fmt="%H:%M")
+    if rms_time and isinstance(rms_time, datetime):
+        rms_time = rms_time.time()
+    elif rms_time and isinstance(rms_time, str):
+        try:
+            rms_time = datetime.strptime(rms_time, "%H:%M").time()
+        except:
+            rms_time = None
+
+    if cad_dt is None or rms_date is None or rms_time is None:
+        return 0.0
+
+    cad_date = cad_dt.date()
+    date_score = 1.0 if cad_date == rms_date else 0.0
+    scores.append(date_score * 0.3)
+
+    cad_time = cad_dt.time()
+    cad_dt_comb = datetime.combine(date.today(), cad_time)
+    rms_dt_comb = datetime.combine(date.today(), rms_time)
+    diff_min = abs((cad_dt_comb - rms_dt_comb).total_seconds() / 60.0)
+
+    # 2-hour (120 min) window
+    time_score = max(0.0, 1.0 - diff_min / 120.0)
+    scores.append(time_score * 0.2)
+
+    return sum(scores)
+
+def score_address_zone_approx_date(cad_row, rms_row) -> float:
+    """
+    Strategy 4: Address + Zone + Approx Date. Fields:
+      CAD: FullAddress2, ZoneCalc, (optional TimeofCall)
+      RMS: FullAddress, Zone, (optional IncidentDate)
+    """
+    scores = []
+
+    # Address similarity (0.5, threshold 0.90)
+    cad_addr = normalize_address(cad_row["FullAddress2"])
+    rms_addr = normalize_address(rms_row["FullAddress"])
+    addr_sim = fuzz.ratio(cad_addr, rms_addr) / 100.0
+    if addr_sim < 0.90:
+        return 0.0
+    scores.append(addr_sim * 0.5)
+
+    # Zone exact match (0.3)
+    cad_zone = str(cad_row["ZoneCalc"]).strip() if not pd.isna(cad_row["ZoneCalc"]) else ""
+    rms_zone = str(rms_row["Zone"]).strip() if not pd.isna(rms_row["Zone"]) else ""
+    zone_score = 1.0 if cad_zone and cad_zone == rms_zone else 0.0
+    scores.append(zone_score * 0.3)
+
+    # Approximate date (0.2, within 7 days), optional
+    cad_dt = parse_time(cad_row.get("TimeofCall"))
+    rms_date = parse_time(rms_row.get("IncidentDate"))
+    if rms_date:
+        rms_date = rms_date.date()
+    
+    if cad_dt is not None and rms_date is not None:
+        diff_days = abs((cad_dt.date() - rms_date).days)
+        date_score = max(0.0, 1.0 - diff_days / 7.0)
+        scores.append(date_score * 0.2)
+    else:
+        # If date is missing, rescale weights for addr + zone only
+        # addr: 0.5 / 0.8 = 0.625, zone: 0.3 / 0.8 = 0.375
+        return addr_sim * 0.625 + zone_score * 0.375
+
+    return sum(scores)
+
+# -------------------------------------------------------------------
+# High-level merge workflow
+# -------------------------------------------------------------------
+
+def merge_cad_rms(cad_df: pd.DataFrame, rms_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge CAD and RMS dataframes using primary key first, then alternative strategies. Returns merged dataframe with:
+    - merge_match_flag: boolean indicating if match was found
+    - merge_confidence_score: float confidence score (0.0-1.0)
+    - merge_matching_strategy: string indicating which strategy was used
+    """
+    # 1. Primary key match on normalized case number
+    cad_df = cad_df.copy()
+    rms_df = rms_df.copy()
+
+    # Get field names from mapping spec
+    cad_key_field = mapping_spec["join_keys"]["primary"]["cad_source_field_name"]
+    rms_key_field = mapping_spec["join_keys"]["primary"]["rms_source_field_name"]
+
+    cad_df["_key_norm"] = cad_df[cad_key_field].apply(normalize_case_number)
+    rms_df["_key_norm"] = rms_df[rms_key_field].apply(normalize_case_number)
+
+    merged = cad_df.merge(
+        rms_df,
+        on="_key_norm",
+        how="left",
+        suffixes=("_cad", "_rms"),
+    )
+
+    merged["merge_match_flag"] = merged[rms_key_field].notna()
+    merged["merge_confidence_score"] = merged["merge_match_flag"].astype(float)
+    merged["merge_matching_strategy"] = merged["merge_match_flag"].map(
+        {True: "primary_key", False: None}
+    )
+
+    # 2. Identify unmatched sets
+    unmatched_cad = merged[~merged["merge_match_flag"]].copy()
+
+    matched_keys = merged.loc[merged["merge_match_flag"], "_key_norm"].dropna().unique()
+    unmatched_rms = rms_df[~rms_df["_key_norm"].isin(matched_keys)].copy()
+
+    # 3. Apply alternative strategies in order
+    strategies = [
+        ("temporal_address", 0.85, score_temporal_address),
+        ("officer_temporal", 0.80, score_officer_temporal),
+        ("address_zone_approx_date", 0.75, score_address_zone_approx_date),
+    ]
+
+    # For simplicity, brute-force within reasonable sample. # For production, window by date and/or index. for cad_idx, cad_row in unmatched_cad.iterrows():
+        best_score = 0.0
+        best_strategy = None
+        best_rms_idx = None
+
+        for strat_name, threshold, scorer in strategies:
+            for rms_idx, rms_row in unmatched_rms.iterrows():
+                score = scorer(cad_row, rms_row)
+                if score >= threshold and score > best_score:
+                    best_score = score
+                    best_strategy = strat_name
+                    best_rms_idx = rms_idx
+
+            if best_rms_idx is not None:
+                # We already found a good match for this CAD row; stop trying lower strategies
+                break
+
+        if best_rms_idx is not None:
+            # Update merged row
+            merged.loc[cad_idx, "merge_confidence_score"] = best_score
+            merged.loc[cad_idx, "merge_matching_strategy"] = best_strategy
+            merged.loc[cad_idx, "merge_match_flag"] = True
+
+            # Copy RMS columns into *_rms side for this CAD row
+            for col in rms_df.columns:
+                if col not in ["_key_norm"]:  # Skip internal columns
+                    merged.loc[cad_idx, f"{col}_rms"] = unmatched_rms.loc[best_rms_idx, col]
+
+            # Remove used RMS record from pool to preserve 1:1 mapping
+            unmatched_rms = unmatched_rms.drop(index=best_rms_idx)
+
+    return merged
+
+if __name__ == "__main__":
+    # Example usage
+    cad = pd.read_excel(CAD_PATH)
+    rms = pd.read_excel(RMS_PATH)
+
+    merged = merge_cad_rms(cad, rms)
+
+    # Quick QA summary
+    print("Total CAD records:", len(cad))
+    print("Matched records:", merged["merge_match_flag"].sum())
+    print("\nMatching strategy breakdown:")
+    print(merged["merge_matching_strategy"].value_counts(dropna=False))
+
+    # Save for inspection
+    merged.to_parquet("2025_CAD_RMS_merged.parquet")
+    print(f"\nSaved merged results to: 2025_CAD_RMS_merged.parquet")
+
+```
+
+The file looks fine. The error may be due to the special character (↔) in the docstring. Creating a version without special characters:
+
+
+```python
+"""
+CAD-RMS Merge Loader with Multi-Column Matching Strategies
+
+This module implements the CAD-RMS merge workflow using the mapping schemas
+defined in CAD_RMS/DataDictionary/current/schema/
+
+Assumptions:
+- Mapping JSON at: CAD_RMS/DataDictionary/current/schema/cad_to_rms_field_map.json
+- Uses pandas and rapidfuzz for matching
+"""
+
+import json
+from datetime import datetime, date
+from pathlib import Path
+from typing import Dict, Tuple, Optional
+
+import pandas as pd
+from rapidfuzz import fuzz
+
+# -------------------------------------------------------------------
+# Config
+# -------------------------------------------------------------------
+
+BASE_PATH = Path("C:/Users/carucci_r/OneDrive - City of Hackensack")
+CAD_PATH = BASE_PATH / "05_EXPORTS/_CAD/full_year/2025/2025_Yearly_CAD.xlsx"
+RMS_PATH = BASE_PATH / "05_EXPORTS/_RMS/full_year/2025/2025_Yearly_RMS.xlsx"
+
+MAPPING_JSON = Path(
+    "CAD_RMS/DataDictionary/current/schema/cad_to_rms_field_map.json"
+)
+
+# -------------------------------------------------------------------
+# Helpers: normalization
+# -------------------------------------------------------------------
+
+def normalize_case_number(value: object) -> str:
+    """Normalize case / report numbers (ReportNumberNew, Case Number).""" if pd.isna(value):
+        return ""
+    s = str(value).strip()
+    s = " ".join(s.split())  # collapse internal whitespace
+    s = "".join(ch for ch in s if ch.isprintable())
+    return s.upper()  # case-insensitive comparison
+
+def normalize_address(addr: object) -> str:
+    """Very simple address normalization; you can plug in your own.""" if pd.isna(addr):
+        return ""
+    s = str(addr).upper().strip()
+    # basic punctuation removal
+    for ch in [",", ". ", "#"]:
+        s = s.replace(ch, " ")
+    s = " ".join(s.split())
+    # TODO: optional: normalize street suffixes using a lookup table
+    return s
+
+def parse_time(value, fmt=None):
+    """Parse time values with fallback handling.""" if pd.isna(value):
+        return None
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, date):
+        return datetime.combine(value, datetime.min.time())
+    if fmt:
+        try:
+            return datetime.strptime(str(value), fmt)
+        except ValueError:
+            pass
+    # fallback: let pandas parse
+    try:
+        return pd.to_datetime(value)
+    except:
+        return None
+
+# -------------------------------------------------------------------
+# Load mapping JSON (structure-aware but tolerant)
+# -------------------------------------------------------------------
+
+def load_mapping(path: Path) -> dict:
+    """Load the mapping JSON schema.""" with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+# You can extend this if you want to drive behavior dynamically from JSON
+mapping_spec = load_mapping(MAPPING_JSON)
+
+# -------------------------------------------------------------------
+# Strategy implementations
+# -------------------------------------------------------------------
+
+def score_temporal_address(cad_row, rms_row) -> float:
+    """
+    Strategy 2: Temporal + Address. Fields:
+      CAD: TimeofCall, FullAddress2
+      RMS: IncidentDate, IncidentTime, FullAddress
+    """
+    scores = []
+
+    # Date match (weight 0.4)
+    cad_dt = parse_time(cad_row["TimeofCall"])
+    rms_date = parse_time(rms_row["IncidentDate"])
+    if rms_date:
+        rms_date = rms_date.date()
+
+    if cad_dt is None or rms_date is None:
+        return 0.0
+
+    cad_date = cad_dt.date()
+    date_score = 1.0 if cad_date == rms_date else 0.0
+    scores.append(date_score * 0.4)
+
+    # Time match (weight 0.3, within 60 min)
+    rms_time = parse_time(rms_row["IncidentTime"], fmt="%H:%M")
+    if rms_time is None:
+        return 0.0
+    if isinstance(rms_time, datetime):
+        rms_time = rms_time.time()
+    elif isinstance(rms_time, str):
+        # Try parsing as time string
+        try:
+            rms_time = datetime.strptime(rms_time, "%H:%M").time()
+        except:
+            return 0.0
+
+    cad_time = cad_dt.time()
+    cad_dt_comb = datetime.combine(date.today(), cad_time)
+    rms_dt_comb = datetime.combine(date.today(), rms_time)
+    diff_min = abs((cad_dt_comb - rms_dt_comb).total_seconds() / 60.0)
+    time_score = max(0.0, 1.0 - diff_min / 60.0)
+    scores.append(time_score * 0.3)
+
+    # Address similarity (weight 0.3, threshold 0.85)
+    cad_addr = normalize_address(cad_row["FullAddress2"])
+    rms_addr = normalize_address(rms_row["FullAddress"])
+
+    addr_sim = fuzz.ratio(cad_addr, rms_addr) / 100.0
+    if addr_sim < 0.85:
+        return 0.0
+
+    scores.append(addr_sim * 0.3)
+
+    return sum(scores)
+
+def score_officer_temporal(cad_row, rms_row) -> float:
+    """
+    Strategy 3: Officer + Temporal. Fields:
+      CAD: Officer, TimeofCall
+      RMS: OfficerOfRecord, IncidentDate, IncidentTime
+    """
+    scores = []
+
+    # Officer normalization (very simple; plug in Assignment_Master lookup if desired)
+    cad_off = str(cad_row["Officer"]).upper().strip() if not pd.isna(cad_row["Officer"]) else ""
+    rms_off = str(rms_row["OfficerOfRecord"]).upper().strip() if not pd.isna(rms_row["OfficerOfRecord"]) else ""
+
+    officer_match = 1.0 if cad_off and cad_off == rms_off else 0.0
+    scores.append(officer_match * 0.5)
+
+    cad_dt = parse_time(cad_row["TimeofCall"])
+    rms_date = parse_time(rms_row["IncidentDate"])
+    if rms_date:
+        rms_date = rms_date.date()
+    rms_time = parse_time(rms_row["IncidentTime"], fmt="%H:%M")
+    if rms_time and isinstance(rms_time, datetime):
+        rms_time = rms_time.time()
+    elif rms_time and isinstance(rms_time, str):
+        try:
+            rms_time = datetime.strptime(rms_time, "%H:%M").time()
+        except:
+            rms_time = None
+
+    if cad_dt is None or rms_date is None or rms_time is None:
+        return 0.0
+
+    cad_date = cad_dt.date()
+    date_score = 1.0 if cad_date == rms_date else 0.0
+    scores.append(date_score * 0.3)
+
+    cad_time = cad_dt.time()
+    cad_dt_comb = datetime.combine(date.today(), cad_time)
+    rms_dt_comb = datetime.combine(date.today(), rms_time)
+    diff_min = abs((cad_dt_comb - rms_dt_comb).total_seconds() / 60.0)
+
+    # 2-hour (120 min) window
+    time_score = max(0.0, 1.0 - diff_min / 120.0)
+    scores.append(time_score * 0.2)
+
+    return sum(scores)
+
+def score_address_zone_approx_date(cad_row, rms_row) -> float:
+    """
+    Strategy 4: Address + Zone + Approx Date. Fields:
+      CAD: FullAddress2, ZoneCalc, (optional TimeofCall)
+      RMS: FullAddress, Zone, (optional IncidentDate)
+    """
+    scores = []
+
+    # Address similarity (0.5, threshold 0.90)
+    cad_addr = normalize_address(cad_row["FullAddress2"])
+    rms_addr = normalize_address(rms_row["FullAddress"])
+    addr_sim = fuzz.ratio(cad_addr, rms_addr) / 100.0
+    if addr_sim < 0.90:
+        return 0.0
+    scores.append(addr_sim * 0.5)
+
+    # Zone exact match (0.3)
+    cad_zone = str(cad_row["ZoneCalc"]).strip() if not pd.isna(cad_row["ZoneCalc"]) else ""
+    rms_zone = str(rms_row["Zone"]).strip() if not pd.isna(rms_row["Zone"]) else ""
+    zone_score = 1.0 if cad_zone and cad_zone == rms_zone else 0.0
+    scores.append(zone_score * 0.3)
+
+    # Approximate date (0.2, within 7 days), optional
+    cad_dt = parse_time(cad_row.get("TimeofCall"))
+    rms_date = parse_time(rms_row.get("IncidentDate"))
+    if rms_date:
+        rms_date = rms_date.date()
+    
+    if cad_dt is not None and rms_date is not None:
+        diff_days = abs((cad_dt.date() - rms_date).days)
+        date_score = max(0.0, 1.0 - diff_days / 7.0)
+        scores.append(date_score * 0.2)
+    else:
+        # If date is missing, rescale weights for addr + zone only
+        # addr: 0.5 / 0.8 = 0.625, zone: 0.3 / 0.8 = 0.375
+        return addr_sim * 0.625 + zone_score * 0.375
+
+    return sum(scores)
+
+# -------------------------------------------------------------------
+# High-level merge workflow
+# -------------------------------------------------------------------
+
+def merge_cad_rms(cad_df: pd.DataFrame, rms_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge CAD and RMS dataframes using primary key first, then alternative strategies. Returns merged dataframe with:
+    - merge_match_flag: boolean indicating if match was found
+    - merge_confidence_score: float confidence score (0.0-1.0)
+    - merge_matching_strategy: string indicating which strategy was used
+    """
+    # 1. Primary key match on normalized case number
+    cad_df = cad_df.copy()
+    rms_df = rms_df.copy()
+
+    # Get field names from mapping spec
+    cad_key_field = mapping_spec["join_keys"]["primary"]["cad_source_field_name"]
+    rms_key_field = mapping_spec["join_keys"]["primary"]["rms_source_field_name"]
+
+    cad_df["_key_norm"] = cad_df[cad_key_field].apply(normalize_case_number)
+    rms_df["_key_norm"] = rms_df[rms_key_field].apply(normalize_case_number)
+
+    merged = cad_df.merge(
+        rms_df,
+        on="_key_norm",
+        how="left",
+        suffixes=("_cad", "_rms"),
+    )
+
+    merged["merge_match_flag"] = merged[rms_key_field].notna()
+    merged["merge_confidence_score"] = merged["merge_match_flag"].astype(float)
+    merged["merge_matching_strategy"] = merged["merge_match_flag"].map(
+        {True: "primary_key", False: None}
+    )
+
+    # 2. Identify unmatched sets
+    unmatched_cad = merged[~merged["merge_match_flag"]].copy()
+
+    matched_keys = merged.loc[merged["merge_match_flag"], "_key_norm"].dropna().unique()
+    unmatched_rms = rms_df[~rms_df["_key_norm"].isin(matched_keys)].copy()
+
+    # 3. Apply alternative strategies in order
+    strategies = [
+        ("temporal_address", 0.85, score_temporal_address),
+        ("officer_temporal", 0.80, score_officer_temporal),
+        ("address_zone_approx_date", 0.75, score_address_zone_approx_date),
+    ]
+
+    # For simplicity, brute-force within reasonable sample. # For production, window by date and/or index. for cad_idx, cad_row in unmatched_cad.iterrows():
+        best_score = 0.0
+        best_strategy = None
+        best_rms_idx = None
+
+        for strat_name, threshold, scorer in strategies:
+            for rms_idx, rms_row in unmatched_rms.iterrows():
+                score = scorer(cad_row, rms_row)
+                if score >= threshold and score > best_score:
+                    best_score = score
+                    best_strategy = strat_name
+                    best_rms_idx = rms_idx
+
+            if best_rms_idx is not None:
+                # We already found a good match for this CAD row; stop trying lower strategies
+                break
+
+        if best_rms_idx is not None:
+            # Update merged row
+            merged.loc[cad_idx, "merge_confidence_score"] = best_score
+            merged.loc[cad_idx, "merge_matching_strategy"] = best_strategy
+            merged.loc[cad_idx, "merge_match_flag"] = True
+
+            # Copy RMS columns into *_rms side for this CAD row
+            for col in rms_df.columns:
+                if col not in ["_key_norm"]:  # Skip internal columns
+                    merged.loc[cad_idx, f"{col}_rms"] = unmatched_rms.loc[best_rms_idx, col]
+
+            # Remove used RMS record from pool to preserve 1:1 mapping
+            unmatched_rms = unmatched_rms.drop(index=best_rms_idx)
+
+    return merged
+
+if __name__ == "__main__":
+    # Example usage
+    cad = pd.read_excel(CAD_PATH)
+    rms = pd.read_excel(RMS_PATH)
+
+    merged = merge_cad_rms(cad, rms)
+
+    # Quick QA summary
+    print("Total CAD records:", len(cad))
+    print("Matched records:", merged["merge_match_flag"].sum())
+    print("\nMatching strategy breakdown:")
+    print(merged["merge_matching_strategy"].value_counts(dropna=False))
+
+    # Save for inspection
+    merged.to_parquet("2025_CAD_RMS_merged.parquet")
+    print(f"\nSaved merged results to: 2025_CAD_RMS_merged.parquet")
+
+```
+
+Fixed a bug (line 218 used `cad_row` instead of `rms_row`) and removed the special character. The file should be readable. If the error persists, try:
+
+1. Close and reopen the file in your IDE
+2. Check if the file path is correct:
+   ```
+   CAD_RMS\DataDictionary\scripts\cad_rms_merge_loader.py
+   ```
+3. Try opening it from File Explorer or another editor
+
+Verifying the file is valid:
+
+
+```plaintext
+   CAD_RMS\DataDictionary\scripts\cad_rms_merge_loader.py
+```
+
+The file compiles successfully, so it's valid Python. The error is likely an IDE issue. ## Summary of fixes
+
+1. Fixed bug on line 218: changed `cad_row.get("IncidentDate")` to `rms_row.get("IncidentDate")`
+2. Removed special character: changed `CAD↔RMS` to `CAD-RMS` in the docstring
+3. File is valid: Python syntax check passed
+
+## To resolve the IDE error
+
+Try these steps:
+
+1. Close the file in your IDE
+2. Navigate to the file in File Explorer:
+   ```
+   C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\CAD_RMS\DataDictionary\scripts\
+   ```
+3. Right-click `cad_rms_merge_loader.py` → Open with → your IDE
+4. Or try opening it in a different editor (VS Code, Notepad++, etc.) to confirm it's readable
+
+The file is valid and should open. If the error persists, it's likely an IDE-specific issue. You can also try:
+- Restarting your IDE
+- Checking if there are any IDE extensions causing issues
+- Opening the file from the command line: `code "CAD_RMS\DataDictionary\scripts\cad_rms_merge_loader.py"`
+
+The file is ready to use. ```plaintext
+   C:\Users\carucci_r\OneDrive - City of Hackensack\09_Reference\Standards\CAD_RMS\DataDictionary\scripts\
+```
+
+---
+
+**User**
+
+here is what I have
+### 2025 Data – Year-End Report Workspace
+
+This page documents all raw data sources, processing requirements, and desired outputs for the 2025 year-end report. It is structured so an AI coding assistant (Claude Code / Cursor) can generate a [`claude.md`](http://claude.md) project file and an execution plan. ---
+
+### 1. Raw Data Sources
+
+**1.1 CAD (Computer Aided Dispatch)**
+
+- Path: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_CAD\\full_year\\2025\\2025_Yearly_CAD.xlsx`
+
+**1.2 RMS (Records Management System)**
+
+- Path: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_RMS\\full_year\\2025\\2025_Yearly_RMS.xlsx`
+
+**1.3 Domestic Violence Supplemental**
+
+- Path: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_DV_Supplement\\2025\\raw\\2025_supplementary_domestic_violence_offense_report.xlsx`
+
+**1.4 Arrest Data**
+
+- Path: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_Arrest\\full_year\\2025\\2025_Lawsoft_Yearly_Arrest.xlsx`
+
+**1.5 Summons Data (E-Ticket)**
+
+- Base folder: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_Summons\\E_Ticket\\2025`
+- Includes: yearly export and individual monthly exports for 2025. **1.6 Use of Force**
+
+- Path: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_Benchmark\\use_force\\complete_report\\full_year\\2025\\use-of-force-reports-01_01_2025-12_31_2025.csv`
+
+**1.7 Show of Force**
+
+- Path: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_Benchmark\\show_force\\complete_report\\full_year\\2025\\show-of-force-reports-01_01_2025-12_31_2025.csv`
+
+**1.8 Vehicle Pursuits**
+
+- Path: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_Benchmark\\vehicle_pursuit\\complete_report\\full_year\\2025\\vehicle-pursuit-reports-01_01_2025-12_31_2025.csv`
+
+**1.9 NIBRS**
+
+- Workbook path: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\01_DataSources\\NIBRS\\NIBRS_Monthly_Report.xlsx`
+- Worksheet: `NIBRS_Monthly_Report`
+- Table name: `NIBRS_Monthly_Report`
+
+---
+
+### 2. Reference Materials and ETL Logic
+
+**2.1 Data Dictionary and Standards**
+
+- Unified data dictionary:
+    - Path: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\09_Reference\\Standards\\unified_data_dictionary`
+- Purpose:
+    - Defines how CAD and RMS data interact with each other. - Defines canonical field names, data types, and value mappings. **2.2 Existing ETL / Cleaning Projects**
+
+- **Domestic Violence / DOJ ETL project**
+    - Path: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\dv_doj`
+    - Usage: reference for how to clean, normalize, and standardize CAD and RMS data. - **Arrests ETL scripts**
+    - Path: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\Arrests`
+    - Usage: adapt to produce a single, full-year arrest dataset (no monthly breakdown needed). - **Summons ETL scripts**
+    - Path: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\Summons`
+    - Usage: clean and process all 2025 Summons data (yearly and monthly exports) and compute totals by category. ---
+
+### 3. File Organization Requirements (Raw vs Processed)
+
+For each export type (CAD, RMS, Domestic Violence Supplemental, Arrest, Summons, Use of Force, Show of Force, Vehicle Pursuits, NIBRS where applicable):
+
+1. The **raw export** must be stored in a `raw` subfolder. 2. The **processed / cleaned output** must be stored in a `processed` (or `clean`) subfolder at the same directory level as `raw`. 3. Processed files should have clear, consistent naming (for example, appending `_clean` or `_processed` to the base filename and including the coverage dates where helpful). Example pattern for a data type directory:
+
+- `<base_path>\\raw\\<original_export_files>`
+- `<base_path>\\processed\\<cleaned_standardized_files>`
+
+---
+
+### 4. Specific Processing Tasks and Metrics Needed
+
+This section defines the outputs that the ETL and analysis should produce. An AI coding assistant can treat each bullet as a deliverable or testable requirement. ### 4.1 Arrests
+
+- 2025 total arrests should be **582** (validation check). - Use raw data from: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_Arrest\\full_year\\2025\\2025_Lawsoft_Yearly_Arrest.xlsx`. - Adapt ETL scripts from: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\Arrests`. - Output requirements:
+    - A single, full-year cleaned arrest dataset (no monthly breakdown needed). - Include fields consistent with the unified data dictionary. - Include checks or summary output confirming that total arrests = 582. ### 4.2 Motor Vehicle Stops (from CAD)
+
+- Source: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_CAD\\full_year\\2025\\2025_Yearly_CAD.xlsx`. - Logic:
+    - Count the number of CAD records where the `Incident` field value is exactly **"Motor Vehicle Stop"**. - Output requirements:
+    - A count of total motor vehicle stops in 2025. - Optional: a cleaned dataset of all motor vehicle stop incidents. ### 4.3 Summons (Moving, Non-moving, Special Complaints)
+
+- Raw data folder (yearly and all monthly files):
+    - `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_Summons\\E_Ticket\\2025`
+- ETL scripts to adapt:
+    - `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\02_ETL_Scripts\\Summons`
+- Processing requirements:
+    - Clean and process the **full-year** export. - Clean and process **all individual monthly exports for 2025**. - Standardize fields and values using the unified data dictionary where applicable. - Categories:
+    - **Moving (M)**
+    - **Non-moving / Parking (P)**
+    - **Special Complaints (C)**
+- Output requirements:
+    - Year-end totals for:
+        - Moving summons (M)
+        - Non-moving / parking summons (P)
+        - Special complaints (C)
+    - A combined 2025 cleaned summons dataset with category field clearly labeled. ### 4.4 Motor Vehicle Accidents
+
+- Data source: from CAD and/or RMS exports (see CAD and RMS paths above; use unified data dictionary to identify accident-related incidents and reports). - Required metrics:
+    - Total motor vehicle accidents (2025). - Motor vehicle accidents with injuries (2025). - Output requirements:
+    - Cleaned accident dataset with flags/fields to distinguish total accidents vs accidents with injuries. ### 4.5 Reports Written
+
+- Data source: RMS export (`2025_Yearly_RMS.xlsx`) and related fields defined in the unified data dictionary. - Required metrics:
+    
+    [SUMMARY.zip](attachment:0ffdc417-2bc9-4b10-8c19-bd2ccb0aa546:SUMMARY.zip)
+    
+    [rms_export_field_definitions.md](attachment:5ce62c9f-4ba6-4f7e-b131-42e4d00017d7:rms_export_field_definitions.md)
+    
+    [README.md](attachment:1ee21aae-e373-4dbf-9118-213eeec9113c:README.md)
+    
+    [SCHEMA_FILES_SUMMARY.md](attachment:0124210c-17cf-4b66-9781-cde0ba97559d:SCHEMA_FILES_SUMMARY.md)
+    
+    [multi_column_matching_strategy.md](attachment:b895e3f9-9e90-45f9-be21-146a20118086:multi_column_matching_strategy.md)
+    
+    [RELEASE_NOTES.md](attachment:6db37398-bbfe-4494-bdd9-43ce39be43d2:RELEASE_NOTES.md)
+    
+    [requirements.txt](attachment:15f5ab11-ed16-47c8-8ac9-28ee4eab0b49:requirements.txt)
+    
+    [PACKAGING_COMPLETION_SUMMARY.md](attachment:132089a3-2196-43ae-a9b6-7bb20dac1699:PACKAGING_COMPLETION_SUMMARY.md)
+    
+    [SUMMARY.md](attachment:3b07dfec-6325-4b6f-8ad6-a33c07166843:SUMMARY.md)
+    
+    [CHANGELOG.md](attachment:187b24e8-0aa1-4220-90c2-4e51fc53b4f2:CHANGELOG.md)
+    
+    [unified_data_dictionary.zip](attachment:3a8b7899-0129-4590-ac29-af7dfbc19654:unified_data_dictionary.zip)
+    
+    - Total number of reports written in 2025. - Output requirements:
+    - Summary count of reports written. - Optional: cleaned dataset of all reports. ### 4.6 NIBRS Closure Rates
+
+- Source workbook: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\01_DataSources\\NIBRS\\NIBRS_Monthly_Report.xlsx`
+- Worksheet and table: `NIBRS_Monthly_Monthly_Report` (worksheet `NIBRS_Monthly_Report`, table `NIBRS_Monthly_Report`). - Required metrics:
+    - Overall NIBRS closure rate for 2025. - Closure rates broken down by:
+        - Murder
+        - Crimes Against Person
+        - Crimes Against Property
+        - Crimes Against Society
+- Output requirements:
+    - Table or dataset with closure rates by category and overall. ### 4.7 Crime Categories (NIBRS / RMS)
+
+Use NIBRS and RMS data plus the unified data dictionary to compute counts by category for 2025:
+
+- Murder
+- Crimes Against Person
+- Crimes Against Property
+- Crimes Against Society
+
+Output requirements:
+
+- Counts and rates per category for 2025. - If possible, crosswalk between RMS offense codes and NIBRS categories using the unified data dictionary. ### 4.8 Use of Force
+
+- Source: `C:\\Users\\carucci_r\\OneDrive - City of Hackensack\\05_EXPORTS\\_Benchmark\\use_force\\complete_report\\full_year\\2025\\use-of-force-reports-01_01_2025-12_31_2025.csv`
+- Required metrics:
+    - Total number of use-of-force reports in 2025. - Any additional breakdowns that can be derived easily (for example, by type, reason, or outcome) if fields exist in the dataset.

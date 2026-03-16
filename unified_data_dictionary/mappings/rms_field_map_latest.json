@@ -16,7 +16,7 @@
   },
   "notes": [
     "source_field_name is the raw RMS export header (exact spelling, including spaces/punctuation).",
-    "field_name is the canonical/display name for the RMS field in this repo (defaults to source_field_name unless a specific canonical is established).",
+    "RMS monthly export headers: Case Number (mapped to CaseNumber), FullAddress (not Location), Zone (not PDZone). OffenseCode is not in the export.",
     "internal_field_name is a safe Python key (no spaces).",
     "esri_field_name is not applicable for RMS exports in this repo, so it is null for all fields.",
     "cad_mapping is included for RMS↔CAD alignment based on repo merges and the user-provided mapping notes."
