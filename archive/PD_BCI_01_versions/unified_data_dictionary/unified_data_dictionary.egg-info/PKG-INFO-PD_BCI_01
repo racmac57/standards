@@ -1,0 +1,50 @@
+Metadata-Version: 2.4
+Name: unified-data-dictionary
+Version: 1.0.0
+Summary: Unified data dictionary for CAD/RMS/DV law enforcement data integration
+Author-email: "R. A. Carucci" <rcarucci@hackensackpd.org>
+License: MIT
+Project-URL: Homepage, https://github.com/racmac57/unified_data_dictionary
+Project-URL: Documentation, https://github.com/racmac57/unified_data_dictionary/tree/main/docs
+Project-URL: Repository, https://github.com/racmac57/unified_data_dictionary
+Project-URL: Issues, https://github.com/racmac57/unified_data_dictionary/issues
+Keywords: data-dictionary,schema,law-enforcement,CAD,RMS,DV
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Database :: Database Engines/Servers
+Classifier: Topic :: Documentation
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: polars>=0.20.0
+Requires-Dist: openpyxl>=3.1.2
+Requires-Dist: pydantic>=2.5.0
+Requires-Dist: click>=8.1.7
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: gitpython>=3.1.40
+Provides-Extra: dev
+Requires-Dist: pytest>=7.4.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.1.0; extra == "dev"
+Requires-Dist: ruff>=0.1.0; extra == "dev"
+Requires-Dist: mypy>=1.7.0; extra == "dev"
+Requires-Dist: black>=23.12.0; extra == "dev"
+Requires-Dist: ipython>=8.18.0; extra == "dev"
+Dynamic: license-file
+
+# Generated Files - Policy and Training Workbook Overhaul
+
+**Date:** 2025-06-26  
+**Participants:** RAC, Data Analyst  
+**Session Token:** SESSION_20250626_POLICY_TRAINING_FIX_COMPLETE
+
+## Included Files
+- 2025_06_26_21_31_29_Regenerated_Cleaned_Conversation.txt — Cleaned full transcript of the session
+- 2025_06_26_21_31_29_Regenerated_Structured_Summary.md — Structured Markdown summary with YAML metadata and code blocks
+
+## Format Notes
+- Timestamps are in YYYY-MM-DD HH:MM (24-hour EST)
+- Code includes headers and metadata for audit/logging
+- Dropdowns and formatting follow training unit policy standards

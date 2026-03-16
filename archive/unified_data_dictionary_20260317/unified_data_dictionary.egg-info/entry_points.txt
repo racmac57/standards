@@ -1,0 +1,2 @@
+[console_scripts]
+udd = src.cli:cli

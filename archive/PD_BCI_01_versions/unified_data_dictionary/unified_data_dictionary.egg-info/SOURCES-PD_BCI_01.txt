@@ -1,0 +1,15 @@
+LICENSE
+README.md
+pyproject.toml
+src/__init__.py
+src/utils/__init__.py
+tests/test_allowed_values.py
+tests/test_coordinate_validation.py
+tests/test_datetime_parsing.py
+tests/test_join_keys.py
+unified_data_dictionary.egg-info/PKG-INFO
+unified_data_dictionary.egg-info/SOURCES.txt
+unified_data_dictionary.egg-info/dependency_links.txt
+unified_data_dictionary.egg-info/entry_points.txt
+unified_data_dictionary.egg-info/requires.txt
+unified_data_dictionary.egg-info/top_level.txt
